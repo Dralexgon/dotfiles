@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 32 32"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="system-shutdown.svg"
+   width="32"
+   height="32"
+   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#999999"
+     borderopacity="1"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="8.4189901"
+     inkscape:cx="15.797619"
+     inkscape:cy="15.67884"
+     inkscape:window-width="1920"
+     inkscape:window-height="994"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <defs
+     id="defs3051">
+    <style
+       type="text/css"
+       id="current-color-scheme">.ColorScheme-Text {color:#fcfcfc;}</style>
+  </defs>
+  <g
+     id="system-shutdown"
+     transform="translate(28,179)">
+    <path
+       style="color:#000000;overflow:visible;opacity:0;fill:#d1d5e9;fill-opacity:1;stroke-width:1.06667"
+       id="path945-7"
+       overflow="visible"
+       d="m -12,-179 c -8.82859,0 -16,7.17141 -16,16 0,8.82859 7.17141,16 16,16 8.82859,0 16,-7.17141 16,-16 0,-8.82859 -7.17141,-16 -16,-16 z"
+       inkscape:connector-curvature="0" />
+    <path
+       d="m -19.170911,-172.1015 a 11.779103,11.779103 0 1 0 18.666566,12.01785 11.898477,11.898477 0 0 0 -4.277336,-12.01785 c -0.670639,-0.5231 -1.628311,0.41848 -0.948283,0.94829 a 10.636335,10.636335 0 0 1 4.133818,9.54051 10.444532,10.444532 0 0 1 -20.532283,1.28226 10.596096,10.596096 0 0 1 3.905801,-10.82277 c 0.680028,-0.52847 -0.274962,-1.47541 -0.948283,-0.94829 z"
+       id="path1231"
+       style="color:#e5e9ef;fill:currentColor;fill-opacity:1;stroke-width:1.34128"
+       class="ColorScheme-Text" />
+    <path
+       d="m -11.30834,-162.29676 a 0.670639,0.670639 0 0 1 -1.341278,0 v -12.0326 0 a 0.670639,0.670639 0 0 1 1.341278,0 z"
+       id="path1233"
+       style="color:#e5e9ef;fill:currentColor;fill-opacity:1;stroke-width:1.34128"
+       class="ColorScheme-Text" />
+  </g>
+</svg>
