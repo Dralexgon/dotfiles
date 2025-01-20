@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Exec=picom --config ~/.config/picom/picom.conf
-Hidden=true
-NoDisplay=false
-X-GNOME-Autostart-enabled=true
-Name=Picom
-Comment=Picom cursor trail

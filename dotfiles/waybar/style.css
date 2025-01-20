@@ -1,0 +1,89 @@
+* {
+  font-family: JetBrainsMono Nerd Font Mono;
+  font-size: 16px;
+  border-radius: 0px;
+  border: none;
+  min-height: 0px;
+}
+window#waybar {
+  background: rgba(0,0,0,0);
+}
+#workspaces {
+  color: #011d45;
+  background: #184684;
+  margin: 4px 4px;
+  padding: 5px 5px;
+  border-radius: 16px;
+}
+#workspaces button {
+  font-weight: bold;
+  padding: 0px 5px;
+  margin: 0px 3px;
+  border-radius: 16px;
+  color: #011d45;
+  background: linear-gradient(45deg, #b57cb1, #9f8a9d);
+  opacity: 0.5;
+  transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
+}
+#workspaces button.active {
+  font-weight: bold;
+  padding: 0px 5px;
+  margin: 0px 3px;
+  border-radius: 16px;
+  color: #011d45;
+  background: linear-gradient(45deg, #b57cb1, #9f8a9d);
+  transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
+  opacity: 1.0;
+  min-width: 40px;
+}
+#workspaces button:hover {
+  font-weight: bold;
+  border-radius: 16px;
+  color: #011d45;
+  background: linear-gradient(45deg, #b57cb1, #9f8a9d);
+  opacity: 0.8;
+  transition: all 0.3s cubic-bezier(.55,-0.68,.48,1.682);
+}
+tooltip {
+  background: #011d45;
+  border: 1px solid #b57cb1;
+  border-radius: 12px;
+}
+tooltip label {
+  color: #b57cb1;
+}
+#window, #pulseaudio, #cpu, #memory, #idle_inhibitor {
+  font-weight: bold;
+  margin: 4px 0px;
+  margin-left: 7px;
+  padding: 0px 18px;
+  background: #c2b6ba;
+  color: #011d45;
+  border-radius: 24px 10px 24px 10px;
+}
+#custom-startmenu {
+  color: #8c918d;
+  background: #805aa3;
+  font-size: 28px;
+  margin: 0px;
+  padding: 0px 30px 0px 15px;
+  border-radius: 0px 0px 40px 0px;
+}
+#custom-hyprbindings, #network, #battery,
+#custom-notification, #tray, #custom-exit {
+  font-weight: bold;
+  background: #dd6b9e;
+  color: #011d45;
+  margin: 4px 0px;
+  margin-right: 7px;
+  border-radius: 10px 24px 10px 24px;
+  padding: 0px 18px;
+}
+#clock {
+  font-weight: bold;
+  color: #0D0E15;
+  background: linear-gradient(90deg, #c57e84, #9788c1);
+  margin: 0px;
+  padding: 0px 15px 0px 30px;
+  border-radius: 0px 0px 0px 40px;
+}

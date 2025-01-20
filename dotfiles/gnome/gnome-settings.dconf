@@ -1,10 +1,5 @@
 [/]
-color-scheme='prefer-dark'
+accent-color='blue'
+color-scheme='default'
 cursor-size=24
-cursor-theme='Sunaōkami-Shiroko'
-document-font-name='Caveat 12'
-font-name='Caveat 12'
-gtk-theme='Yaru-magenta-dark'
-icon-theme='Yaru-magenta'
-locate-pointer=false
-monospace-font-name='Roboto 12'
+cursor-theme='default'

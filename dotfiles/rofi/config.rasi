@@ -1,0 +1,14 @@
+configuration {
+display-drun: " Apps";
+display-filebrowser: " File";
+display-run: " Run";
+drun-display-format: "{icon} {name}";
+font: "JetBrainsMono Nerd Font Mono 12";
+icon-theme: "Papirus";
+location: 0;
+modi: "drun,filebrowser,run";
+show-icons: true;
+xoffset: 0;
+yoffset: 0;
+}
+@theme "custom"
