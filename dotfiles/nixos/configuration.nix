@@ -123,6 +123,7 @@ in
 
     # Simple useful tools
     git
+    github-cli
     wget
     tree
 

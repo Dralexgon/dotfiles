@@ -19,7 +19,7 @@ PS1="\
 
 # Nix shortcuts
 alias alexnix-conf="$EDITOR $CONFIGURATION_NIX_FILE"
-alias alexnix-rebuild-switch="sudo nixos-rebuild switch && reboot"
+alias alexnix-rebuild-switch="sudo nixos-rebuild switch"
 alias alexnix-rebuild-reboot="sudo nixos-rebuild switch && reboot"
 alias alexnix-generation-list="nixos-rebuild list-generations"
 alexnix-clean-generation() { # Usage examples: nix-clean-generation 1 2 3
