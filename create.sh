@@ -35,7 +35,7 @@ cp -r ~/.config/nvim $DOTFILES_DIR
 
 # Nixos
 if grep -q nixos </etc/os-release; then
-    cp -r /etc/nixos $DOTFILES_DIR/nixos
+    cp /etc/nixos/configuration.nix $DOTFILES_DIR/nixos/configuration.nix
 fi
 
 echo "Configuration backed up to $DOTFILES_DIR"
