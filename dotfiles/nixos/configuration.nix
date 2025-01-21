@@ -123,7 +123,7 @@ in
 
     # Simple useful tools
     git
-    github-cli
+    github-desktop
     wget
     tree
 
