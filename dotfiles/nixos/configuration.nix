@@ -140,6 +140,8 @@ in
     btop
     fastfetch
     catppuccin-gtk
+    python3
+    pywal
 
     # Games
     prismlauncher # Minecraft launcher
@@ -156,7 +158,7 @@ in
     kitty # Hyprland console
     hyprlock # Lock screen
     hyprpaper # Wallpaper manager
-    # sww # Another wallpaper manager
+    swww # Another wallpaper manager
     swaynotificationcenter # Notification menu (is dunst better ?)
     clipse # Clipboard manager
     wl-clipboard # Another clipboard manager
