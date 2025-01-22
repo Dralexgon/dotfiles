@@ -105,7 +105,10 @@ in
 
   # Screensharing in hyrpland (not tested)
   xdg.portal.enable = conf_hyprland;
-  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+  xdg.portal.extraPortals = [
+    pkgs.xdg-desktop-portal-gtk
+    pkgs.xdg-desktop-portal-hyprland
+  ];
 
   programs.ssh.startAgent = true;
 
@@ -127,6 +130,8 @@ in
     wget
     tree
 
+    fzf # Dont really know but seems cool for terminal
+
     # 2 discord clients for multiple accounts
     discord
     vesktop
@@ -135,6 +140,9 @@ in
     btop
     fastfetch
     catppuccin-gtk
+
+    # Games
+    prismlauncher # Minecraft launcher
 
     #gnome-builder
 
@@ -151,6 +159,7 @@ in
     # sww # Another wallpaper manager
     swaynotificationcenter # Notification menu (is dunst better ?)
     clipse # Clipboard manager
+    wl-clipboard # Another clipboard manager
     wlogout # Logout menu
     pavucontrol # Sound GUI
 
@@ -181,9 +190,12 @@ in
     autoconf
     autoconf-archive
     libtool
+
+    # Net
+    gns3-server
+    gns3-gui
   ] else []
   )
-
   ;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.

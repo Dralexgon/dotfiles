@@ -18,18 +18,20 @@ PS1="\
 \[$PINK\]uwu~ \[$WHITE\]"
 
 # Nix shortcuts
-alias alexnix-conf="$EDITOR $CONFIGURATION_NIX_FILE"
-alias alexnix-rebuild-switch="sudo nixos-rebuild switch"
-alias alexnix-rebuild-reboot="sudo nixos-rebuild switch && reboot"
-alias alexnix-generation-list="nixos-rebuild list-generations"
-alexnix-clean-generation() { # Usage examples: nix-clean-generation 1 2 3
+alias alex-nix-conf="$EDITOR $CONFIGURATION_NIX_FILE"
+alias alex-nix-rebuild-switch="sudo nixos-rebuild switch"
+alias alex-nix-rebuild-reboot="sudo nixos-rebuild switch && reboot"
+alias alex-nix-generation-list="nixos-rebuild list-generations"
+alex-nix-clean-generation() { # Usage examples: nix-clean-generation 1 2 3
     sudo nix-env --profile /nix/var/nix/profiles/system --delete-generations "$@"
     nix-collect-garbage
 }
-alias alexnix-package-list="nix-store -q --requisites /run/current-system | awk -F'-' '/\/nix\/store/ {print \$(NF-1)}' | sort -u"
+alias alex-nix-package-list="nix-store -q --requisites /run/current-system | awk -F'-' '/\/nix\/store/ {print \$(NF-1)}' | sort -u"
 
-alias alexrc-conf="$EDITOR ~/.bashrc"
-alias alexrc-update="source ~/.bashrc"
+alias alex-sh-conf="$EDITOR ~/.bashrc"
+alias alex-sh-update="source ~/.bashrc"
+
+alias alex-hyprland="$EDITOR .config/hypr/hyprland.conf"
 
 acp() {
     git add .
