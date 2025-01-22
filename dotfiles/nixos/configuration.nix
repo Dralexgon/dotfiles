@@ -210,6 +210,31 @@ in
     ];
   };
 
+  # More complex configuration with the module nix-minecraft
+  service.minecraft = {
+    enable = true;
+    eula = true;
+    declarative = true;# To enable serverProperties
+
+    #package = pkgs.minecraft-server-1-12;
+    #dataDir = "/var/lib/minecraft";
+
+    serverProperties = {
+      gamemode = "survival";
+      difficulty = "normal";
+      #level-seed = "123456789"; etc...
+    };
+
+    whitelist = [
+      alex = "1512b2a9-76f9-46b9-8e85-2aced976a707";
+    ];
+
+    # jvmOptions = [
+    #   "-Xmx1024M"
+    #   "-Xms1024M"
+    # ];
+  };
+
 
 
 
