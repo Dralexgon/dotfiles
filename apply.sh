@@ -1,23 +1,26 @@
 #!/usr/bin/env bash
 
-SYMLINKS=true
+SYMLINKS=false
+REMOVE_TARGET=true # Will remove folder in .config if it already exists
+NIXOS=true         # Will be disabled if not on NixOS, set it to false only if you are on NixOS AND don't want to apply the NixOS configuration
+
 DOTFILES_DIR=./dotfiles
 
 # Gnome
 
-dconf load /org/gnome/shell/extensions/ <$DOTFILES_DIR/gnome/gnome-shell-extensions.dconf
-dconf load /org/gnome/desktop/interface/ <$DOTFILES_DIR/gnome/gnome-settings.dconf
-dconf load /org/gnome/settings-daemon/plugins/media-keys/ <$DOTFILES_DIR/gnome/keyboard-shortcuts.dconf
+# dconf load /org/gnome/shell/extensions/ <$DOTFILES_DIR/gnome/gnome-shell-extensions.dconf
+# dconf load /org/gnome/desktop/interface/ <$DOTFILES_DIR/gnome/gnome-settings.dconf
+# dconf load /org/gnome/settings-daemon/plugins/media-keys/ <$DOTFILES_DIR/gnome/keyboard-shortcuts.dconf
 
-if $SYMLINKS; then
-    ln -s $DOTFILES_DIR/gnome/autostart ~/.config/autostart
-    ln -s $DOTFILES_DIR/gnome/.themes ~/.themes
-    ln -s $DOTFILES_DIR/gnome/.icons ~/.icons
-else
-    cp -r $DOTFILES_DIR/gnome/autostart ~/.config/autostart
-    cp -r $DOTFILES_DIR/gnome/.themes ~/.themes
-    cp -r $DOTFILES_DIR/gnome/.icons ~/.icons
-fi
+# if $SYMLINKS; then
+#     ln -s $DOTFILES_DIR/gnome/autostart ~/.config/autostart
+#     ln -s $DOTFILES_DIR/gnome/.themes ~/.themes
+#     ln -s $DOTFILES_DIR/gnome/.icons ~/.icons
+# else
+#     cp -r $DOTFILES_DIR/gnome/autostart ~/.config/autostart
+#     cp -r $DOTFILES_DIR/gnome/.themes ~/.themes
+#     cp -r $DOTFILES_DIR/gnome/.icons ~/.icons
+# fi
 
 # Bashrc
 
@@ -29,32 +32,34 @@ fi
 
 # Hyprland
 
-if $SYMLINKS; then
-    ln -s $DOTFILES_DIR/hypr ~/.config/hypr
-    ln -s $DOTFILES_DIR/kitty ~/.config/kitty
-    ln -s $DOTFILES_DIR/rofi ~/.config/rofi
-    ln -s $DOTFILES_DIR/waybar ~/.config/waybar
-else
-    cp -r $DOTFILES_DIR/hypr ~/.config/hypr
-    cp -r $DOTFILES_DIR/kitty ~/.config/kitty
-    cp -r $DOTFILES_DIR/rofi ~/.config/rofi
-    cp -r $DOTFILES_DIR/waybar ~/.config/waybar
-fi
-
-# Neovim
-
-if $SYMLINKS; then
-    ln -s $DOTFILES_DIR/nvim ~/.config/nvim
-else
-    cp -r $DOTFILES_DIR/nvim ~/.config/nvim
-fi
+for var in hypr kitty rofi waybar nvim; do
+    if [ ! -d $DOTFILES_DIR/$var ]; then
+        echo "Error: $DOTFILES_DIR/$var does not exist"
+        exit 1
+    fi
+    if [ -e ~/.config/$var ]; then
+        if $REMOVE_TARGET; then
+            rm -r ~/.config/$var
+        else
+            echo "Error: ~/.config/$var already exists"
+            exit 1
+        fi
+    fi
+    if $SYMLINKS; then
+        ln -s $DOTFILES_DIR/$var ~/.config
+    else
+        cp -r $DOTFILES_DIR/$var ~/.config
+    fi
+done
 
 # Nixos
 
-if $SYMLINKS && grep -q nixos </etc/os-release; then
-    ln -s $DOTFILES_DIR/nixos /etc/nixos
-else
-    cp -r $DOTFILES_DIR/nixos /etc/nixos
+if $NIXOS && grep -q nixos </etc/os-release; then
+    if $SYMLINKS; then
+        sudo ln -s $DOTFILES_DIR/nixos /etc
+    else
+        sudo cp -r $DOTFILES_DIR/nixos /etc
+    fi
 fi
 
 echo "Complete"
