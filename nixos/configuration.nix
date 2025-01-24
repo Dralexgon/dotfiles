@@ -63,8 +63,9 @@ in
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
+  # hardware.pulseaudio.enable = false; old versions
   # Enable sound with pipewire.
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
@@ -135,6 +136,7 @@ in
     # 2 discord clients for multiple accounts
     discord
     vesktop
+    element-desktop
 
     # Ricing
     btop
@@ -145,11 +147,6 @@ in
 
     # Games
     prismlauncher # Minecraft launcher
-
-    #gnome-builder
-
-    gnome-tweaks
-    #nix-software-center
   ] ++ (
   if conf_hyprland then
   [
@@ -197,6 +194,22 @@ in
     gns3-server
     gns3-gui
   ] else []
+  ) ++ (
+  if conf_gnome then
+  [
+    gnome-tweaks
+
+    # Gnome music contribution
+    gnome-builder
+    meson
+    typora
+
+    #nix-software-center
+
+    #gnome-shell-extension-dash-to-dock
+    #gnome-shell-extension-appindicator
+    #gnome-shell-extension-user-theme
+  ] else []
   )
   ;
 
@@ -211,29 +224,29 @@ in
   };
 
   # More complex configuration with the module nix-minecraft
-  service.minecraft = {
-    enable = true;
-    eula = true;
-    declarative = true;# To enable serverProperties
+  # services.minecraft = {
+  #   enable = true;
+  #   eula = true;
+  #   declarative = true;# To enable serverProperties
 
-    #package = pkgs.minecraft-server-1-12;
-    #dataDir = "/var/lib/minecraft";
+  #   #package = pkgs.minecraft-server-1-12;
+  #   #dataDir = "/var/lib/minecraft";
 
-    serverProperties = {
-      gamemode = "survival";
-      difficulty = "normal";
-      #level-seed = "123456789"; etc...
-    };
+  #   serverProperties = {
+  #     gamemode = "survival";
+  #     difficulty = "normal";
+  #     #level-seed = "123456789"; etc...
+  #   };
 
-    whitelist = [
-      alex = "1512b2a9-76f9-46b9-8e85-2aced976a707";
-    ];
+  #   whitelist = {
+  #     alex = "1512b2a9-76f9-46b9-8e85-2aced976a707";
+  #   };
 
-    # jvmOptions = [
-    #   "-Xmx1024M"
-    #   "-Xms1024M"
-    # ];
-  };
+  #   # jvmOptions = [
+  #   #   "-Xmx1024M"
+  #   #   "-Xms1024M"
+  #   # ];
+  # };
 
 
 
