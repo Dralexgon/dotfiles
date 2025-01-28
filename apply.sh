@@ -4,7 +4,7 @@ SYMLINKS=false
 REMOVE_TARGET=true # Will remove folder in .config if it already exists
 NIXOS=true         # Will be disabled if not on NixOS, set it to false only if you are on NixOS AND don't want to apply the NixOS configuration
 
-DOTFILES_DIR=./dotfiles
+DOTFILES_DIR=./config
 
 # Gnome
 

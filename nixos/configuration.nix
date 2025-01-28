@@ -88,6 +88,10 @@ in
   networking.hostName = "nixos"; # Define your hostname.
 
   system.autoUpgrade.enable = true;# Enable the automatic upgrade, disabled by default.
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+  
+  # Trying to fix wifi card driver
+  # boot.kernelParams = [ "modprobe.blacklist=rtw88_8821ce" ]; #    rtl8821ce-dkms
 
   # programs.hyprland.enable = conf == 1;
   # services.xserver.desktopManager.gnome.enable = conf == 2;
@@ -117,6 +121,8 @@ in
   # $ nix search wget
   environment.systemPackages =
   with pkgs; [
+
+    # Web browsers
     firefox
 
     # Text editors/IDE
@@ -147,6 +153,7 @@ in
 
     # Games
     prismlauncher # Minecraft launcher
+    unityhub # Unity launcher
   ] ++ (
   if conf_hyprland then
   [
@@ -193,6 +200,7 @@ in
     # Net
     gns3-server
     gns3-gui
+    docker
   ] else []
   ) ++ (
   if conf_gnome then
