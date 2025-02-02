@@ -8,7 +8,10 @@
 
 # Setup your variables
 EDITOR='nvim'
-CONFIGURATION_NIX_FILE='/etc/nixos/configuration.nix'
+#CONFIGURATION_NIX_FILE='/etc/nixos/configuration.nix'
+CONFIGURATION_NIX_FILE=~/OS/alex/nixos/configuration.nix
+
+FLAKE_DIR=~/OS/alex
 
 # Bash prompt
 PINK='\033[01;95m'
@@ -19,8 +22,13 @@ PS1="\
 
 # Nix shortcuts
 alias alex-nix-conf="$EDITOR $CONFIGURATION_NIX_FILE"
-alias alex-nix-rebuild-switch="sudo nixos-rebuild switch"
-alias alex-nix-rebuild-reboot="sudo nixos-rebuild switch && reboot"
+
+#alias alex-nix-rebuild-switch="sudo nixos-rebuild switch"
+#alias alex-nix-rebuild-reboot="sudo nixos-rebuild switch && reboot"
+
+alias alex-nix-rebuild-switch="sudo nixos-rebuild switch --flake $FLAKE_DIR/#default"
+alias alex-nix-rebuild-reboot="sudo nixos-rebuild boot --flake $FLAKE_DIR/#default; reboot"
+
 alias alex-nix-generation-list="nixos-rebuild list-generations"
 alex-nix-clean-generation() { # Usage examples: nix-clean-generation 1 2 3
     sudo nix-env --profile /nix/var/nix/profiles/system --delete-generations "$@"
@@ -34,12 +42,14 @@ alias alex-sh-update="source ~/.bashrc"
 alias alex-hyprland="$EDITOR .config/hypr/hyprland.conf"
 
 acp() {
+    find -iname "*.[ch]" -exec clang-format -i {} \; -exec sed -i -e '$a\' {} \;
     git add .
     git commit -m "$1"
     git push
 }
 
 acpmt() {
+    find -iname "*.[ch]" -exec clang-format -i {} \; -exec sed -i -e '$a\' {} \;
     git add .
     git commit -m "$1"
     git tag -a "$1" -m "$1"
@@ -67,6 +77,26 @@ swapf() {
         echo "Swapped: $file1 <--> $file2"
     else
         echo "Error: File swapping failed."
+    fi
+}
+
+de() {
+    # Move to trash
+    TRASH_DIR="$HOME/.local/share/Trash/files"
+    # Check if file exist
+    if [ -e "$1" ]; then
+        # Check if trash directory exist
+        if [ ! -d "$TRASH_DIR" ]; then
+            TRASH_DIR="$HOME/.Trash"
+        fi
+        if [ -d "$1" ]; then
+            mv -r "$1" "$TRASH_DIR"
+        else
+            mv "$1" "$TRASH_DIR"
+        fi
+        echo "Moved to trash: $1"
+    else
+        echo "Error: File does not exist."
     fi
 }
 
