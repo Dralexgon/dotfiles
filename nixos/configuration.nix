@@ -95,7 +95,10 @@ in
 
   # programs.hyprland.enable = conf == 1;
   # services.xserver.desktopManager.gnome.enable = conf == 2;
-  services.xserver.displayManager.gdm.enable = conf_gnome;
+  services.xserver.displayManager = {
+    gdm.enable = conf_gnome;
+    #gdm.enableGnomeKeyring = conf_gnome;
+  };
   services.xserver.desktopManager.gnome.enable = conf_gnome;
   programs.hyprland.enable = conf_hyprland;
 
@@ -116,6 +119,8 @@ in
   ];
 
   programs.ssh.startAgent = true;
+  # virtualisation.docker.enable = conf_epita;
+  #users.extraGroups.docker.members = [ "alex" ];
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -198,9 +203,13 @@ in
     libtool
 
     # Net
-    gns3-server
-    gns3-gui
-    docker
+    # gns3-server
+    # gns3-gui
+    #docker
+    # dynamips
+    # ubridge
+    # inetutils
+    #maybe: libvirt,kvm,wireshark
   ] else []
   ) ++ (
   if conf_gnome then
@@ -225,10 +234,20 @@ in
   users.users.alex = {
     isNormalUser = true;
     description = "alex";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" "wheel" "docker" ];
     packages = with pkgs; [
       #thunderbird
     ];
+  };
+
+  # Give root permissions to ubridge (/!\ NOT TESTED)
+  security.wrappers = {
+    ubridge = {
+      source = "${pkgs.ubridge}/bin/ubridge";
+      owner = "root";
+      group = "root";
+      permissions = "u+sx,g+sx,o+sx";
+    };
   };
 
   # More complex configuration with the module nix-minecraft
