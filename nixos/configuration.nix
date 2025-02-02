@@ -126,7 +126,6 @@ in
   # $ nix search wget
   environment.systemPackages =
   with pkgs; [
-
     # Web browsers
     firefox
 
@@ -156,6 +155,7 @@ in
     catppuccin-gtk
     python3
     pywal
+    dconf-editor
 
     # Games
     prismlauncher # Minecraft launcher
