@@ -141,6 +141,7 @@ in
     github-desktop
     wget
     tree
+    fragments # Bit toorent client
 
     fzf # Dont really know but seems cool for terminal
 
