@@ -132,7 +132,11 @@ in
     # Text editors/IDE
     vim
     vscode
+
+    # Neovim packages
     neovim
+    jetbrains-mono
+    font-awesome
     nodejs # For copilot nvim
 
     # Simple useful tools
