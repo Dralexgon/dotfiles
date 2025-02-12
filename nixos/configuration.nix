@@ -218,6 +218,7 @@ in
     # Java
     jetbrains.idea-ultimate
     postgresql
+    maven
   ] else []
   ) ++ (
   if conf_gnome then
