@@ -25,9 +25,9 @@ DOTFILES_DIR=./config
 # Bashrc
 
 if $SYMLINKS; then
-    ln -s $DOTFILES_DIR/bash/.bashrc ~/.bashrc
+    ln -s $DOTFILES_DIR/bash/bashrc ~/.bashrc
 else
-    cp $DOTFILES_DIR/bash/.bashrc ~/.bashrc
+    cp $DOTFILES_DIR/bash/bashrc ~/.bashrc
 fi
 
 # Hyprland
@@ -56,9 +56,9 @@ done
 
 if $NIXOS && grep -q nixos </etc/os-release; then
     if $SYMLINKS; then
-        sudo ln -s $DOTFILES_DIR/nixos /etc
+        sudo ln -s nixos /etc
     else
-        sudo cp -r $DOTFILES_DIR/nixos /etc
+        sudo cp -r nixos /etc
     fi
 fi
 

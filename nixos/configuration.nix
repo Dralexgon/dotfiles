@@ -63,9 +63,9 @@ in
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
-  # hardware.pulseaudio.enable = false; old versions
   # Enable sound with pipewire.
-  services.pulseaudio.enable = false;
+  hardware.pulseaudio.enable = false; # old versions
+  # services.pulseaudio.enable = false; # new versions
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
@@ -87,9 +87,9 @@ in
 
   networking.hostName = "nixos"; # Define your hostname.
 
-  system.autoUpgrade.enable = true;# Enable the automatic upgrade, disabled by default.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
-  
+  # system.autoUpgrade.enable = true;# Enable the automatic upgrade, disabled by default.
+  # boot.kernelPackages = pkgs.linuxPackages_latest;
+
   # Trying to fix wifi card driver
   # boot.kernelParams = [ "modprobe.blacklist=rtw88_8821ce" ]; #    rtl8821ce-dkms
 
