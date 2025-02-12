@@ -210,7 +210,10 @@ in
     # dynamips
     # ubridge
     # inetutils
-    #maybe: libvirt,kvm,wireshark
+
+    # Java
+    jetbrains.idea-ultimate
+    postgresql
   ] else []
   ) ++ (
   if conf_gnome then
