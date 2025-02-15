@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, lib, ... }:
+{ config, pkgs, inputs, ... }:
 
 let
   conf_hyprland = true;
@@ -17,8 +17,11 @@ in
     ];
 
   # Bootloader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  # boot.loader.systemd-boot.enable = true;
+  # boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.grub.enable = true;
+  boot.loader.grub.device = "nodev";
+  boot.loader.grub.useOSProber = true;
 
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
@@ -87,11 +90,13 @@ in
 
   networking.hostName = "nixos"; # Define your hostname.
 
-  # system.autoUpgrade.enable = true;# Enable the automatic upgrade, disabled by default.
-  # boot.kernelPackages = pkgs.linuxPackages_latest;
+  system.autoUpgrade.enable = true;# Enable the automatic upgrade, disabled by default.
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   # Trying to fix wifi card driver
   # boot.kernelParams = [ "modprobe.blacklist=rtw88_8821ce" ]; #    rtl8821ce-dkms
+
+  # hardware.opengl.enable = true; # for minecraft forge
 
   # programs.hyprland.enable = conf == 1;
   # services.xserver.desktopManager.gnome.enable = conf == 2;
@@ -106,7 +111,7 @@ in
   services.xserver = {
     enable = conf_gnome;
     xkb = {
-      layout = "fr";
+      layout = "us";
       variant = "";
     };
   };
@@ -137,6 +142,7 @@ in
     neovim
     jetbrains-mono
     font-awesome
+    luarocks
     nodejs # For copilot nvim
 
     # Simple useful tools
@@ -146,20 +152,21 @@ in
     tree
     fragments # Bit toorent client
 
-    fzf # Dont really know but seems cool for terminal
-
     # 2 discord clients for multiple accounts
     discord
     vesktop
-    element-desktop
 
     # Ricing
     btop
     fastfetch
     catppuccin-gtk
-    python3
+    # python3
     pywal
     dconf-editor
+
+    # To draw art
+    python312Full
+    # python3Packages.tkinter
 
     # Games
     prismlauncher # Minecraft launcher
@@ -178,17 +185,18 @@ in
     wl-clipboard # Another clipboard manager
     wlogout # Logout menu
     pavucontrol # Sound GUI
+    networkmanagerapplet # Wifi menu: nm-applet --indicator
 
     # Not tested
     grim # Screenshot
     slurp # Screenshot area selector
     hyprshot # Screenshot
-    networkmanagerapplet # Wifi menu: nm-applet --indicator
 
     #ZaneyOS conf
     eza
     bat
     starship
+    fzf # FuzzyFinder, used to search file. I should use it more
   ] else []
   ) ++ (
   if conf_epita then
@@ -198,24 +206,27 @@ in
     gnumake
 
     # Afs
-    krb5
-    sshfs
+    # krb5
+    # sshfs
 
     # GNU autotools
-    automake
-    autoconf
-    autoconf-archive
-    libtool
+    # automake
+    # autoconf
+    # autoconf-archive
+    # libtool
 
     # Net
     # gns3-server
     # gns3-gui
-    #docker
+    # docker
     # dynamips
     # ubridge
     # inetutils
 
     # Java
+    # (nixpkgs-stable.jetbrains.idea-ultimate)
+    # inputs.nixpkgs-stable.${system}.jetbrains.idea-ultimate
+    # inputs.nixpkgs-stable.packages.${system}.hello
     jetbrains.idea-ultimate
     postgresql
     maven
@@ -226,9 +237,10 @@ in
     gnome-tweaks
 
     # Gnome music contribution
-    gnome-builder
-    meson
-    typora
+    # gnome-builder
+    # meson
+    # typora
+    # element-desktop
 
     #nix-software-center
 
