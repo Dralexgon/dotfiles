@@ -13,27 +13,33 @@
   };
 
   outputs = { self, nixpkgs, catppuccin, home-manager, ... }@inputs: {
-    nixosConfigurations.default = nixpkgs.lib.nixosSystem {
+    nixosConfigurations.alex = nixpkgs.lib.nixosSystem {
       specialArgs = {inherit inputs;};
       modules = [
         ./nixos/configuration.nix
         # inputs.home-manager.nixosModules.default
 
-        catppuccin.nixosModules.catppuccin
-        # if you use home-manager
-        home-manager.nixosModules.home-manager
+        # catppuccin.nixosModules.catppuccin
+        # home-manager.nixosModules.home-manager
 
-        {
-          # if you use home-manager
-          home-manager.users.pepperjack = {
-            imports = [
-              ./nixos/home.nix
-              catppuccin.homeManagerModules.catppuccin
-            ];
-          };
-        }
+        # {
+        #   home-manager.users.alex = {
+        #     imports = [
+        #       ./nixos/home.nix
+        #       catppuccin.homeManagerModules.catppuccin
+        #     ];
+        #   };
+        # }
 
       ];
     };
+
+    # homeConfigurations.pepperjack = home-manager.lib.homeManagerConfiguration {
+    #   pkgs = nixpkgs.legacyPackages.x86_64-linux;
+    #   modules = [
+    #     ./home.nix
+    #     catppuccin.homeManagerModules.catppuccin
+    #   ];
+    # };
   };
 }

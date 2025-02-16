@@ -22,6 +22,13 @@ DOTFILES_DIR=./config
 #     cp -r $DOTFILES_DIR/gnome/.icons ~/.icons
 # fi
 
+# GTK theme
+
+cd /tmp
+git clone https://github.com/Fausto-Korpsvart/Catppuccin-GTK-Theme
+cd Catppuccin-GTK-Theme/themes
+./install.sh -l --theme purple --color dark
+
 # Bashrc
 
 if $SYMLINKS; then
