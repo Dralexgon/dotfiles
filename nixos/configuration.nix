@@ -14,7 +14,9 @@ in
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      inputs.nix-minecraft.nixosModules.minecraft-servers
     ];
+  nixpkgs.overlays = [ inputs.nix-minecraft.overlay ];
 
   # Bootloader.
   # boot.loader.systemd-boot.enable = true;
@@ -163,6 +165,9 @@ in
     # python3
     pywal
     dconf-editor
+    nwg-look
+    home-manager
+    gnomeExtensions.user-themes
 
     # To draw art
     python312Full
@@ -271,30 +276,19 @@ in
     };
   };
 
-  # More complex configuration with the module nix-minecraft
-  # services.minecraft = {
-  #   enable = true;
-  #   eula = true;
-  #   declarative = true;# To enable serverProperties
+  services.minecraft-servers = {
+    enable = true;
+    eula = true;
 
-  #   #package = pkgs.minecraft-server-1-12;
-  #   #dataDir = "/var/lib/minecraft";
+    servers = {
+      uwu = {
+        enable = true;
+        openFirewall = true;
+      };
+    };
+  };
 
-  #   serverProperties = {
-  #     gamemode = "survival";
-  #     difficulty = "normal";
-  #     #level-seed = "123456789"; etc...
-  #   };
-
-  #   whitelist = {
-  #     alex = "1512b2a9-76f9-46b9-8e85-2aced976a707";
-  #   };
-
-  #   # jvmOptions = [
-  #   #   "-Xmx1024M"
-  #   #   "-Xms1024M"
-  #   # ];
-  # };
+  hardware.openrazer.enable = true;
 
 
 
