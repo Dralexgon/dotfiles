@@ -141,7 +141,9 @@ in
 
     # Neovim packages
     neovim
+    lua
     luarocks
+    lazygit
     nodejs # For copilot nvim
 
     # Nerd fonts for Neovim
