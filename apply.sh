@@ -66,12 +66,12 @@ done
 
 # Nixos
 
-if $NIXOS && grep -q nixos </etc/os-release; then
-    if $SYMLINKS; then
-        sudo ln -s nixos /etc
-    else
-        sudo cp -r nixos /etc
-    fi
-fi
+# if $NIXOS && grep -q nixos </etc/os-release; then
+#     if $SYMLINKS; then
+#         sudo ln -s nixos /etc
+#     else
+#         sudo cp -r nixos /etc
+#     fi
+# fi
 
-echo "Complete"
+echo "Completed"

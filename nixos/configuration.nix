@@ -46,25 +46,12 @@ in
     LC_TIME = "fr_FR.UTF-8";
     LC_ALL = "en_US.UTF-8";
   };
-  # i18n.defaultLocale = "en_US.UTF-8";
-  # i18n.extraLocaleSettings = {
-  #   LC_ADDRESS = "en_EN.UTF-8";
-  #   LC_IDENTIFICATION = "en_EN.UTF-8";
-  #   LC_MEASUREMENT = "en_EN.UTF-8";
-  #   LC_MONETARY = "en_EN.UTF-8";
-  #   LC_NAME = "en_EN.UTF-8";
-  #   LC_NUMERIC = "en_EN.UTF-8";
-  #   LC_PAPER = "en_EN.UTF-8";
-  #   LC_TELEPHONE = "en_EN.UTF-8";
-  #   LC_TIME = "en_EN.UTF-8";
-  #   #LC_ALL="C";
-  # };
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
   # Configure console keymap
-  console.keyMap = "fr";
+  console.keyMap = "us";
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
@@ -128,7 +115,7 @@ in
 
   programs.ssh.startAgent = true;
   # virtualisation.docker.enable = conf_epita;
-  #users.extraGroups.docker.members = [ "alex" ];
+  # users.extraGroups.docker.members = [ "alex" ];
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -248,6 +235,7 @@ in
   ) ++ (
   if conf_gnome then
   [
+    (nixpkgs-unstable.blackbox-terminal) # Better gnome terminal, can use themes
     gnome-tweaks
 
     # Gnome music contribution
@@ -277,14 +265,14 @@ in
   };
 
   # Give root permissions to ubridge (/!\ NOT TESTED)
-  security.wrappers = {
-    ubridge = {
-      source = "${pkgs.ubridge}/bin/ubridge";
-      owner = "root";
-      group = "root";
-      permissions = "u+sx,g+sx,o+sx";
-    };
-  };
+  # security.wrappers = {
+  #   ubridge = {
+  #     source = "${pkgs.ubridge}/bin/ubridge";
+  #     owner = "root";
+  #     group = "root";
+  #     permissions = "u+sx,g+sx,o+sx";
+  #   };
+  # };
 
   # services.minecraft-servers = {
   #   enable = false;

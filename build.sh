@@ -4,4 +4,4 @@ if [ ! -e nixos/hardware-configuration.nix ] || ! diff nixos/hardware-configurat
     sudo cp nixos/hardware-configuration.nix /etc/nixos/hardware-configuration.nix
 fi
 
-sudo nixos-rebuild boot --flake .#alex
+sudo nixos-rebuild switch --flake .#host-RTX3060-alex
