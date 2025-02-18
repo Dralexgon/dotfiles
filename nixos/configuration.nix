@@ -19,11 +19,11 @@ in
   nixpkgs.overlays = [ inputs.nix-minecraft.overlay ];
 
   # Bootloader.
-  # boot.loader.systemd-boot.enable = true;
-  # boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.grub.enable = true;
-  boot.loader.grub.device = "nodev";
-  boot.loader.grub.useOSProber = true;
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  # boot.loader.grub.enable = true;
+  # boot.loader.grub.device = "nodev";
+  # boot.loader.grub.useOSProber = true;
 
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
@@ -141,10 +141,17 @@ in
 
     # Neovim packages
     neovim
-    jetbrains-mono
-    font-awesome
     luarocks
     nodejs # For copilot nvim
+
+    # Nerd fonts for Neovim
+    jetbrains-mono
+    font-awesome
+    # Not sure if the following fonts are needed
+    noto-fonts-emoji
+    noto-fonts-cjk-sans
+    symbola
+    material-icons
 
     # Simple useful tools
     git
@@ -152,7 +159,7 @@ in
     wget
     tree
     fragments # Bit toorent client
-    gcolor3
+    gcolor3 # Color picker
 
     # 2 discord clients for multiple accounts
     discord
@@ -162,7 +169,7 @@ in
     btop
     fastfetch
     catppuccin-gtk
-    # python3
+    python3
     pywal
     dconf-editor
     nwg-look
@@ -171,7 +178,7 @@ in
     gnomeExtensions.custom-accent-colors
 
     # To draw art
-    python312Full
+    # python312Full
     # python3Packages.tkinter
 
     # Games
@@ -230,12 +237,9 @@ in
     # inetutils
 
     # Java
-    # (nixpkgs-stable.jetbrains.idea-ultimate)
-    # inputs.nixpkgs-stable.${system}.jetbrains.idea-ultimate
-    # inputs.nixpkgs-stable.packages.${system}.hello
-    jetbrains.idea-ultimate
-    postgresql
-    maven
+    # jetbrains.idea-ultimate
+    # postgresql
+    # maven
   ] else []
   ) ++ (
   if conf_gnome then
@@ -243,8 +247,9 @@ in
     gnome-tweaks
 
     # Gnome music contribution
-    # gnome-builder
-    # meson
+    gnome-builder
+    meson
+    pkg-config
     # typora
     # element-desktop
 
