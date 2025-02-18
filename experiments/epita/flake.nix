@@ -11,5 +11,8 @@
   in
   {
     packages.x86_64-linux.default = pkgs.hello;
+    # packages.x86_64-linux.default = with pkgs; [
+    #   hello
+    # ];
   };
 }

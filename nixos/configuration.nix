@@ -8,6 +8,7 @@ let
   conf_hyprland = true;
   conf_gnome = true;
   conf_epita = true;
+  nixpkgs-unstable = inputs.nixpkgs-unstable.legacyPackages."x86_64-linux";
 in
 
 {
@@ -17,6 +18,9 @@ in
       inputs.nix-minecraft.nixosModules.minecraft-servers
     ];
   nixpkgs.overlays = [ inputs.nix-minecraft.overlay ];
+  # nixpkgs-unstable = import inputs.nixpkgs-unstable;
+  # nixpkgs-unstable = import inputs.nixpkgs-unstable { system = "x86_64-linux";};
+  # nixpkgs-unstable = import inputs.nixpkgs-unstable.legacyPackages."x86_64-linux";
 
   # Bootloader.
   # boot.loader.systemd-boot.enable = true;
@@ -235,7 +239,8 @@ in
   ) ++ (
   if conf_gnome then
   [
-    (nixpkgs-unstable.blackbox-terminal) # Better gnome terminal, can use themes
+    # (inputs.nixpkgs-unstable.blackbox-terminal) # Better gnome terminal, can use themes
+    nixpkgs-unstable.blackbox-terminal # Better gnome terminal, can use themes
     gnome-tweaks
 
     # Gnome music contribution
