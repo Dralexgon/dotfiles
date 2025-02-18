@@ -175,6 +175,7 @@ in
     nwg-look
     home-manager
     gnomeExtensions.user-themes
+    catppuccin-cursors.macchiatoMauve
     gnomeExtensions.custom-accent-colors
 
     # To draw art
