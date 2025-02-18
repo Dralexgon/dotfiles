@@ -15,6 +15,7 @@
   outputs = { self, nixpkgs, catppuccin, home-manager, ... }@inputs: {
     nixosConfigurations.alex = nixpkgs.lib.nixosSystem {
       specialArgs = {inherit inputs;};
+      # inherit inputs;
       modules = [
         ./nixos/configuration.nix
         # inputs.home-manager.nixosModules.default

@@ -27,7 +27,12 @@ DOTFILES_DIR=./config
 cd /tmp
 git clone https://github.com/Fausto-Korpsvart/Catppuccin-GTK-Theme
 cd Catppuccin-GTK-Theme/themes
+nix-shell -p sassc
 ./install.sh -l --theme purple --color dark
+cd ..
+mkdir -p ~/.icons
+cp -r icons/Catppuccin-Macchiato ~/.icons
+find . -type f -name 'folder-oomox*.svg' -exec sed -i 's/7DC4E4/CBA6F7/g' {} +
 
 # Bashrc
 
