@@ -9,7 +9,7 @@
 # Setup your variables
 EDITOR='nvim'
 #CONFIGURATION_NIX_FILE='/etc/nixos/configuration.nix'
-CONFIGURATION_NIX_FILE=~/OS/alex/nixos/configuration.nix
+CONFIGURATION_NIX_FILE=~/dotfiles/nixos/configuration.nix
 
 FLAKE_DIR=~/OS/alex
 
@@ -30,7 +30,7 @@ alias alex-nix-rebuild-switch="sudo nixos-rebuild switch --flake $FLAKE_DIR/#def
 alias alex-nix-rebuild-reboot="sudo nixos-rebuild boot --flake $FLAKE_DIR/#default; reboot"
 
 alias alex-nix-generation-list="nixos-rebuild list-generations"
-alex-nix-clean-generation() { # Usage examples: nix-clean-generation 1 2 3
+alex-nix-generation-clean() { # Usage examples: nix-clean-generation 1 2 3
     sudo nix-env --profile /nix/var/nix/profiles/system --delete-generations "$@"
     nix-collect-garbage
 }

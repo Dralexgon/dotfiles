@@ -26,7 +26,10 @@ DOTFILES_DIR=./config
 
 cd /tmp
 git clone https://github.com/Fausto-Korpsvart/Catppuccin-GTK-Theme
+mkdir -p ~/.icons
+cp -r icons/Catppuccin-Macchiato ~/.icons
 cd Catppuccin-GTK-Theme/themes
+nix-shell -p sassc
 ./install.sh -l --theme purple --color dark
 
 # Bashrc

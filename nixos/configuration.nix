@@ -131,8 +131,7 @@ in
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-  environment.systemPackages =
-  with pkgs; [
+  environment.systemPackages = with pkgs; [
     # Web browsers
     firefox
 
@@ -153,6 +152,7 @@ in
     wget
     tree
     fragments # Bit toorent client
+    gcolor3
 
     # 2 discord clients for multiple accounts
     discord
@@ -168,6 +168,7 @@ in
     nwg-look
     home-manager
     gnomeExtensions.user-themes
+    gnomeExtensions.custom-accent-colors
 
     # To draw art
     python312Full
@@ -276,17 +277,17 @@ in
     };
   };
 
-  services.minecraft-servers = {
-    enable = true;
-    eula = true;
-
-    servers = {
-      uwu = {
-        enable = true;
-        openFirewall = true;
-      };
-    };
-  };
+  # services.minecraft-servers = {
+  #   enable = false;
+  #   eula = true;
+  #
+  #   servers = {
+  #     uwu = {
+  #       enable = true;
+  #       openFirewall = true;
+  #     };
+  #   };
+  # };
 
   hardware.openrazer.enable = true;
 

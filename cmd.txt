@@ -1,0 +1,1 @@
+find . -type f -name folder-oomox*.svg  -exec sed -i 's/7DC4E4/CBA6F7/g' {} +
