@@ -11,7 +11,7 @@ EDITOR='nvim'
 #CONFIGURATION_NIX_FILE='/etc/nixos/configuration.nix'
 CONFIGURATION_NIX_FILE=~/dotfiles/nixos/configuration.nix
 
-FLAKE_DIR=~/OS/alex
+FLAKE_DIR=~/dotfiles
 
 # Bash prompt
 PINK='\033[01;95m'

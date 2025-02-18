@@ -8,7 +8,8 @@ let
   conf_hyprland = true;
   conf_gnome = true;
   conf_epita = true;
-  nixpkgs-unstable = inputs.nixpkgs-unstable.legacyPackages."x86_64-linux";
+  conf_razer = true;
+  nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
 in
 
 {
@@ -18,17 +19,19 @@ in
       inputs.nix-minecraft.nixosModules.minecraft-servers
     ];
   nixpkgs.overlays = [ inputs.nix-minecraft.overlay ];
-  # nixpkgs-unstable = import inputs.nixpkgs-unstable;
-  # nixpkgs-unstable = import inputs.nixpkgs-unstable { system = "x86_64-linux";};
-  # nixpkgs-unstable = import inputs.nixpkgs-unstable.legacyPackages."x86_64-linux";
 
   # Bootloader.
-  # boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.grub.efiSupport = true;
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "nodev";
   boot.loader.grub.useOSProber = true;
+  # boot.loader.systemd-boot.enable = true;
+
+  fileSystems."/mnt/ubuntu" = {
+    device = "/dev/nvme0n1p4";
+    options = ["nofail"];
+  };
 
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
@@ -117,6 +120,11 @@ in
     pkgs.xdg-desktop-portal-hyprland
   ];
 
+
+  # services.flatpak.enable = true;
+  # flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+
   programs.ssh.startAgent = true;
   # virtualisation.docker.enable = conf_epita;
   # users.extraGroups.docker.members = [ "alex" ];
@@ -194,8 +202,6 @@ in
     wlogout # Logout menu
     pavucontrol # Sound GUI
     networkmanagerapplet # Wifi menu: nm-applet --indicator
-
-    # Not tested
     grim # Screenshot
     slurp # Screenshot area selector
     hyprshot # Screenshot
@@ -214,14 +220,14 @@ in
     gnumake
 
     # Afs
-    # krb5
-    # sshfs
+    krb5
+    sshfs
 
     # GNU autotools
-    # automake
-    # autoconf
-    # autoconf-archive
-    # libtool
+    automake
+    autoconf
+    autoconf-archive
+    libtool
 
     # Net
     # gns3-server
@@ -232,22 +238,26 @@ in
     # inetutils
 
     # Java
-    # jetbrains.idea-ultimate
+    # nixpkgs-stable.jetbrains.idea-ultimate
     # postgresql
     # maven
   ] else []
   ) ++ (
   if conf_gnome then
   [
-    # (inputs.nixpkgs-unstable.blackbox-terminal) # Better gnome terminal, can use themes
-    nixpkgs-unstable.blackbox-terminal # Better gnome terminal, can use themes
     gnome-tweaks
+    # Better gnome terminal and can use themes but
+    # must be installed with flatpak for full features.
+    # Unfortunately, NixOS and other package managers... You know
+    blackbox-terminal
+    # gnome-software
+    # flatpak
 
     # Gnome music contribution
     gnome-builder
     meson
     pkg-config
-    # typora
+    # apostrophe # Markdown editor
     # element-desktop
 
     #nix-software-center
