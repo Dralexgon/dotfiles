@@ -168,6 +168,7 @@ in
     nwg-look
     home-manager
     gnomeExtensions.user-themes
+    catppuccin-cursors.macchiatoMauve
 
     # To draw art
     python312Full
