@@ -2,10 +2,15 @@
   description = "Nixos config flake";
 
   inputs = {
+    # Change depending on your prefered version
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-24.11";
-    # nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+
+
     nix-minecraft.url = "github:Infinidoge/nix-minecraft";
+    boot-animation.url = "github:Melkor333/nixos-boot";
     # catppuccin.url = "github:catppuccin/nix";
     # home-manager = {
     #   url = "github:nix-community/home-manager";
@@ -18,6 +23,8 @@
       specialArgs = {inherit inputs;};
       modules = [
         ./nixos/configuration.nix
+
+        inputs.boot-animation.nixosModules.default
         # inputs.home-manager.nixosModules.default
 
         # catppuccin.nixosModules.catppuccin

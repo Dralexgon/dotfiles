@@ -1,5 +1,20 @@
 {
   "nodes": {
+    "boot-animation": {
+      "locked": {
+        "lastModified": 1722927293,
+        "narHash": "sha256-8oCsiFyAuidAdhSz60Lu8+TwCPHxaeWixyv0xT0mLt4=",
+        "owner": "Melkor333",
+        "repo": "nixos-boot",
+        "rev": "afaed735149d0a06f234e54dd2d9db2e18dc64ae",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Melkor333",
+        "repo": "nixos-boot",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -86,6 +101,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-unstable": {
+      "locked": {
+        "lastModified": 1739866667,
+        "narHash": "sha256-EO1ygNKZlsAC9avfcwHkKGMsmipUk1Uc0TbrEZpkn64=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "73cf49b8ad837ade2de76f87eb53fc85ed5d4680",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixpkgs_2": {
       "locked": {
         "lastModified": 1739736696,
@@ -104,9 +135,11 @@
     },
     "root": {
       "inputs": {
+        "boot-animation": "boot-animation",
         "nix-minecraft": "nix-minecraft",
         "nixpkgs": "nixpkgs_2",
-        "nixpkgs-stable": "nixpkgs-stable"
+        "nixpkgs-stable": "nixpkgs-stable",
+        "nixpkgs-unstable": "nixpkgs-unstable"
       }
     },
     "systems": {
