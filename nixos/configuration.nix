@@ -170,15 +170,19 @@ in
     # Ricing
     btop
     fastfetch
-    catppuccin-gtk
     python3
     pywal
     dconf-editor
     nwg-look
     home-manager
     gnomeExtensions.user-themes
-    catppuccin-cursors.macchiatoMauve
     gnomeExtensions.custom-accent-colors
+
+    # catppuccin rice
+    catppuccin-cursors.macchiatoMauve
+    catppuccin-gtk
+    catppuccin-grub
+    catppuccin-plymouth
 
     # To draw art
     # python312Full
