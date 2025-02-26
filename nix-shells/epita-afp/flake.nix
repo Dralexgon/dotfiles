@@ -17,7 +17,7 @@
       ];
 
       shellHook = ''
-        echo "${description}"
+        echo "Compilateurs haskell et lisp pour Approches Fonctionnelles de la Programmation";
       '';
     };
   };

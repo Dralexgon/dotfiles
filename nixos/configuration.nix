@@ -167,18 +167,12 @@ in
     discord
     vesktop
 
-    # Ricing
+    # General ricing
     btop
     fastfetch
-    catppuccin-gtk
-    python3
-    pywal
     dconf-editor
     nwg-look
     home-manager
-    gnomeExtensions.user-themes
-    catppuccin-cursors.macchiatoMauve
-    gnomeExtensions.custom-accent-colors
 
     # To draw art
     # python312Full
@@ -205,6 +199,10 @@ in
     grim # Screenshot
     slurp # Screenshot area selector
     hyprshot # Screenshot
+
+    # Ricing
+    python3
+    pywal
 
     #ZaneyOS conf
     eza
@@ -257,6 +255,9 @@ in
     gnome-builder
     meson
     pkg-config
+    libadwaita
+    gtk4
+    flatpak-builder
     # apostrophe # Markdown editor
     # element-desktop
 
@@ -265,9 +266,17 @@ in
     #gnome-shell-extension-dash-to-dock
     #gnome-shell-extension-appindicator
     #gnome-shell-extension-user-theme
+    
+    # Gnome ricing
+    catppuccin-gtk
+    gnomeExtensions.user-themes
+    catppuccin-cursors.macchiatoMauve
+    gnomeExtensions.custom-accent-colors
   ] else []
   )
   ;
+
+  services.flatpak.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.alex = {
