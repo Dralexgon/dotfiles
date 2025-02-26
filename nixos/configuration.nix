@@ -20,12 +20,24 @@ in
     ];
   nixpkgs.overlays = [ inputs.nix-minecraft.overlay ];
 
+  # Added by flake boot-animation
+  # nixos-boot = {
+  #   enable = true;
+  #   theme = "evil-nixos";
+  # };
+
   # Bootloader.
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.grub.efiSupport = true;
-  boot.loader.grub.enable = true;
-  boot.loader.grub.device = "nodev";
-  boot.loader.grub.useOSProber = true;
+  boot.loader.grub = {
+    enable = true;
+    efiSupport = true;
+    device = "nodev";
+    useOSProber = true;
+    theme = pkgs.catppuccin-grub;
+  };
+  boot.plymouth.enable = true;
+  boot.plymouth.themePackages = [ pkgs.catppuccin-plymouth ];
+  # boot.plymouth.theme = "catppuccin";
   # boot.loader.systemd-boot.enable = true;
 
   fileSystems."/mnt/ubuntu" = {
@@ -162,6 +174,7 @@ in
     tree
     fragments # Bit toorent client
     gcolor3 # Color picker
+    amberol
 
     # 2 discord clients for multiple accounts
     discord
@@ -173,6 +186,15 @@ in
     dconf-editor
     nwg-look
     home-manager
+    python3
+    pywal
+    dconf-editor
+    nwg-look
+    home-manager
+
+    # catppuccin rice
+    catppuccin-cursors.macchiatoMauve
+    catppuccin-gtk
 
     # To draw art
     # python312Full
@@ -244,6 +266,9 @@ in
   if conf_gnome then
   [
     gnome-tweaks
+    gnome-extension-manager
+    gnomeExtensions.user-themes
+    gnomeExtensions.custom-accent-colors
     # Better gnome terminal and can use themes but
     # must be installed with flatpak for full features.
     # Unfortunately, NixOS and other package managers... You know
