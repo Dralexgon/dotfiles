@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, inputs, ... }:
+{ config, pkgs, lib, inputs, ... }:
 
 let
   conf_hyprland = true;
@@ -40,10 +40,10 @@ in
   # boot.plymouth.theme = "catppuccin";
   # boot.loader.systemd-boot.enable = true;
 
-  fileSystems."/mnt/ubuntu" = {
-    device = "/dev/nvme0n1p4";
-    options = ["nofail"];
-  };
+  # fileSystems."/mnt/ubuntu" = {
+  #   device = "/dev/nvme0n1p4";
+  #   options = ["nofail"];
+  # };
 
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
@@ -102,10 +102,30 @@ in
   system.autoUpgrade.enable = true;# Enable the automatic upgrade, disabled by default.
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
+
   # Trying to fix wifi card driver
+  boot.blacklistedKernelModules = [ "wlp10s0" ]; # "rtw88_8821ce" "rtl8822ce" ];
   # boot.kernelParams = [ "modprobe.blacklist=rtw88_8821ce" ]; #    rtl8821ce-dkms
 
-  # hardware.opengl.enable = true; # for minecraft forge
+  # Todo: try that
+  # boot.extraModprobeConfig = "blacklist wlp10s0";
+
+  hardware.graphics = { # for minecraft forge
+    enable = true;
+  };
+
+  # Load nvidia driver for Xorg and Wayland
+  services.xserver.videoDrivers = ["nvidia"];
+
+  hardware.nvidia = {
+    modesetting.enable = true;
+    powerManagement.enable = false;
+    powerManagement.finegrained = false;
+    open = false;
+    nvidiaSettings = true;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
+
 
   # programs.hyprland.enable = conf == 1;
   # services.xserver.desktopManager.gnome.enable = conf == 2;
@@ -141,6 +161,26 @@ in
   # virtualisation.docker.enable = conf_epita;
   # users.extraGroups.docker.members = [ "alex" ];
 
+
+  fonts.packages = with pkgs; [
+    # nerdfonts
+    # Nerd fonts for Neovim
+    # jetbrains-mono
+    nerd-fonts.jetbrains-mono
+    # nerd-fonts.symbols-only
+    # nerd-fonts.font-awesome
+    # font-awesome
+    # Not sure if the following fonts are needed
+    # noto-fonts-emoji
+    # noto-fonts-cjk-sans
+    # symbola
+    # material-icons
+  ];
+
+
+  # fonts.packages = [ pkgs.nerd-fonts.jetbrains-mono ] ++ builtins.filter lib.attrsets.isDerivation (builtins.attrValues pkgs.nerd-fonts);
+  # fonts.fontDir.enable = true;
+
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
@@ -150,31 +190,31 @@ in
     # Text editors/IDE
     vim
     vscode
+    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.clion ["github-copilot"])
+    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.idea-ultimate ["github-copilot"])
 
     # Neovim packages
     neovim
     lua
-    luarocks
-    lazygit
-    nodejs # For copilot nvim
-
-    # Nerd fonts for Neovim
+    cargo
     jetbrains-mono
     font-awesome
-    # Not sure if the following fonts are needed
-    noto-fonts-emoji
-    noto-fonts-cjk-sans
-    symbola
-    material-icons
+    luarocks
+    lazygit
+    fd
+    ripgrep
+    nodejs # For copilot nvim
 
     # Simple useful tools
     git
     github-desktop
     wget
+    unzip
     tree
     fragments # Bit toorent client
     gcolor3 # Color picker
     amberol
+    xorg.xkill
 
     # 2 discord clients for multiple accounts
     discord
@@ -188,6 +228,9 @@ in
     dconf-editor
     nwg-look
     home-manager
+    polychromatic
+
+    eww # This can be used to create a custom bar. I will try to do my own menu with it
 
     # catppuccin rice
     catppuccin-cursors.macchiatoMauve
@@ -198,8 +241,24 @@ in
     # python3Packages.tkinter
 
     # Games
-    prismlauncher # Minecraft launcher
     unityhub # Unity launcher
+
+    # Minecraft
+    prismlauncher # Minecraft launcher
+    (pkgs.modrinth-app.overrideAttrs (oldAttrs: {
+      buildCommand =
+        ''
+          gappsWrapperArgs+=(
+             --set WEBKIT_DISABLE_DMABUF_RENDERER 1
+          )
+        ''
+        + oldAttrs.buildCommand;
+    }))
+    # modrinth-app
+    # zulu17
+    zulu21
+
+    libglvnd # For minecraft forge
   ] ++ (
   if conf_hyprland then
   [
@@ -228,9 +287,16 @@ in
   ) ++ (
   if conf_epita then
   [
-    # C language
+    # C
     gcc
     gnumake
+    clang-tools
+
+    # C++
+    gcc
+    gnumake
+    clang-tools
+    cmake
 
     # Afs
     krb5
@@ -261,7 +327,9 @@ in
     gnome-tweaks
     gnome-extension-manager
     gnomeExtensions.user-themes
+    gnomeExtensions.blur-my-shell
     gnomeExtensions.custom-accent-colors
+    gnomeExtensions.dash2dock-lite
     # Better gnome terminal and can use themes but
     # must be installed with flatpak for full features.
     # Unfortunately, NixOS and other package managers... You know
@@ -318,6 +386,7 @@ in
   # };
 
   hardware.openrazer.enable = true;
+  hardware.openrazer.users = ["alex"];
 
 
 
