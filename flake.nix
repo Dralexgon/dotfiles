@@ -19,6 +19,9 @@
   };
 
   outputs = { self, nixpkgs,  ... }@inputs: {
+
+    nixosConfigurations."nixos" = self.nixosConfigurations."host-RTX3060-alex";
+
     nixosConfigurations."host-RTX3060-alex" = nixpkgs.lib.nixosSystem {
       specialArgs = {inherit inputs;};
       modules = [
