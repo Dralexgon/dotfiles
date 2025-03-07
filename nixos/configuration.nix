@@ -45,6 +45,12 @@ in
   #   options = ["nofail"];
   # };
 
+  swapDevices = [{
+    device = "/swapfile";
+    size = 16 * 1024; # 16GB
+  }];
+
+
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Enable networking
@@ -115,16 +121,16 @@ in
   };
 
   # Load nvidia driver for Xorg and Wayland
-  services.xserver.videoDrivers = ["nvidia"];
-
-  hardware.nvidia = {
-    modesetting.enable = true;
-    powerManagement.enable = false;
-    powerManagement.finegrained = false;
-    open = false;
-    nvidiaSettings = true;
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
-  };
+  # services.xserver.videoDrivers = ["nvidia"];
+  #
+  # hardware.nvidia = {
+  #   modesetting.enable = true;
+  #   powerManagement.enable = false;
+  #   powerManagement.finegrained = false;
+  #   open = false;
+  #   nvidiaSettings = true;
+  #   package = config.boot.kernelPackages.nvidiaPackages.stable;
+  # };
 
 
   # programs.hyprland.enable = conf == 1;
@@ -165,8 +171,8 @@ in
   fonts.packages = with pkgs; [
     # nerdfonts
     # Nerd fonts for Neovim
-    # jetbrains-mono
-    nerd-fonts.jetbrains-mono
+    jetbrains-mono
+    # nerd-fonts.jetbrains-mono
     # nerd-fonts.symbols-only
     # nerd-fonts.font-awesome
     # font-awesome
@@ -176,6 +182,7 @@ in
     # symbola
     # material-icons
   ];
+
 
 
   # fonts.packages = [ pkgs.nerd-fonts.jetbrains-mono ] ++ builtins.filter lib.attrsets.isDerivation (builtins.attrValues pkgs.nerd-fonts);
@@ -197,8 +204,8 @@ in
     neovim
     lua
     cargo
-    jetbrains-mono
-    font-awesome
+    # jetbrains-mono
+    # font-awesome
     luarocks
     lazygit
     fd
@@ -248,15 +255,16 @@ in
 
     # Minecraft
     prismlauncher # Minecraft launcher
-    (pkgs.modrinth-app.overrideAttrs (oldAttrs: {
-      buildCommand =
-        ''
-          gappsWrapperArgs+=(
-             --set WEBKIT_DISABLE_DMABUF_RENDERER 1
-          )
-        ''
-        + oldAttrs.buildCommand;
-    }))
+    # modrinth-app # Modrinth launcher
+    # (pkgs.modrinth-app.overrideAttrs (oldAttrs: {
+    #   buildCommand =
+    #     ''
+    #       gappsWrapperArgs+=(
+    #          --set WEBKIT_DISABLE_DMABUF_RENDERER 1
+    #       )
+    #     ''
+    #     + oldAttrs.buildCommand;
+    # }))
     # modrinth-app
     # zulu17
     zulu21
@@ -325,8 +333,8 @@ in
 
     # Java
     # nixpkgs-stable.jetbrains.idea-ultimate
-    # postgresql
-    # maven
+    postgresql
+    maven
   ] else []
   ) ++ (
   if conf_gnome then

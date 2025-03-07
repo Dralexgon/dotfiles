@@ -26,24 +26,33 @@
       specialArgs = {inherit inputs;};
       modules = [
         ./nixos/configuration.nix
-
+        # ./nixos/modules/core/epita.nix
         inputs.boot-animation.nixosModules.default
-        # inputs.home-manager.nixosModules.default
-
-        # catppuccin.nixosModules.catppuccin
-        # home-manager.nixosModules.home-manager
-
-        # {
-        #   home-manager.users.alex = {
-        #     imports = [
-        #       ./nixos/home.nix
-        #       catppuccin.homeManagerModules.catppuccin
-        #     ];
-        #   };
-        # }
-
       ];
     };
+
+    # nixosConfigurations."host-RTX3060-alex" = nixpkgs.lib.nixosSystem {
+    #   specialArgs = {inherit inputs;};
+    #   modules = [
+    #     ./nixos/configuration.nix
+    #
+    #     inputs.boot-animation.nixosModules.default
+    #     # inputs.home-manager.nixosModules.default
+    #
+    #     # catppuccin.nixosModules.catppuccin
+    #     # home-manager.nixosModules.home-manager
+    #
+    #     # {
+    #     #   home-manager.users.alex = {
+    #     #     imports = [
+    #     #       ./nixos/home.nix
+    #     #       catppuccin.homeManagerModules.catppuccin
+    #     #     ];
+    #     #   };
+    #     # }
+    #
+    #   ];
+    # };
 
     # homeConfigurations.pepperjack = home-manager.lib.homeManagerConfiguration {
     #   pkgs = nixpkgs.legacyPackages.x86_64-linux;
