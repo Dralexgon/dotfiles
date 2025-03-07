@@ -45,10 +45,10 @@ in
   #   options = ["nofail"];
   # };
 
-  swapDevices = [{
-    device = "/swapfile";
-    size = 16 * 1024; # 16GB
-  }];
+  # swapDevices = [{
+  #   device = "/swapfile";
+  #   size = 8 * 1024; # 16GB
+  # }];
 
 
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -183,9 +183,6 @@ in
     # material-icons
   ];
 
-
-
-  # fonts.packages = [ pkgs.nerd-fonts.jetbrains-mono ] ++ builtins.filter lib.attrsets.isDerivation (builtins.attrValues pkgs.nerd-fonts);
   # fonts.fontDir.enable = true;
 
   # List packages installed in system profile. To search, run:
@@ -214,7 +211,6 @@ in
 
     # Simple useful tools
     git
-    github-desktop
     wget
     unzip
     tree
@@ -223,22 +219,24 @@ in
     amberol
     xorg.xkill
 
+    # Simple useful tools for Nixos
+    nix-output-monitor
+    nvd
+    nh
+
     # 2 discord clients for multiple accounts
     discord
     vesktop
 
     # General ricing
-    btop
-    fastfetch
+    fastfetch # Most important ricing tool (that's the nice logo in the terminal)
+    btop # System monitor
     dconf-editor
     nwg-look
     home-manager
     python3
     pywal
-    dconf-editor
-    nwg-look
-    home-manager
-    polychromatic
+    polychromatic # Razer GUI
 
     eww # This can be used to create a custom bar. I will try to do my own menu with it
 
@@ -256,16 +254,15 @@ in
     # Minecraft
     prismlauncher # Minecraft launcher
     # modrinth-app # Modrinth launcher
-    # (pkgs.modrinth-app.overrideAttrs (oldAttrs: {
-    #   buildCommand =
-    #     ''
-    #       gappsWrapperArgs+=(
-    #          --set WEBKIT_DISABLE_DMABUF_RENDERER 1
-    #       )
-    #     ''
-    #     + oldAttrs.buildCommand;
-    # }))
-    # modrinth-app
+    (pkgs.modrinth-app.overrideAttrs (oldAttrs: {
+      buildCommand =
+        ''
+          gappsWrapperArgs+=(
+             --set WEBKIT_DISABLE_DMABUF_RENDERER 1
+          )
+        ''
+        + oldAttrs.buildCommand;
+    }))
     # zulu17
     zulu21
 
@@ -339,6 +336,8 @@ in
   ) ++ (
   if conf_gnome then
   [
+    tilix
+
     gnome-tweaks
     gnome-extension-manager
     gnomeExtensions.user-themes
