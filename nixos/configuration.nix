@@ -164,18 +164,18 @@ in
 
 
   programs.ssh.startAgent = true;
-  # virtualisation.docker.enable = conf_epita;
-  # users.extraGroups.docker.members = [ "alex" ];
+  virtualisation.docker.enable = conf_epita;
+  users.extraGroups.docker.members = [ "alex" ];
 
 
   fonts.packages = with pkgs; [
     # nerdfonts
     # Nerd fonts for Neovim
     jetbrains-mono
+    # font-awesome
     # nerd-fonts.jetbrains-mono
     # nerd-fonts.symbols-only
     # nerd-fonts.font-awesome
-    # font-awesome
     # Not sure if the following fonts are needed
     # noto-fonts-emoji
     # noto-fonts-cjk-sans
@@ -199,6 +199,8 @@ in
     vscode
     (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.clion ["github-copilot"])
     (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.idea-ultimate ["github-copilot"])
+
+    warp-terminal
 
     # Neovim packages
     neovim
@@ -229,7 +231,6 @@ in
 
     # General ricing
     btop
-    fastfetch
     dconf-editor
     nwg-look
     home-manager
@@ -239,8 +240,13 @@ in
     nwg-look
     home-manager
     polychromatic
-
     eww # This can be used to create a custom bar. I will try to do my own menu with it
+
+    # Ricing visual
+    fastfetch
+    cmatrix
+    cbonsai
+    pipes-rs
 
     # catppuccin rice
     catppuccin-cursors.macchiatoMauve
