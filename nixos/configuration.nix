@@ -121,16 +121,15 @@ in
   };
 
   # Load nvidia driver for Xorg and Wayland
-  # services.xserver.videoDrivers = ["nvidia"];
-  #
-  # hardware.nvidia = {
-  #   modesetting.enable = true;
-  #   powerManagement.enable = false;
-  #   powerManagement.finegrained = false;
-  #   open = false;
-  #   nvidiaSettings = true;
-  #   package = config.boot.kernelPackages.nvidiaPackages.stable;
-  # };
+  services.xserver.videoDrivers = ["nvidia"];
+  hardware.nvidia = {
+    modesetting.enable = true;
+    powerManagement.enable = false;
+    powerManagement.finegrained = false;
+    open = false;
+    nvidiaSettings = true;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
 
 
   # programs.hyprland.enable = conf == 1;
@@ -164,8 +163,8 @@ in
 
 
   programs.ssh.startAgent = true;
-  # virtualisation.docker.enable = conf_epita;
-  # users.extraGroups.docker.members = [ "alex" ];
+  virtualisation.docker.enable = conf_epita;
+  users.extraGroups.docker.members = [ "alex" ];
 
 
   fonts.packages = with pkgs; [
@@ -344,6 +343,8 @@ in
     gnomeExtensions.blur-my-shell
     gnomeExtensions.custom-accent-colors
     gnomeExtensions.dash2dock-lite
+    gnomeExtensions.compiz-windows-effect
+    gnomeExtensions.compiz-alike-magic-lamp-effect
     # Better gnome terminal and can use themes but
     # must be installed with flatpak for full features.
     # Unfortunately, NixOS and other package managers... You know

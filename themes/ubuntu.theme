@@ -1,3 +1,4 @@
 WALLPAPER='ubuntu.png'
 DIR='/home/alex/Pictures/Wallpapers'
-SHELL_THEME='none'
+SHELL_THEME='Yaru-magenta'
+ICON_THEME='Yaru-magenta'
