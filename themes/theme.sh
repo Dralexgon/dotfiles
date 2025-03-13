@@ -1,6 +1,7 @@
 WALLPAPER='default.png'
 DIR="$HOME/Pictures/Wallpapers"
 SHELL_THEME='Adwaita'
+ICON_THEME='Adwaita'
 
 if [ $# != 1 ]; then
     echo "Usage: theme.sh <file.theme>"
@@ -14,7 +15,7 @@ gsettings set org.gnome.desktop.background picture-uri file://"$DIR"/"$WALLPAPER
 gsettings set org.gnome.desktop.background picture-uri-dark file://"$DIR"/"$WALLPAPER"
 gsettings set org.gnome.shell.extensions.user-theme name "$SHELL_THEME"
 gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita'
-gsettings set org.gnome.desktop.interface icon-theme 'Adwaita'
+gsettings set org.gnome.desktop.interface icon-theme "$ICON_THEME"
 
 # FILE="$HOME/.config/gtk-3.0/settings.ini"
 #
