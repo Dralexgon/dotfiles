@@ -8,6 +8,7 @@ let
   conf_hyprland = true;
   conf_gnome = true;
   conf_epita = true;
+  conf_gaming = true;
   conf_razer = true;
   nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
 in
@@ -37,13 +38,10 @@ in
   };
   boot.plymouth.enable = true;
   boot.plymouth.themePackages = [ pkgs.catppuccin-plymouth ];
-  # boot.plymouth.theme = "catppuccin";
   # boot.loader.systemd-boot.enable = true;
 
-  # fileSystems."/mnt/ubuntu" = {
-  #   device = "/dev/nvme0n1p4";
-  #   options = ["nofail"];
-  # };
+  # For windows dual boot
+  time.hardwareClockInLocalTime = true;
 
   # swapDevices = [{
   #   device = "/swapfile";
@@ -184,6 +182,8 @@ in
 
   # fonts.fontDir.enable = true;
 
+  nix.package = nixpkgs-stable.nix;
+
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
@@ -237,11 +237,10 @@ in
     home-manager
     python3
     pywal
-    dconf-editor
     nwg-look
     home-manager
     polychromatic # Razer GUI
-    
+
     eww # This can be used to create a custom bar. I will try to do my own menu with it
 
     # Ricing visual
@@ -249,10 +248,11 @@ in
     cmatrix
     cbonsai
     pipes-rs
+    cava
 
     # catppuccin rice
     catppuccin-cursors.macchiatoMauve
-    catppuccin-gtk
+    # catppuccin-gtk
 
     # To draw art
     # python312Full
@@ -330,6 +330,9 @@ in
     autoconf-archive
     libtool
 
+    # Mail
+    thunderbird
+
     # Net
     # gns3-server
     # gns3-gui
@@ -346,22 +349,42 @@ in
   ) ++ (
   if conf_gnome then
   [
-    tilix
+    gnome-terminal # Better terminal but just use kitty instead
+    pinta # Paint for gnome
 
+    # Useful gnome tools
     gnome-tweaks
     gnome-extension-manager
+    gnomeExtensions.emoji-copy
+    gnomeExtensions.gsconnect
+
+    # Choose your favorite
+    gnomeExtensions.network-stats
+    gnomeExtensions.speed-buzz-internet-speed-meter
+    gnomeExtensions.internet-speed-meter
+    gnomeExtensions.crazy-internet-speed-meter
+    gnomeExtensions.speedinator
+
+    # Nice and leightweight
     gnomeExtensions.user-themes
     gnomeExtensions.blur-my-shell
-    gnomeExtensions.custom-accent-colors
+    #gnomeExtensions.custom-accent-colors
+
+    # Very nice but heavy
     gnomeExtensions.dash2dock-lite
     gnomeExtensions.compiz-windows-effect
     gnomeExtensions.compiz-alike-magic-lamp-effect
+    gnomeExtensions.burn-my-windows
+    gnomeExtensions.desktop-cube
+
     # Better gnome terminal and can use themes but
     # must be installed with flatpak for full features.
     # Unfortunately, NixOS and other package managers... You know
     blackbox-terminal
     # gnome-software
     # flatpak
+
+    catppuccin-cursors.macchiatoMauve
 
     # Gnome music contribution
     gnome-builder
@@ -375,20 +398,19 @@ in
 
     #nix-software-center
 
-    #gnome-shell-extension-dash-to-dock
-    #gnome-shell-extension-appindicator
-    #gnome-shell-extension-user-theme
-    
-    # Gnome ricing
-    catppuccin-gtk
-    gnomeExtensions.user-themes
-    catppuccin-cursors.macchiatoMauve
-    gnomeExtensions.custom-accent-colors
+  ] else []
+  ) ++ (
+  if conf_gaming then
+  [
+    protonup
+    lutris
+    heroic
+    bottles
   ] else []
   )
   ;
 
-  services.flatpak.enable = true;
+  # services.flatpak.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.alex = {
@@ -422,8 +444,19 @@ in
   #   };
   # };
 
-  hardware.openrazer.enable = true;
-  hardware.openrazer.users = ["alex"];
+  # Gaming
+
+  programs.steam = {
+    enable = conf_gaming;
+    gamescopeSession.enable = conf_gaming;
+  };
+
+  programs.gamemode.enable = conf_gaming;
+
+  hardware.openrazer = {
+    enable = true;
+    users = ["alex"];
+  };
 
 
 
