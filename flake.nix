@@ -21,11 +21,26 @@
 
   outputs = { self, nixpkgs,  ... }@inputs:{
 
-    nixosConfigurations.default = self.nixosConfigurations."host-RTX3060-alex";
+    nixosConfigurations.default = self.nixosConfigurations."nixos";
 
-    nixosConfigurations."nixos" = self.nixosConfigurations."host-RTX3060-alex";
+    nixosConfigurations."nixos" = self.nixosConfigurations."nixos-tower-RTX3060";
 
-    nixosConfigurations."host-RTX3060-alex" = nixpkgs.lib.nixosSystem {
+    nixosConfigurations."nixos-tower-RTX3060" = nixpkgs.lib.nixosSystem {
+      specialArgs = {inherit inputs;};
+      modules = [
+        ./nixos/configuration.nix
+        ./nixos/modules/epita.nix
+        ./nixos/modules/nvidia-driver.nix
+        ./nixos/modules/razer.nix
+        ./nixos/modules/swap.nix
+        ./nixos/modules/ricing.nix
+        ./nixos/modules/ricing-tools.nix
+
+        # inputs.boot-animation.nixosModules.default
+      ];
+    };
+
+    nixosConfigurations."nixos-grey-laptop" = nixpkgs.lib.nixosSystem {
       specialArgs = {inherit inputs;};
       modules = [
         ./nixos/configuration.nix
@@ -33,6 +48,8 @@
         #./nixos/modules/nvidia-driver.nix
         #./nixos/modules/razer.nix
         ./nixos/modules/swap.nix
+        ./nixos/modules/ricing.nix
+        ./nixos/modules/ricing-tools.nix
 
         # inputs.boot-animation.nixosModules.default
       ];

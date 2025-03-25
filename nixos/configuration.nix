@@ -305,35 +305,6 @@ in
 
   ] else []
   ) ++ (
-  if conf_ricing then
-  [
-    # General ricing
-    fastfetch # Most important ricing tool (that's the nice logo in the terminal)
-    btop # System monitor
-    dconf-editor
-    nwg-look
-    home-manager
-    python3
-    pywal
-
-    eww # This can be used to create a custom bar. I will try to do my own menu with it
-
-    # Ricing visual
-    fastfetch
-    cmatrix
-    cbonsai
-    pipes-rs
-    cava
-
-    # catppuccin rice
-    catppuccin-cursors.macchiatoMauve
-    # catppuccin-gtk
-
-    # To draw art
-    # python312Full
-    # python3Packages.tkinter
-  ] else []
-  ) ++ (
   if conf_gaming then
   [
     # Steam is installed separately
