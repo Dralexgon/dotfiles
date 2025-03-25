@@ -7,8 +7,6 @@
 let
   conf_hyprland = false;
   conf_gnome = true;
-  conf_epita = true;
-  conf_gaming = false;
   conf_ricing = true;
   # implicit pkgs = nixpkgs.legacyPackages.${pkgs.system};
   nixpkgs23 = inputs.nixpkgs23.legacyPackages.${pkgs.system};
@@ -46,6 +44,11 @@ in
 
   # For windows dual boot
   time.hardwareClockInLocalTime = true;
+
+
+
+
+  
 
 
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -147,9 +150,6 @@ in
 
 
   programs.ssh.startAgent = true;
-  virtualisation.docker.enable = conf_epita;
-  users.extraGroups.docker.members = [ "alex" ];
-
 
   fonts.packages = with pkgs; [
     jetbrains-mono
@@ -290,35 +290,6 @@ in
     #warp-terminal
 
   ] else []
-  ) ++ (
-  if conf_gaming then
-  [
-    # Steam is installed separately
-    protonup
-    lutris
-    heroic
-    bottles
-
-    # Unity launcher, to create games
-    unityhub 
-
-    # Minecraft
-    prismlauncher # Minecraft launcher
-    # modrinth-app # Modrinth launcher
-    # It crashes nixos-rebuild sometimes:
-    # (pkgs.modrinth-app.overrideAttrs (oldAttrs: {
-    #   buildCommand =
-    #     ''
-    #       gappsWrapperArgs+=(
-    #          --set WEBKIT_DISABLE_DMABUF_RENDERER 1
-    #       )
-    #     ''
-    #     + oldAttrs.buildCommand;
-    # }))
-    zulu21 # Java for minecraft
-
-    libglvnd # For minecraft forge
-  ] else []
   );
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
@@ -330,16 +301,6 @@ in
       #thunderbird
     ];
   };
-
-  # Give root permissions to ubridge (/!\ NOT TESTED)
-  # security.wrappers = {
-  #   ubridge = {
-  #     source = "${pkgs.ubridge}/bin/ubridge";
-  #     owner = "root";
-  #     group = "root";
-  #     permissions = "u+sx,g+sx,o+sx";
-  #   };
-  # };
 
   # services.minecraft-servers = {
   #   enable = false;
@@ -353,23 +314,15 @@ in
   #   };
   # };
 
-  # Gaming
-
-  programs.steam = {
-    enable = conf_gaming;
-    gamescopeSession.enable = conf_gaming;
-  };
-
-  programs.gamemode.enable = conf_gaming;
-
-  environment.variables = {
-    NIXPKGS_ALLOW_UNFREE = "1";
-  };
-
 
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
+
+  # Allow unfree packages v2 (not sure if it works)
+  environment.variables = {
+    NIXPKGS_ALLOW_UNFREE = "1";
+  };
 
   # Enable experimental features like flakes
   nix.settings.experimental-features = ["nix-command" "flakes"];

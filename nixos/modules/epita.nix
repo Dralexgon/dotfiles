@@ -1,6 +1,9 @@
 { config, pkgs, lib, inputs, ... }:
 
 {
+  #virtualisation.docker.enable = true;
+  #users.extraGroups.docker.members = [ "alex" ];
+
   environment.systemPackages = with pkgs; [
     # C
     gcc
@@ -39,5 +42,16 @@
     postgresql
     maven
   ];
+
+  # Enable the GNS3 server
+  # Give root permissions to ubridge (/!\ NOT TESTED)
+  # security.wrappers = {
+  #   ubridge = {
+  #     source = "${pkgs.ubridge}/bin/ubridge";
+  #     owner = "root";
+  #     group = "root";
+  #     permissions = "u+sx,g+sx,o+sx";
+  #   };
+  # };
 
 }

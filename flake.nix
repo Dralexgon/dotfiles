@@ -30,6 +30,7 @@
       modules = [
         ./nixos/configuration.nix
         ./nixos/modules/epita.nix
+        ./nixos/modules/gaming.nix
         ./nixos/modules/nvidia-drivers.nix
         ./nixos/modules/razer.nix
         ./nixos/modules/swap.nix
@@ -45,6 +46,7 @@
       modules = [
         ./nixos/configuration.nix
         ./nixos/modules/epita.nix
+        #./nixos/modules/gaming.nix
         #./nixos/modules/nvidia-drivers.nix
         #./nixos/modules/razer.nix
         ./nixos/modules/swap.nix
