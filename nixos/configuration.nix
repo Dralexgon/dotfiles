@@ -8,8 +8,8 @@ let
   conf_hyprland = false;
   conf_gnome = true;
   conf_epita = true;
-  conf_gaming = true;
-  conf_razer = true;
+  conf_gaming = false;
+  conf_razer = false;
   conf_ricing = true;
   # implicit pkgs = nixpkgs.legacyPackages.${pkgs.system};
   nixpkgs23 = inputs.nixpkgs23.legacyPackages.${pkgs.system};
@@ -48,10 +48,10 @@ in
   # For windows dual boot
   time.hardwareClockInLocalTime = true;
 
-  # swapDevices = [{
-  #   device = "/swapfile";
-  #   size = 4 * 1024; # 4GB
-  # }];
+  swapDevices = [{
+    device = "/swapfile";
+    size = 4 * 1024; # 4GB
+  }];
 
 
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -119,18 +119,18 @@ in
   # Todo: try that
   # boot.extraModprobeConfig = "blacklist wlp10s0";
 
-  hardware.graphics.enable = true; # for minecraft forge
+  # hardware.graphics.enable = true; # for minecraft forge
 
-  # Load nvidia driver for Xorg and Wayland
-  services.xserver.videoDrivers = ["nvidia"];
-  hardware.nvidia = {
-    modesetting.enable = true;
-    powerManagement.enable = false;
-    powerManagement.finegrained = false;
-    open = false;
-    nvidiaSettings = true;
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
-  };
+  # # Load nvidia driver for Xorg and Wayland
+  # services.xserver.videoDrivers = ["nvidia"];
+  # hardware.nvidia = {
+  #   modesetting.enable = true;
+  #   powerManagement.enable = false;
+  #   powerManagement.finegrained = false;
+  #   open = false;
+  #   nvidiaSettings = true;
+  #   package = config.boot.kernelPackages.nvidiaPackages.stable;
+  # };
 
 
   services.xserver.displayManager = {
@@ -162,7 +162,7 @@ in
   ];
 
 
-  services.flatpak.enable = true;
+  # services.flatpak.enable = true;
   # flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
 
@@ -310,46 +310,46 @@ in
     #warp-terminal
 
   ] else []
-  ) ++ (
-  if conf_epita then
-  [
-    # C
-    gcc
-    gnumake
-    clang-tools
+  # ) ++ (
+  # if conf_epita then
+  # [
+  #   # C
+  #   gcc
+  #   gnumake
+  #   clang-tools
 
-    # C++
-    gcc
-    gnumake
-    clang-tools
-    cmake
+  #   # C++
+  #   gcc
+  #   gnumake
+  #   clang-tools
+  #   cmake
 
-    # Afs
-    krb5
-    sshfs
+  #   # Afs
+  #   krb5
+  #   sshfs
 
-    # GNU autotools
-    automake
-    autoconf
-    autoconf-archive
-    libtool
+  #   # GNU autotools
+  #   automake
+  #   autoconf
+  #   autoconf-archive
+  #   libtool
 
-    # Mail
-    thunderbird
+  #   # Mail
+  #   thunderbird
 
-    # Net
-    # gns3-server
-    # gns3-gui
-    # docker
-    # dynamips
-    # ubridge
-    # inetutils
+  #   # Net
+  #   # gns3-server
+  #   # gns3-gui
+  #   # docker
+  #   # dynamips
+  #   # ubridge
+  #   # inetutils
 
-    # Java
-    # nixpkgs-stable.jetbrains.idea-ultimate
-    postgresql
-    maven
-  ] else []
+  #   # Java
+  #   # nixpkgs-stable.jetbrains.idea-ultimate
+  #   postgresql
+  #   maven
+  # ] else []
   ) ++ (
   if conf_ricing then
   [

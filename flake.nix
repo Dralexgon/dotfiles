@@ -29,7 +29,7 @@
       specialArgs = {inherit inputs;};
       modules = [
         ./nixos/configuration.nix
-        # ./nixos/modules/core/epita.nix
+        ./nixos/modules/core/epita.nix
         # inputs.boot-animation.nixosModules.default
       ];
     };

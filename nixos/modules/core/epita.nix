@@ -25,6 +25,9 @@
     autoconf-archive
     libtool
 
+    # Mail
+    thunderbird
+
     # Net
     # gns3-server
     # gns3-gui
@@ -35,8 +38,8 @@
 
     # Java
     # nixpkgs-stable.jetbrains.idea-ultimate
-    # postgresql
-    # maven
+    postgresql
+    maven
   ];
 
 }
