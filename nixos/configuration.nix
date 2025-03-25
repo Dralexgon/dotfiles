@@ -184,6 +184,7 @@ in
     luarocks
     lazygit
     fd
+    wl-clipboard
     ripgrep
     nodejs # For copilot nvim
 
