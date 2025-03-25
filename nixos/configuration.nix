@@ -47,11 +47,6 @@ in
   # For windows dual boot
   time.hardwareClockInLocalTime = true;
 
-  swapDevices = [{
-    device = "/swapfile";
-    size = 4 * 1024; # 4GB
-  }];
-
 
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 

@@ -32,6 +32,7 @@
         ./nixos/modules/epita.nix
         #./nixos/modules/nvidia-driver.nix
         #./nixos/modules/razer.nix
+        ./nixos/modules/swap.nix
 
         # inputs.boot-animation.nixosModules.default
       ];
