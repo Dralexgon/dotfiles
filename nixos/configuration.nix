@@ -7,20 +7,24 @@
 let
   conf_hyprland = false;
   conf_gnome = true;
-  conf_epita = false;
-  conf_gaming = false;
-  conf_razer = false;
-  conf_ricing = false;
-  nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
+  conf_epita = true;
+  conf_gaming = true;
+  conf_razer = true;
+  conf_ricing = true;
+  # implicit pkgs = nixpkgs.legacyPackages.${pkgs.system};
+  nixpkgs23 = inputs.nixpkgs23.legacyPackages.${pkgs.system};
+  nixpkgs24 = inputs.nixpkgs24.legacyPackages.${pkgs.system};
+  nixpkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system};
+  #nixpkgs-unstable = import inputs.nixpkgs-unstable.legacyPackages.${pkgs.system} { config.allowUnfree = true; };
 in
 
 {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
-      inputs.nix-minecraft.nixosModules.minecraft-servers
+      #inputs.nix-minecraft.nixosModules.minecraft-servers
     ];
-  nixpkgs.overlays = [ inputs.nix-minecraft.overlay ];
+  #nixpkgs.overlays = [ inputs.nix-minecraft.overlay ];
 
   # Added by flake boot-animation
   # nixos-boot = {
@@ -46,7 +50,7 @@ in
 
   # swapDevices = [{
   #   device = "/swapfile";
-  #   size = 8 * 1024; # 16GB
+  #   size = 4 * 1024; # 4GB
   # }];
 
 
@@ -105,7 +109,7 @@ in
   networking.hostName = "nixos"; # Define your hostname.
 
   system.autoUpgrade.enable = true;# Enable the automatic upgrade, disabled by default.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  #boot.kernelPackages = pkgs.linuxPackages_latest;
 
 
   # Trying to fix wifi card driver
@@ -115,22 +119,20 @@ in
   # Todo: try that
   # boot.extraModprobeConfig = "blacklist wlp10s0";
 
-  # hardware.graphics.enable = true; # for minecraft forge
+  hardware.graphics.enable = true; # for minecraft forge
 
-  # # Load nvidia driver for Xorg and Wayland
-  # services.xserver.videoDrivers = ["nvidia"];
-  # hardware.nvidia = {
-  #   modesetting.enable = true;
-  #   powerManagement.enable = false;
-  #   powerManagement.finegrained = false;
-  #   open = false;
-  #   nvidiaSettings = true;
-  #   package = config.boot.kernelPackages.nvidiaPackages.stable;
-  # };
+  # Load nvidia driver for Xorg and Wayland
+  services.xserver.videoDrivers = ["nvidia"];
+  hardware.nvidia = {
+    modesetting.enable = true;
+    powerManagement.enable = false;
+    powerManagement.finegrained = false;
+    open = false;
+    nvidiaSettings = true;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
 
 
-  # programs.hyprland.enable = conf == 1;
-  # services.xserver.desktopManager.gnome.enable = conf == 2;
   services.xserver.displayManager = {
     gdm.enable = conf_gnome;
     #gdm.enableGnomeKeyring = conf_gnome;
@@ -154,8 +156,13 @@ in
   #   pkgs.xdg-desktop-portal-hyprland
   # ];
 
+  xdg.portal.enable = true;
+  xdg.portal.extraPortals = [
+    pkgs.xdg-desktop-portal-gtk
+  ];
 
-  # services.flatpak.enable = true;
+
+  services.flatpak.enable = true;
   # flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
 
@@ -165,7 +172,7 @@ in
 
 
   fonts.packages = with pkgs; [
-    # jetbrains-mono
+    jetbrains-mono
   ];
 
   # fonts.fontDir.enable = true;
@@ -180,10 +187,13 @@ in
 
     # Text editors/IDE
     vim
+    #nixpkgs-unstable.vscode # unfree
     vscode
-    #(pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.clion ["github-copilot"])
-    #(pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.idea-ultimate ["github-copilot"])
+    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.clion ["github-copilot"])
+    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.idea-ultimate ["github-copilot"])
     
+    # Terminal <3 meow
+    kitty
 
     # Neovim packages
     neovim
@@ -279,18 +289,19 @@ in
     # must be installed with flatpak for full features.
     # Unfortunately, NixOS and other package managers... You know
     blackbox-terminal
-    # gnome-software
-    # flatpak
+
+    #flatpak
+    #gnome-software
 
     catppuccin-cursors.macchiatoMauve
 
     # Gnome music contribution
-    gnome-builder
-    meson
-    pkg-config
-    libadwaita
-    gtk4
-    flatpak-builder
+    # gnome-builder
+    # meson
+    # pkg-config
+    # libadwaita
+    # gtk4
+    # flatpak-builder
     # apostrophe # Markdown editor
     # element-desktop
 
@@ -404,8 +415,6 @@ in
   ] else []
   );
 
-  # services.flatpak.enable = true;
-
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.alex = {
     isNormalUser = true;
@@ -452,7 +461,9 @@ in
     users = ["alex"];
   };
 
-
+  environment.variables = {
+    NIXPKGS_ALLOW_UNFREE = "1";
+  };
 
 
 
