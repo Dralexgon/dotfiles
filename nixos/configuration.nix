@@ -9,7 +9,6 @@ let
   conf_gnome = true;
   conf_epita = true;
   conf_gaming = false;
-  conf_razer = false;
   conf_ricing = true;
   # implicit pkgs = nixpkgs.legacyPackages.${pkgs.system};
   nixpkgs23 = inputs.nixpkgs23.legacyPackages.${pkgs.system};
@@ -310,46 +309,6 @@ in
     #warp-terminal
 
   ] else []
-  # ) ++ (
-  # if conf_epita then
-  # [
-  #   # C
-  #   gcc
-  #   gnumake
-  #   clang-tools
-
-  #   # C++
-  #   gcc
-  #   gnumake
-  #   clang-tools
-  #   cmake
-
-  #   # Afs
-  #   krb5
-  #   sshfs
-
-  #   # GNU autotools
-  #   automake
-  #   autoconf
-  #   autoconf-archive
-  #   libtool
-
-  #   # Mail
-  #   thunderbird
-
-  #   # Net
-  #   # gns3-server
-  #   # gns3-gui
-  #   # docker
-  #   # dynamips
-  #   # ubridge
-  #   # inetutils
-
-  #   # Java
-  #   # nixpkgs-stable.jetbrains.idea-ultimate
-  #   postgresql
-  #   maven
-  # ] else []
   ) ++ (
   if conf_ricing then
   [
@@ -455,11 +414,6 @@ in
   };
 
   programs.gamemode.enable = conf_gaming;
-
-  hardware.openrazer = {
-    enable = conf_razer;
-    users = ["alex"];
-  };
 
   environment.variables = {
     NIXPKGS_ALLOW_UNFREE = "1";

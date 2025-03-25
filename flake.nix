@@ -29,7 +29,10 @@
       specialArgs = {inherit inputs;};
       modules = [
         ./nixos/configuration.nix
-        ./nixos/modules/core/epita.nix
+        ./nixos/modules/epita.nix
+        #./nixos/modules/nvidia-driver.nix
+        #./nixos/modules/razer.nix
+
         # inputs.boot-animation.nixosModules.default
       ];
     };
