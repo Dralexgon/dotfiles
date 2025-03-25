@@ -367,11 +367,6 @@ in
 
     libglvnd # For minecraft forge
   ] else []
-  ) ++ (
-  if conf_razer then
-  [
-    polychromatic # Razer GUI
-  ] else []
   );
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
