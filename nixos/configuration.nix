@@ -113,20 +113,6 @@ in
   # Todo: try that
   # boot.extraModprobeConfig = "blacklist wlp10s0";
 
-  # hardware.graphics.enable = true; # for minecraft forge
-
-  # # Load nvidia driver for Xorg and Wayland
-  # services.xserver.videoDrivers = ["nvidia"];
-  # hardware.nvidia = {
-  #   modesetting.enable = true;
-  #   powerManagement.enable = false;
-  #   powerManagement.finegrained = false;
-  #   open = false;
-  #   nvidiaSettings = true;
-  #   package = config.boot.kernelPackages.nvidiaPackages.stable;
-  # };
-
-
   services.xserver.displayManager = {
     gdm.enable = conf_gnome;
     #gdm.enableGnomeKeyring = conf_gnome;
