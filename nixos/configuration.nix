@@ -5,11 +5,12 @@
 { config, pkgs, lib, inputs, ... }:
 
 let
-  conf_hyprland = true;
+  conf_hyprland = false;
   conf_gnome = true;
-  conf_epita = true;
-  conf_gaming = true;
-  conf_razer = true;
+  conf_epita = false;
+  conf_gaming = false;
+  conf_razer = false;
+  conf_ricing = false;
   nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
 in
 
@@ -114,20 +115,18 @@ in
   # Todo: try that
   # boot.extraModprobeConfig = "blacklist wlp10s0";
 
-  hardware.graphics = { # for minecraft forge
-    enable = true;
-  };
+  # hardware.graphics.enable = true; # for minecraft forge
 
-  # Load nvidia driver for Xorg and Wayland
-  services.xserver.videoDrivers = ["nvidia"];
-  hardware.nvidia = {
-    modesetting.enable = true;
-    powerManagement.enable = false;
-    powerManagement.finegrained = false;
-    open = false;
-    nvidiaSettings = true;
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
-  };
+  # # Load nvidia driver for Xorg and Wayland
+  # services.xserver.videoDrivers = ["nvidia"];
+  # hardware.nvidia = {
+  #   modesetting.enable = true;
+  #   powerManagement.enable = false;
+  #   powerManagement.finegrained = false;
+  #   open = false;
+  #   nvidiaSettings = true;
+  #   package = config.boot.kernelPackages.nvidiaPackages.stable;
+  # };
 
 
   # programs.hyprland.enable = conf == 1;
@@ -149,11 +148,11 @@ in
   };
 
   # Screensharing in hyrpland (not tested)
-  xdg.portal.enable = conf_hyprland;
-  xdg.portal.extraPortals = [
-    pkgs.xdg-desktop-portal-gtk
-    pkgs.xdg-desktop-portal-hyprland
-  ];
+  # xdg.portal.enable = conf_hyprland;
+  # xdg.portal.extraPortals = [
+  #   pkgs.xdg-desktop-portal-gtk
+  #   pkgs.xdg-desktop-portal-hyprland
+  # ];
 
 
   # services.flatpak.enable = true;
@@ -166,23 +165,12 @@ in
 
 
   fonts.packages = with pkgs; [
-    # nerdfonts
-    # Nerd fonts for Neovim
-    jetbrains-mono
-    # font-awesome
-    # nerd-fonts.jetbrains-mono
-    # nerd-fonts.symbols-only
-    # nerd-fonts.font-awesome
-    # Not sure if the following fonts are needed
-    # noto-fonts-emoji
-    # noto-fonts-cjk-sans
-    # symbola
-    # material-icons
+    # jetbrains-mono
   ];
 
   # fonts.fontDir.enable = true;
 
-  nix.package = nixpkgs-stable.nix;
+  #nix.package = nixpkgs-stable.nix;
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -193,10 +181,9 @@ in
     # Text editors/IDE
     vim
     vscode
-    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.clion ["github-copilot"])
-    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.idea-ultimate ["github-copilot"])
-
-    warp-terminal
+    #(pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.clion ["github-copilot"])
+    #(pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.idea-ultimate ["github-copilot"])
+    
 
     # Neovim packages
     neovim
@@ -228,55 +215,6 @@ in
     # 2 discord clients for multiple accounts
     discord
     vesktop
-
-    # General ricing
-    fastfetch # Most important ricing tool (that's the nice logo in the terminal)
-    btop # System monitor
-    dconf-editor
-    nwg-look
-    home-manager
-    python3
-    pywal
-    nwg-look
-    home-manager
-    polychromatic # Razer GUI
-
-    eww # This can be used to create a custom bar. I will try to do my own menu with it
-
-    # Ricing visual
-    fastfetch
-    cmatrix
-    cbonsai
-    pipes-rs
-    cava
-
-    # catppuccin rice
-    catppuccin-cursors.macchiatoMauve
-    # catppuccin-gtk
-
-    # To draw art
-    # python312Full
-    # python3Packages.tkinter
-
-    # Games
-    unityhub # Unity launcher
-
-    # Minecraft
-    prismlauncher # Minecraft launcher
-    # modrinth-app # Modrinth launcher
-    (pkgs.modrinth-app.overrideAttrs (oldAttrs: {
-      buildCommand =
-        ''
-          gappsWrapperArgs+=(
-             --set WEBKIT_DISABLE_DMABUF_RENDERER 1
-          )
-        ''
-        + oldAttrs.buildCommand;
-    }))
-    # zulu17
-    zulu21
-
-    libglvnd # For minecraft forge
   ] ++ (
   if conf_hyprland then
   [
@@ -305,46 +243,6 @@ in
     bat
     starship
     fzf # FuzzyFinder, used to search file. I should use it more
-  ] else []
-  ) ++ (
-  if conf_epita then
-  [
-    # C
-    gcc
-    gnumake
-    clang-tools
-
-    # C++
-    gcc
-    gnumake
-    clang-tools
-    cmake
-
-    # Afs
-    krb5
-    sshfs
-
-    # GNU autotools
-    automake
-    autoconf
-    autoconf-archive
-    libtool
-
-    # Mail
-    thunderbird
-
-    # Net
-    # gns3-server
-    # gns3-gui
-    # docker
-    # dynamips
-    # ubridge
-    # inetutils
-
-    # Java
-    # nixpkgs-stable.jetbrains.idea-ultimate
-    postgresql
-    maven
   ] else []
   ) ++ (
   if conf_gnome then
@@ -398,17 +296,113 @@ in
 
     #nix-software-center
 
+    #warp-terminal
+
+  ] else []
+  ) ++ (
+  if conf_epita then
+  [
+    # C
+    gcc
+    gnumake
+    clang-tools
+
+    # C++
+    gcc
+    gnumake
+    clang-tools
+    cmake
+
+    # Afs
+    krb5
+    sshfs
+
+    # GNU autotools
+    automake
+    autoconf
+    autoconf-archive
+    libtool
+
+    # Mail
+    thunderbird
+
+    # Net
+    # gns3-server
+    # gns3-gui
+    # docker
+    # dynamips
+    # ubridge
+    # inetutils
+
+    # Java
+    # nixpkgs-stable.jetbrains.idea-ultimate
+    postgresql
+    maven
+  ] else []
+  ) ++ (
+  if conf_ricing then
+  [
+    # General ricing
+    fastfetch # Most important ricing tool (that's the nice logo in the terminal)
+    btop # System monitor
+    dconf-editor
+    nwg-look
+    home-manager
+    python3
+    pywal
+
+    eww # This can be used to create a custom bar. I will try to do my own menu with it
+
+    # Ricing visual
+    fastfetch
+    cmatrix
+    cbonsai
+    pipes-rs
+    cava
+
+    # catppuccin rice
+    catppuccin-cursors.macchiatoMauve
+    # catppuccin-gtk
+
+    # To draw art
+    # python312Full
+    # python3Packages.tkinter
   ] else []
   ) ++ (
   if conf_gaming then
   [
+    # Steam is installed separately
     protonup
     lutris
     heroic
     bottles
+
+    # Unity launcher, to create games
+    unityhub 
+
+    # Minecraft
+    prismlauncher # Minecraft launcher
+    # modrinth-app # Modrinth launcher
+    # It crashes nixos-rebuild sometimes:
+    # (pkgs.modrinth-app.overrideAttrs (oldAttrs: {
+    #   buildCommand =
+    #     ''
+    #       gappsWrapperArgs+=(
+    #          --set WEBKIT_DISABLE_DMABUF_RENDERER 1
+    #       )
+    #     ''
+    #     + oldAttrs.buildCommand;
+    # }))
+    zulu21 # Java for minecraft
+
+    libglvnd # For minecraft forge
   ] else []
-  )
-  ;
+  ) ++ (
+  if conf_razer then
+  [
+    polychromatic # Razer GUI
+  ] else []
+  );
 
   # services.flatpak.enable = true;
 
@@ -454,7 +448,7 @@ in
   programs.gamemode.enable = conf_gaming;
 
   hardware.openrazer = {
-    enable = true;
+    enable = conf_razer;
     users = ["alex"];
   };
 
