@@ -109,7 +109,7 @@ in
   networking.hostName = "nixos"; # Define your hostname.
 
   system.autoUpgrade.enable = true;# Enable the automatic upgrade, disabled by default.
-  #boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 
 
   # Trying to fix wifi card driver
