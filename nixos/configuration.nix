@@ -6,7 +6,6 @@
 
 let
   conf_hyprland = false;
-  conf_gnome = true;
   conf_ricing = true;
   # implicit pkgs = nixpkgs.legacyPackages.${pkgs.system};
   nixpkgs23 = inputs.nixpkgs23.legacyPackages.${pkgs.system};
@@ -116,21 +115,7 @@ in
   # Todo: try that
   # boot.extraModprobeConfig = "blacklist wlp10s0";
 
-  services.xserver.displayManager = {
-    gdm.enable = conf_gnome;
-    #gdm.enableGnomeKeyring = conf_gnome;
-  };
-  services.xserver.desktopManager.gnome.enable = conf_gnome;
   programs.hyprland.enable = conf_hyprland;
-
-  # Enable the X11 windowing system.
-  services.xserver = {
-    enable = conf_gnome;
-    xkb = {
-      layout = "us";
-      variant = "";
-    };
-  };
 
   # Screensharing in hyrpland (not tested)
   # xdg.portal.enable = conf_hyprland;
@@ -164,10 +149,11 @@ in
   environment.systemPackages = with pkgs; [
     # Web browsers
     firefox
+    #brave
+    #chromium
 
     # Text editors/IDE
     vim
-    #nixpkgs-unstable.vscode # unfree
     vscode
     (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.clion ["github-copilot"])
     (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.idea-ultimate ["github-copilot"])
@@ -193,10 +179,13 @@ in
     wget
     unzip
     tree
-    fragments # Bit toorent client
-    gcolor3 # Color picker
-    amberol
     xorg.xkill
+
+    # Simple useful apps
+    fragments # Bit toorent client
+    pinta # Paint
+    gcolor3 # Color picker
+    amberol # Music player
 
     # Simple useful tools for Nixos
     nix-output-monitor
@@ -234,62 +223,6 @@ in
     bat
     starship
     fzf # FuzzyFinder, used to search file. I should use it more
-  ] else []
-  ) ++ (
-  if conf_gnome then
-  [
-    gnome-terminal # Better terminal but just use kitty instead
-    pinta # Paint for gnome
-
-    # Useful gnome tools
-    gnome-tweaks
-    gnome-extension-manager
-    gnomeExtensions.emoji-copy
-    gnomeExtensions.gsconnect
-
-    # Choose your favorite
-    gnomeExtensions.network-stats
-    gnomeExtensions.speed-buzz-internet-speed-meter
-    gnomeExtensions.internet-speed-meter
-    gnomeExtensions.crazy-internet-speed-meter
-    gnomeExtensions.speedinator
-
-    # Nice and leightweight
-    gnomeExtensions.user-themes
-    gnomeExtensions.blur-my-shell
-    #gnomeExtensions.custom-accent-colors
-
-    # Very nice but heavy
-    gnomeExtensions.dash2dock-lite
-    gnomeExtensions.compiz-windows-effect
-    gnomeExtensions.compiz-alike-magic-lamp-effect
-    gnomeExtensions.burn-my-windows
-    gnomeExtensions.desktop-cube
-
-    # Better gnome terminal and can use themes but
-    # must be installed with flatpak for full features.
-    # Unfortunately, NixOS and other package managers... You know
-    blackbox-terminal
-
-    #flatpak
-    #gnome-software
-
-    catppuccin-cursors.macchiatoMauve
-
-    # Gnome music contribution
-    # gnome-builder
-    # meson
-    # pkg-config
-    # libadwaita
-    # gtk4
-    # flatpak-builder
-    # apostrophe # Markdown editor
-    # element-desktop
-
-    #nix-software-center
-
-    #warp-terminal
-
   ] else []
   );
 

@@ -26,14 +26,21 @@
     nixosConfigurations."nixos" = self.nixosConfigurations."nixos-tower-RTX3060";
 
     nixosConfigurations."nixos-tower-RTX3060" = nixpkgs.lib.nixosSystem {
+      # Main pc POWERFUL RTXXXX !!!
       specialArgs = {inherit inputs;};
       modules = [
+        # Main configuration
         ./nixos/configuration.nix
-        ./nixos/modules/epita.nix
-        ./nixos/modules/gaming.nix
+        ./nixos/modules/gnome.nix
+
+        # Hardware specific modules
         ./nixos/modules/nvidia-drivers.nix
         ./nixos/modules/razer.nix
         ./nixos/modules/swap.nix
+
+        # Personal modules
+        ./nixos/modules/epita.nix
+        ./nixos/modules/gaming.nix
         ./nixos/modules/ricing.nix
         ./nixos/modules/ricing-tools.nix
 
@@ -42,14 +49,21 @@
     };
 
     nixosConfigurations."nixos-grey-laptop" = nixpkgs.lib.nixosSystem {
+      # Work laptop, nixos-grey-laptop: 50 nuance...
       specialArgs = {inherit inputs;};
       modules = [
+        # Main configuration
         ./nixos/configuration.nix
-        ./nixos/modules/epita.nix
-        #./nixos/modules/gaming.nix
-        #./nixos/modules/nvidia-drivers.nix
-        #./nixos/modules/razer.nix
+        ./nixos/modules/gnome.nix
+
+        # Hardware specific modules
+        ./nixos/modules/nvidia-drivers.nix
+        ./nixos/modules/razer.nix
         ./nixos/modules/swap.nix
+
+        # Personal modules
+        ./nixos/modules/epita.nix
+        ./nixos/modules/gaming.nix
         ./nixos/modules/ricing.nix
         ./nixos/modules/ricing-tools.nix
 
