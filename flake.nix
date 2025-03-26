@@ -5,9 +5,9 @@
     # Change depending on your prefered version
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    nixpkgs23.url = "github:nixos/nixpkgs/nixos-23.11";
-    nixpkgs24.url = "github:nixos/nixpkgs/nixos-24.11";
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    # nixpkgs23.url = "github:nixos/nixpkgs/nixos-23.11";
+    # nixpkgs24.url = "github:nixos/nixpkgs/nixos-24.11";
+    # nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
     #stylix.url = "github:danth/stylix";
     #nix-minecraft.url = "github:Infinidoge/nix-minecraft";
@@ -33,6 +33,7 @@
         ./nixos/configuration.nix
         ./nixos/modules/gnome.nix
         ./nixos/modules/hyprland.nix
+        ./nixos/modules/auto-update.nix
 
         # Hardware specific modules
         ./nixos/modules/nvidia-drivers.nix

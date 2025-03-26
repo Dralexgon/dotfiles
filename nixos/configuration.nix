@@ -5,11 +5,10 @@
 { config, pkgs, lib, inputs, ... }:
 
 let
-  conf_hyprland = false;
   # implicit pkgs = nixpkgs.legacyPackages.${pkgs.system};
-  nixpkgs23 = inputs.nixpkgs23.legacyPackages.${pkgs.system};
-  nixpkgs24 = inputs.nixpkgs24.legacyPackages.${pkgs.system};
-  nixpkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system};
+  #nixpkgs23 = inputs.nixpkgs23.legacyPackages.${pkgs.system};
+  #nixpkgs24 = inputs.nixpkgs24.legacyPackages.${pkgs.system};
+  #nixpkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system};
   #nixpkgs-unstable = import inputs.nixpkgs-unstable.legacyPackages.${pkgs.system} { config.allowUnfree = true; };
 in
 
@@ -102,10 +101,6 @@ in
 
 
   networking.hostName = "nixos"; # Define your hostname.
-
-  system.autoUpgrade.enable = true; # Enable the automatic upgrade, disabled by default.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
-
 
   # Trying to fix wifi card driver
   boot.blacklistedKernelModules = [ "wlp10s0" ]; # "rtw88_8821ce" "rtl8822ce" ];
