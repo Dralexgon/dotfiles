@@ -1,7 +1,6 @@
 { config, pkgs, lib, inputs, ... }:
 
 {
-
   services.xserver = {
     displayManager.gdm.enable = true;
     #displayManager.gdm.enableGnomeKeyring = true;
@@ -53,7 +52,7 @@
     # Unfortunately, NixOS and other package managers... You know
     blackbox-terminal
 
-    # Flatpak
+    # Flatpak maybe
     #flatpak
     #gnome-software
 
@@ -71,4 +70,7 @@
 
     #nix-software-center
   ];
+
+  # services.flatpak.enable = true;
+  # flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 }

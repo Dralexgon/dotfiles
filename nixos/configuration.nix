@@ -6,7 +6,6 @@
 
 let
   conf_hyprland = false;
-  conf_ricing = true;
   # implicit pkgs = nixpkgs.legacyPackages.${pkgs.system};
   nixpkgs23 = inputs.nixpkgs23.legacyPackages.${pkgs.system};
   nixpkgs24 = inputs.nixpkgs24.legacyPackages.${pkgs.system};
@@ -29,17 +28,17 @@ in
   # };
 
   # Bootloader.
-  boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.grub = {
-    enable = true;
-    efiSupport = true;
-    device = "nodev";
-    useOSProber = true;
-    theme = pkgs.catppuccin-grub;
+  boot.loader = {
+    efi.canTouchEfiVariables = true;
+    grub = {
+      enable = true;
+      efiSupport = true;
+      device = "nodev";
+      useOSProber = true;
+      theme = pkgs.catppuccin-grub;
+    };
   };
-  boot.plymouth.enable = true;
-  boot.plymouth.themePackages = [ pkgs.catppuccin-plymouth ];
-  # boot.loader.systemd-boot.enable = true;
+  # boot.loader.systemd-boot.enable = true; # Default boot loader
 
   # For windows dual boot
   time.hardwareClockInLocalTime = true;
@@ -104,7 +103,7 @@ in
 
   networking.hostName = "nixos"; # Define your hostname.
 
-  system.autoUpgrade.enable = true;# Enable the automatic upgrade, disabled by default.
+  system.autoUpgrade.enable = true; # Enable the automatic upgrade, disabled by default.
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
 
@@ -115,23 +114,14 @@ in
   # Todo: try that
   # boot.extraModprobeConfig = "blacklist wlp10s0";
 
-  programs.hyprland.enable = conf_hyprland;
 
-  # Screensharing in hyrpland (not tested)
-  # xdg.portal.enable = conf_hyprland;
-  # xdg.portal.extraPortals = [
-  #   pkgs.xdg-desktop-portal-gtk
-  #   pkgs.xdg-desktop-portal-hyprland
-  # ];
-
+  # I have no idea what it does
   xdg.portal.enable = true;
   xdg.portal.extraPortals = [
     pkgs.xdg-desktop-portal-gtk
   ];
 
 
-  # services.flatpak.enable = true;
-  # flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
 
   programs.ssh.startAgent = true;
@@ -195,36 +185,7 @@ in
     # 2 discord clients for multiple accounts
     discord
     vesktop
-  ] ++ (
-  if conf_hyprland then
-  [
-    rofi-wayland # App launcher
-    waybar # Status bar at the top of the screen
-    kitty # Hyprland console
-    hyprlock # Lock screen
-    hyprpaper # Wallpaper manager
-    swww # Another wallpaper manager
-    swaynotificationcenter # Notification menu (is dunst better ?)
-    clipse # Clipboard manager
-    wl-clipboard # Another clipboard manager
-    wlogout # Logout menu
-    pavucontrol # Sound GUI
-    networkmanagerapplet # Wifi menu: nm-applet --indicator
-    grim # Screenshot
-    slurp # Screenshot area selector
-    hyprshot # Screenshot
-
-    # Ricing
-    python3
-    pywal
-
-    #ZaneyOS conf
-    eza
-    bat
-    starship
-    fzf # FuzzyFinder, used to search file. I should use it more
-  ] else []
-  );
+  ];
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.alex = {
