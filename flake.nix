@@ -32,6 +32,7 @@
         # Main configuration
         ./nixos/configuration.nix
         ./nixos/modules/gnome.nix
+        ./nixos/modules/hyprland.nix
 
         # Hardware specific modules
         ./nixos/modules/nvidia-drivers.nix
@@ -41,6 +42,7 @@
         # Personal modules
         ./nixos/modules/epita.nix
         ./nixos/modules/gaming.nix
+        ./nixos/modules/boot-animation.nix
         ./nixos/modules/ricing.nix
         ./nixos/modules/ricing-tools.nix
 
@@ -55,6 +57,7 @@
         # Main configuration
         ./nixos/configuration.nix
         ./nixos/modules/gnome.nix
+        #./nixos/modules/hyprland.nix
 
         # Hardware specific modules
         ./nixos/modules/nvidia-drivers.nix
@@ -64,6 +67,7 @@
         # Personal modules
         ./nixos/modules/epita.nix
         ./nixos/modules/gaming.nix
+        ./nixos/modules/boot-animation.nix
         ./nixos/modules/ricing.nix
         ./nixos/modules/ricing-tools.nix
 
