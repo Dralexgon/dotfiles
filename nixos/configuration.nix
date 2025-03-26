@@ -4,13 +4,13 @@
 
 { config, pkgs, lib, inputs, ... }:
 
-let
-  # implicit pkgs = nixpkgs.legacyPackages.${pkgs.system};
-  #nixpkgs23 = inputs.nixpkgs23.legacyPackages.${pkgs.system};
-  #nixpkgs24 = inputs.nixpkgs24.legacyPackages.${pkgs.system};
-  #nixpkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system};
-  #nixpkgs-unstable = import inputs.nixpkgs-unstable.legacyPackages.${pkgs.system} { config.allowUnfree = true; };
-in
+# let
+#   # implicit pkgs = nixpkgs.legacyPackages.${pkgs.system};
+#   nixpkgs23 = inputs.nixpkgs23.legacyPackages.${pkgs.system};
+#   nixpkgs24 = inputs.nixpkgs24.legacyPackages.${pkgs.system};
+#   nixpkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system};
+#   nixpkgs-unstable = import inputs.nixpkgs-unstable.legacyPackages.${pkgs.system} { config.allowUnfree = true; };
+# in
 
 {
   imports =
@@ -44,60 +44,9 @@ in
 
 
 
-
-  
-
-
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-
-  # Enable networking
-  networking.networkmanager.enable = true;
-
-  # Set your time zone.
-  time.timeZone = "Europe/Paris";
-  i18n.defaultLocale = "en_US.UTF-8";
-  i18n.extraLocaleSettings = {
-    LC_ADDRESS = "fr_FR.UTF-8";
-    LC_IDENTIFICATION = "fr_FR.UTF-8";
-    LC_MEASUREMENT = "fr_FR.UTF-8";
-    LC_MONETARY = "fr_FR.UTF-8";
-    LC_NAME = "fr_FR.UTF-8";
-    LC_NUMERIC = "fr_FR.UTF-8";
-    LC_PAPER = "fr_FR.UTF-8";
-    LC_TELEPHONE = "fr_FR.UTF-8";
-    LC_TIME = "fr_FR.UTF-8";
-    LC_ALL = "en_US.UTF-8";
-  };
-
-  # Enable touchpad support (enabled default in most desktopManager).
-  # services.xserver.libinput.enable = true;
-
-  # Configure console keymap
-  console.keyMap = "us";
-
-  # Enable CUPS to print documents.
-  services.printing.enable = true;
-
-  # Enable sound with pipewire.
-  hardware.pulseaudio.enable = false; # old versions
-  # services.pulseaudio.enable = false; # new versions
-  security.rtkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-    # If you want to use JACK applications, uncomment this
-    #jack.enable = true;
-
-    # use the example session manager (no others are packaged yet so this is enabled by default,
-    # no need to redefine it in your config for now)
-    #media-session.enable = true;
-  };
-
-
-
-
+  ##############################
+  # Configure your system here #
+  ##############################
 
 
   networking.hostName = "nixos"; # Define your hostname.
@@ -115,8 +64,6 @@ in
   xdg.portal.extraPortals = [
     pkgs.xdg-desktop-portal-gtk
   ];
-
-
 
 
   programs.ssh.startAgent = true;
@@ -205,6 +152,61 @@ in
   # };
 
 
+
+
+
+
+
+  #########################################
+  # Mandatory options that I never change #
+  #########################################
+
+  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+
+  # Enable networking
+  networking.networkmanager.enable = true;
+
+  # Set your time zone.
+  time.timeZone = "Europe/Paris";
+  i18n.defaultLocale = "en_US.UTF-8";
+  i18n.extraLocaleSettings = {
+    LC_ADDRESS = "fr_FR.UTF-8";
+    LC_IDENTIFICATION = "fr_FR.UTF-8";
+    LC_MEASUREMENT = "fr_FR.UTF-8";
+    LC_MONETARY = "fr_FR.UTF-8";
+    LC_NAME = "fr_FR.UTF-8";
+    LC_NUMERIC = "fr_FR.UTF-8";
+    LC_PAPER = "fr_FR.UTF-8";
+    LC_TELEPHONE = "fr_FR.UTF-8";
+    LC_TIME = "fr_FR.UTF-8";
+    LC_ALL = "en_US.UTF-8";
+  };
+
+  # Enable touchpad support (enabled default in most desktopManager).
+  # services.xserver.libinput.enable = true;
+
+  # Configure console keymap
+  console.keyMap = "us";
+
+  # Enable CUPS to print documents.
+  services.printing.enable = true;
+
+  # Enable sound with pipewire.
+  hardware.pulseaudio.enable = false; # old versions
+  # services.pulseaudio.enable = false; # new versions
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    # If you want to use JACK applications, uncomment this
+    #jack.enable = true;
+
+    # use the example session manager (no others are packaged yet so this is enabled by default,
+    # no need to redefine it in your config for now)
+    #media-session.enable = true;
+  };
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;

@@ -56,8 +56,6 @@
     #flatpak
     #gnome-software
 
-    catppuccin-cursors.macchiatoMauve
-
     # Gnome music contribution
     # gnome-builder
     # meson
