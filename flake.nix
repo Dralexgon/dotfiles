@@ -46,6 +46,7 @@
         ./nixos/modules/boot-animation.nix
         ./nixos/modules/ricing.nix
         ./nixos/modules/ricing-tools.nix
+        ./nixos/modules/flatpak.nix
 
         # inputs.boot-animation.nixosModules.default
       ];
@@ -71,6 +72,7 @@
         ./nixos/modules/boot-animation.nix
         ./nixos/modules/ricing.nix
         ./nixos/modules/ricing-tools.nix
+        #./nixos/modules/flatpak.nix
 
         # inputs.boot-animation.nixosModules.default
       ];
