@@ -1,0 +1,47 @@
+{
+  "$schema": "json_schema.json",
+  "logo": {
+    "color": {"1": "magenta"},
+    "padding": {
+      "top": 1,
+      "left": 2
+    }
+  },
+  "display": {
+    "color": {
+      "title": "magenta",
+      "keys": "magenta"
+    },
+   },
+  "modules": [
+    "title",
+    "separator",
+    "os",
+    "host",
+    "kernel",
+    "uptime",
+    "packages",
+    "shell",
+    "display",
+    "de",
+    "wm",
+    "wmtheme",
+    "theme",
+    "icons",
+    "font",
+    "cursor",
+    "terminal",
+    "terminalfont",
+    "cpu",
+    "gpu",
+    "memory",
+    "swap",
+    "disk",
+    "localip",
+    "battery",
+    "poweradapter",
+    "locale",
+    "break",
+    "colors"
+  ]
+}
