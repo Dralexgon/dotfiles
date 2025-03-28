@@ -14,4 +14,9 @@
     nvidiaSettings = true;
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
+
+  environment.systemPackages = with pkgs; [
+    # TUI that displays GPU usage (Optional)
+    nvtopPackages.nvidia
+  ];
 }

@@ -49,7 +49,7 @@
   ##############################
 
 
-  networking.hostName = "nixos"; # Define your hostname.
+  networking.hostName = "nixos"; # Define your hostname
 
   # Trying to fix wifi card driver
   boot.blacklistedKernelModules = [ "wlp10s0" ]; # "rtw88_8821ce" "rtl8822ce" ];
