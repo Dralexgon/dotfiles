@@ -121,7 +121,8 @@
     fragments # Bit toorent client
     obs-studio # Screen recorder
     #setzer # Latex editor
-    #apostrophe # Markdown editor 
+    #apostrophe # Markdown editor
+    eartag # Music tag editor
 
     # Simple useful tools for Nixos
     nix-output-monitor

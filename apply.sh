@@ -6,6 +6,8 @@ NIXOS=true         # Will be disabled if not on NixOS, set it to false only if y
 
 DOTFILES_DIR=./config
 
+# TODO: rework
+
 # Gnome
 
 # dconf load /org/gnome/shell/extensions/ <$DOTFILES_DIR/gnome/gnome-shell-extensions.dconf
@@ -23,40 +25,40 @@ DOTFILES_DIR=./config
 # fi
 
 # GTK theme
-./scripts/apply-gnome-nix.sh
+# ./scripts/apply-gnome-nix.sh
 
 # TODO: Gnome terminal theme
-/home/alex/.local/share/blackbox/schemes
+# /home/alex/.local/share/blackbox/schemes
 
 # Bashrc
 
-if $SYMLINKS; then
-    ln -s $DOTFILES_DIR/bash/bashrc ~/.bashrc
-else
-    cp $DOTFILES_DIR/bash/bashrc ~/.bashrc
-fi
+# if $SYMLINKS; then
+#     ln -s $DOTFILES_DIR/bash/bashrc ~/.bashrc
+# else
+#     cp $DOTFILES_DIR/bash/bashrc ~/.bashrc
+# fi
 
 # Hyprland
 
-for var in hypr kitty rofi waybar nvim; do
-    if [ ! -d $DOTFILES_DIR/$var ]; then
-        echo "Error: $DOTFILES_DIR/$var does not exist"
-        exit 1
-    fi
-    if [ -e ~/.config/$var ]; then
-        if $REMOVE_TARGET; then
-            rm -r ~/.config/$var
-        else
-            echo "Error: ~/.config/$var already exists"
-            exit 1
-        fi
-    fi
-    if $SYMLINKS; then
-        ln -s $DOTFILES_DIR/$var ~/.config
-    else
-        cp -r $DOTFILES_DIR/$var ~/.config
-    fi
-done
+# for var in hypr kitty rofi waybar nvim; do
+#     if [ ! -d $DOTFILES_DIR/$var ]; then
+#         echo "Error: $DOTFILES_DIR/$var does not exist"
+#         exit 1
+#     fi
+#     if [ -e ~/.config/$var ]; then
+#         if $REMOVE_TARGET; then
+#             rm -r ~/.config/$var
+#         else
+#             echo "Error: ~/.config/$var already exists"
+#             exit 1
+#         fi
+#     fi
+#     if $SYMLINKS; then
+#         ln -s $DOTFILES_DIR/$var ~/.config
+#     else
+#         cp -r $DOTFILES_DIR/$var ~/.config
+#     fi
+# done
 
 # Nixos
 
