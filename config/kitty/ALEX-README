@@ -1,0 +1,2 @@
+change theme menu: kitty +kitten themes --reload-in=all
+change theme: kitty +kitten themes --reload-in=all <theme name>
