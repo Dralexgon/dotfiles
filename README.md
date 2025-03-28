@@ -2,4 +2,4 @@
 
 Not finished !
 
-https://github.com/Dralexgon/dotfiles/blob/main/github/demo-video.webm
+[![Watch the video](https://img.youtube.com/vi/rfYjSGmUcBk/maxresdefault.jpg)](https://youtu.be/rfYjSGmUcBk)
