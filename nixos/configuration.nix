@@ -114,10 +114,14 @@
     xorg.xkill
 
     # Simple useful apps
-    fragments # Bit toorent client
     pinta # Paint
+    clapper # Video player
     gcolor3 # Color picker
     amberol # Music player
+    fragments # Bit toorent client
+    obs-studio # Screen recorder
+    #setzer # Latex editor
+    #apostrophe # Markdown editor 
 
     # Simple useful tools for Nixos
     nix-output-monitor
