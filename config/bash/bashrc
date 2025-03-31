@@ -7,11 +7,13 @@
 [[ $(tty) != /dev/tty* ]] || return
 
 # Setup your variables
-EDITOR='nvim'
-#CONFIGURATION_NIX_FILE='/etc/nixos/configuration.nix'
-CONFIGURATION_NIX_FILE=~/dotfiles/nixos/configuration.nix
 
-FLAKE_DIR=~/dotfiles
+EDITOR='nvim'
+CONFIGURATION_NIX_FILE='/etc/nixos/configuration.nix'
+
+FLAKE=true
+CONFIGURATION_FLAKE_DIR='~/dotfiles'
+CONFIGURATION_FLAKE_HOST='nixos-grey-laptop'
 
 # Bash prompt
 PINK='\033[01;95m'
@@ -21,13 +23,16 @@ PS1="\
 \[$PINK\]uwu~ \[$WHITE\]"
 
 # Nix shortcuts
-alias alex-nix-conf="$EDITOR $CONFIGURATION_NIX_FILE"
 
-#alias alex-nix-rebuild-switch="sudo nixos-rebuild switch"
-#alias alex-nix-rebuild-reboot="sudo nixos-rebuild switch && reboot"
-
-alias alex-nix-rebuild-switch="sudo nixos-rebuild switch --flake $FLAKE_DIR/#default"
-alias alex-nix-rebuild-reboot="sudo nixos-rebuild boot --flake $FLAKE_DIR/#default; reboot"
+if ! $FLAKE; then
+    alias alex-nix-conf="$EDITOR $CONFIGURATION_NIX_FILE"
+    alias alex-nix-rebuild-switch="sudo nixos-rebuild switch"
+    alias alex-nix-rebuild-reboot="sudo nixos-rebuild switch && reboot"
+else
+    alias alex-nix-conf="$EDITOR $CONFIGURATION_FLAKE_DIR"
+    alias alex-nix-rebuild-switch="sudo nixos-rebuild switch --flake $CONFIGURATION_FLAKE_DIR/#$CONFIGURATION_FLAKE_HOST"
+    alias alex-nix-rebuild-reboot="sudo nixos-rebuild boot --flake $CONFIGURATION_FLAKE_DIR/#$CONFIGURATION_FLAKE_HOST"
+fi
 
 alias alex-nix-generation-list="nixos-rebuild list-generations"
 alex-nix-generation-clean() { # Usage examples: nix-clean-generation 1 2 3
@@ -74,7 +79,7 @@ swapf() {
     mv "$file1" "$tempfile" && mv "$file2" "$file1" && mv "$tempfile" "$file2"
 
     if [ $? -eq 0 ]; then
-        echo "Swapped: $file1 <--> $file2"
+        echo "Swapped: $file1 <-> $file2"
     else
         echo "Error: File swapping failed."
     fi
@@ -106,3 +111,13 @@ if [ -f ~/.bashrc-personal ]; then
 fi
 
 fastfetch
+
+# Temporary, to remove
+export PGDATA="$HOME/postgres_data"
+export PGHOST="/tmp"
+export PGPORT="5432"
+
+# export STARSHIP_CONFIG=~/.config/starship/starship.toml
+# export STARSHIP_CONFIG=~/.config/starship/pastel-powerline.toml
+# export STARSHIP_CONFIG=~/.config/starship/alex.toml
+# eval "$(starship init bash)"
