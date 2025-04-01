@@ -62,16 +62,16 @@
         #./nixos/modules/hyprland.nix
 
         # Hardware specific modules
-        ./nixos/modules/nvidia-drivers.nix
-        ./nixos/modules/razer.nix
+        #./nixos/modules/nvidia-drivers.nix
+        #./nixos/modules/razer.nix
         ./nixos/modules/swap.nix
 
         # Personal modules
         ./nixos/modules/epita.nix
-        ./nixos/modules/gaming.nix
+        #./nixos/modules/gaming.nix
         ./nixos/modules/boot-animation.nix
         ./nixos/modules/ricing.nix
-        ./nixos/modules/ricing-tools.nix
+        #./nixos/modules/ricing-tools.nix
         #./nixos/modules/flatpak.nix
 
         # inputs.boot-animation.nixosModules.default
