@@ -38,7 +38,7 @@
         # Hardware specific modules
         ./nixos/modules/nvidia-drivers.nix
         ./nixos/modules/razer.nix
-        ./nixos/modules/swap.nix
+        #./nixos/modules/swap.nix
 
         # Personal modules
         ./nixos/modules/epita.nix

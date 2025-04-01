@@ -8,6 +8,7 @@
     # Theming (GTK, icons, etc)
     dconf-editor
     nwg-look
+    gradience
     home-manager
 
     # Generate color schemes from images

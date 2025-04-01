@@ -1,5 +1,5 @@
 WALLPAPER='ubuntu.png'
 DIR='/home/alex/Pictures/Wallpapers'
 SHELL_THEME='Yaru-magenta'
-GTK_THEME='Yaru-magenta'
+GTK_THEME='Adwaita' # https://gitlab.gnome.org/GNOME/gtk/-/tree/gtk-4.0/gtk/theme/Adwaita
 ICON_THEME='Yaru-magenta'

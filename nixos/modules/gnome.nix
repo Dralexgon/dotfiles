@@ -37,7 +37,7 @@
     #gnomeExtensions.custom-accent-colors
 
     # Very nice but heavy
-    gnomeExtensions.dash2dock-lite
+    gnomeExtensions.dash2dock-lite # Dash2DockAnimated
     gnomeExtensions.compiz-windows-effect
     gnomeExtensions.compiz-alike-magic-lamp-effect
     gnomeExtensions.burn-my-windows

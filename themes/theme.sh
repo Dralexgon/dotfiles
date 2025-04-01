@@ -2,6 +2,7 @@ WALLPAPER='default.png'
 DIR="$HOME/Pictures/Wallpapers"
 SHELL_THEME='Adwaita'
 ICON_THEME='Adwaita'
+GTK_THEME='Adwaita'
 
 if [ $# != 1 ]; then
     echo "Usage: theme.sh <file.theme>"
@@ -38,3 +39,14 @@ else
     # Append if not found
     echo 'gtk-theme-name='"$SHELL_THEME" >>"$FILE"
 fi
+
+#libadwaita # Thanks to https://github.com/Fausto-Korpsvart/Catppuccin-GTK-Theme/blob/main/themes/install.sh
+rm -rf "${HOME}/.config/gtk-4.0/"{assets,gtk.css,gtk-dark.css}
+
+[ -d "${HOME}/.themes/${GTK_THEME}" ] || exit
+
+echo -e "\nLink '${HOME}/.themes/${GTK_THEME}/gtk-4.0' to '${HOME}/.config/gtk-4.0' for libadwaita..."
+mkdir -p "${HOME}/.config/gtk-4.0"
+ln -sf "${HOME}/.themes/${GTK_THEME}/gtk-4.0/assets" "${HOME}/.config/gtk-4.0/assets"
+ln -sf "${HOME}/.themes/${GTK_THEME}/gtk-4.0/gtk.css" "${HOME}/.config/gtk-4.0/gtk.css"
+ln -sf "${HOME}/.themes/${GTK_THEME}/gtk-4.0/gtk-dark.css" "${HOME}/.config/gtk-4.0/gtk-dark.css"

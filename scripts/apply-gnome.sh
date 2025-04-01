@@ -5,7 +5,7 @@ icons=true
 
 gtk_color='purple'
 icons_color='#CBA6F7'
-remove_icons_app=false
+remove_icons_app=true
 
 echo "Installing Catppuccin Gnome Theme. Special thanks to https://github.com/Fausto-Korpsvart/Catppuccin-GTK-Theme"
 echo "" # A little bit of space

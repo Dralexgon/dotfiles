@@ -2,4 +2,5 @@ WALLPAPER='catppuccin-macchiato.png'
 DIR='/home/alex/Pictures/Wallpapers'
 SHELL_THEME='shell-Purple-Dark'
 GTK_THEME='shell-Purple-Dark'
+GTK_THEME_DIR=~/.themes/shell-Purple-Dark
 ICON_THEME='Catppuccin-Macchiato'
