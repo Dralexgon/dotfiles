@@ -52,7 +52,7 @@
   networking.hostName = "nixos"; # Define your hostname
 
   # Trying to fix wifi card driver
-  boot.blacklistedKernelModules = [ "wlp10s0" ]; # "rtw88_8821ce" "rtl8822ce" ];
+  boot.blacklistedKernelModules = [ "rtw88_8822ce" ]; # "wlp10s0" "rtw88_8821ce" "rtl8822ce" ];
   # boot.kernelParams = [ "modprobe.blacklist=rtw88_8821ce" ]; #    rtl8821ce-dkms
 
   # Todo: try that
@@ -76,6 +76,8 @@
 
   #nix.package = nixpkgs-stable.nix;
 
+  programs.nix-ld.enable = true;
+
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
@@ -89,6 +91,7 @@
     vscode
     (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.clion ["github-copilot"])
     (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.idea-ultimate ["github-copilot"])
+    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.pycharm-professional ["github-copilot"])
     
     # Terminal <3 meow
     kitty
