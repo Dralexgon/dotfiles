@@ -29,24 +29,7 @@
       # Main pc POWERFUL RTXXXX !!!
       specialArgs = {inherit inputs;};
       modules = [
-        # Main configuration
-        ./nixos/configuration.nix
-        ./nixos/modules/gnome.nix
-        ./nixos/modules/hyprland.nix
-        ./nixos/modules/auto-update.nix
-
-        # Hardware specific modules
-        ./nixos/modules/nvidia-drivers.nix
-        ./nixos/modules/razer.nix
-        #./nixos/modules/swap.nix
-
-        # Personal modules
-        ./nixos/modules/epita.nix
-        ./nixos/modules/gaming.nix
-        ./nixos/modules/boot-animation.nix
-        ./nixos/modules/ricing.nix
-        ./nixos/modules/ricing-tools.nix
-        ./nixos/modules/flatpak.nix
+        ./nixos/hosts/nixos-tower-RTX3060/configuration.nix
 
         # inputs.boot-animation.nixosModules.default
       ];
@@ -56,23 +39,7 @@
       # Work laptop, nixos-grey-laptop: 50 nuance...
       specialArgs = {inherit inputs;};
       modules = [
-        # Main configuration
-        ./nixos/configuration.nix
-        ./nixos/modules/gnome.nix
-        #./nixos/modules/hyprland.nix
-
-        # Hardware specific modules
-        #./nixos/modules/nvidia-drivers.nix
-        #./nixos/modules/razer.nix
-        ./nixos/modules/swap.nix
-
-        # Personal modules
-        ./nixos/modules/epita.nix
-        #./nixos/modules/gaming.nix
-        ./nixos/modules/boot-animation.nix
-        ./nixos/modules/ricing.nix
-        #./nixos/modules/ricing-tools.nix
-        #./nixos/modules/flatpak.nix
+        ./nixos/hosts/nixos-grey-laptop/configuration.nix
 
         # inputs.boot-animation.nixosModules.default
       ];

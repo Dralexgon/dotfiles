@@ -14,8 +14,7 @@
 
 {
   imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
+    [
       #inputs.nix-minecraft.nixosModules.minecraft-servers
     ];
   #nixpkgs.overlays = [ inputs.nix-minecraft.overlay ];
@@ -49,7 +48,7 @@
   ##############################
 
 
-  networking.hostName = "nixos"; # Define your hostname
+  #networking.hostName = "nixos"; # Define your hostname
 
   # Trying to fix wifi card driver
   boot.blacklistedKernelModules = [ "rtw88_8822ce" ]; # "wlp10s0" "rtw88_8821ce" "rtl8822ce" ];
