@@ -5,6 +5,8 @@
 { config, pkgs, lib, inputs, ... }:
 
 {
+  networking.hostName = "nixos-grey-laptop";
+
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -17,6 +19,7 @@
     # Main modules
     ./../../modules/gnome.nix
     #./../../modules/hyprland.nix
+    #./../../modules/auto-update.nix
 
     # Hardware specific modules
     #./../../modules/nvidia-drivers.nix

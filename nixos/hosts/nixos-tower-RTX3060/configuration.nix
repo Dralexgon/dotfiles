@@ -5,6 +5,8 @@
 { config, pkgs, lib, inputs, ... }:
 
 {
+  networking.hostName = "nixos-tower-RTX3060";
+
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
