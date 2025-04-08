@@ -106,12 +106,14 @@
     wl-clipboard
     ripgrep
     nodejs # For copilot nvim
+    nil # Nix language for neovim
 
     # Simple useful tools
     git
+    tree
+    tldr # better man (man pages)
     wget
     unzip
-    tree
     xorg.xkill
 
     # Simple useful apps
@@ -125,11 +127,10 @@
     eartag # Music tag editor
 
     # Simple useful tools for Nixos
-    nix-output-monitor
-    nvd
-    nh
-    nil
-    tldr
+    nh # Beautiful rebuild switch animation (nh os rebuild)
+    nix-output-monitor # Same but work with more things
+    nvd # View package difference between two nixpkgs versions
+    nil # NixOS LSP (language server protocol) VERY USEFUL for nix language in IDE
 
     # 2 discord clients for multiple accounts
     discord
