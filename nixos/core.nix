@@ -73,8 +73,6 @@
 
   # fonts.fontDir.enable = true;
 
-  #nix.package = nixpkgs-stable.nix;
-
   programs.nix-ld.enable = true;
 
   # List packages installed in system profile. To search, run:
@@ -91,6 +89,7 @@
     (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.clion ["github-copilot"])
     (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.idea-ultimate ["github-copilot"])
     (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.pycharm-professional ["github-copilot"])
+    #(pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.rust-rover ["github-copilot"])
     
     # Terminal <3 meow
     kitty
@@ -129,6 +128,8 @@
     nix-output-monitor
     nvd
     nh
+    nil
+    tldr
 
     # 2 discord clients for multiple accounts
     discord

@@ -23,7 +23,7 @@
 
     # Hardware specific modules
     ./../../modules/nvidia-drivers.nix
-    ./../../modules/razer.nix
+    #./../../modules/razer.nix # Derivation doesn't build temporarily
     #./../../modules/swap.nix
 
     # Personal modules
