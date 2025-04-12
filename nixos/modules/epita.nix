@@ -1,8 +1,9 @@
 { config, pkgs, lib, inputs, ... }:
 
 {
-  #virtualisation.docker.enable = true;
-  #users.extraGroups.docker.members = [ "alex" ];
+  virtualisation.docker.enable = true;
+  users.extraGroups.docker.members = [ "alex" ];
+  users.users."alex".extraGroups = [ "docker" ];
 
   environment.systemPackages = with pkgs; [
     # C

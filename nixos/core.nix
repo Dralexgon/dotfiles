@@ -129,7 +129,10 @@
     # Simple useful tools for Nixos
     nh # Beautiful rebuild switch animation (nh os rebuild)
     nix-output-monitor # Same but work with more things
-    nvd # View package difference between two nixpkgs versions
+    nvd # View package difference between generations
+    # Example:
+    # - nvd history
+    # nvd diff /nix/var/nix/profiles/system-{42,43}-link
     nil # NixOS LSP (language server protocol) VERY USEFUL for nix language in IDE
 
     # 2 discord clients for multiple accounts

@@ -22,17 +22,17 @@
 
     # Minecraft
     prismlauncher # Minecraft launcher
-    # modrinth-app # Modrinth launcher
-    # It crashes nixos-rebuild sometimes:
-    # (pkgs.modrinth-app.overrideAttrs (oldAttrs: {
-    #   buildCommand =
-    #     ''
-    #       gappsWrapperArgs+=(
-    #          --set WEBKIT_DISABLE_DMABUF_RENDERER 1
-    #       )
-    #     ''
-    #     + oldAttrs.buildCommand;
-    # }))
+    #modrinth-app # Modrinth launcher
+    #It crashes nixos-rebuild sometimes:
+    (pkgs.modrinth-app.overrideAttrs (oldAttrs: {
+      buildCommand =
+        ''
+          gappsWrapperArgs+=(
+             --set WEBKIT_DISABLE_DMABUF_RENDERER 1
+          )
+        ''
+        + oldAttrs.buildCommand;
+    }))
     zulu21 # Java for minecraft
 
     libglvnd # For minecraft forge

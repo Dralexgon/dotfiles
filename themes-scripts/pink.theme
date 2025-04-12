@@ -1,0 +1,5 @@
+WALLPAPER='ubuntu.png'
+DIR='/home/alex/Pictures/Wallpapers'
+SHELL_THEME='Darkaneon-Pink'
+GTK_THEME='Darkaneon-Pink' # https://gitlab.gnome.org/GNOME/gtk/-/tree/gtk-4.0/gtk/theme/Adwaita
+ICON_THEME='Darkaneon-Pink'
