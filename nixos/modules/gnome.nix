@@ -17,6 +17,9 @@
   };
 
   environment.systemPackages = with pkgs; [
+    # Terminal <3 meow
+    kitty # In kitty.conf set linux_display_server to x11 to have the same look as gnome-terminal
+    # Set font to JetBrains Mono Nerd Font Mono if you want to use nerd fonts
 
     # Useful gnome tools
     gnome-tweaks
@@ -25,7 +28,7 @@
     gnomeExtensions.gsconnect # Android phone integration
     gnomeExtensions.speedinator # Control the speed of gnome-shell animations
 
-    # Choose your favorite
+    # Choose your favorite internet speed meter
     gnomeExtensions.network-stats
     #gnomeExtensions.speed-buzz-internet-speed-meter
     #gnomeExtensions.internet-speed-meter

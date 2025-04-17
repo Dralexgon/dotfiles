@@ -27,6 +27,7 @@
     #./../../modules/swap.nix
 
     # Personal modules
+    ./../../modules/neovim.nix
     ./../../modules/epita.nix
     ./../../modules/gaming.nix
     ./../../modules/boot-animation.nix
