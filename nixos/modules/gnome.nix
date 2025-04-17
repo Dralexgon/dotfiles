@@ -22,14 +22,14 @@
     gnome-tweaks
     gnome-extension-manager
     gnomeExtensions.emoji-copy
-    gnomeExtensions.gsconnect
+    gnomeExtensions.gsconnect # Android phone integration
+    gnomeExtensions.speedinator # Control the speed of gnome-shell animations
 
     # Choose your favorite
     gnomeExtensions.network-stats
-    gnomeExtensions.speed-buzz-internet-speed-meter
-    gnomeExtensions.internet-speed-meter
-    gnomeExtensions.crazy-internet-speed-meter
-    gnomeExtensions.speedinator
+    #gnomeExtensions.speed-buzz-internet-speed-meter
+    #gnomeExtensions.internet-speed-meter
+    #gnomeExtensions.crazy-internet-speed-meter
 
     # Nice and leightweight
     gnomeExtensions.user-themes
@@ -52,19 +52,15 @@
     # Unfortunately, NixOS and other package managers... You know
     blackbox-terminal
 
-    # Flatpak maybe
-    #flatpak
-    #gnome-software
-
     # Gnome music contribution
     # gnome-builder
     # meson
-    # pkg-config
+    pkg-config
     # libadwaita
-    # gtk4
+    gtk4
     # flatpak-builder
     # apostrophe # Markdown editor
-    # element-desktop
+    element-desktop
 
     #nix-software-center
   ];

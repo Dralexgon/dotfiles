@@ -17,6 +17,10 @@
     clang-tools
     cmake
 
+    # Man pages
+    man-pages
+    man-pages-posix
+
     # Afs
     krb5
     sshfs

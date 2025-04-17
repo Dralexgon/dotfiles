@@ -38,4 +38,7 @@
   # Configure console keymap
   console.keyMap = "us";
 
+  # Blacklist my buggy wifi card
+  boot.blacklistedKernelModules = [ "rtw88_8822ce" ];
+
 }

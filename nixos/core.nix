@@ -13,10 +13,9 @@
 # in
 
 {
-  imports =
-    [
-      #inputs.nix-minecraft.nixosModules.minecraft-servers
-    ];
+  imports = [
+    #inputs.nix-minecraft.nixosModules.minecraft-servers
+  ];
   #nixpkgs.overlays = [ inputs.nix-minecraft.overlay ];
 
   # Added by flake boot-animation
@@ -46,17 +45,6 @@
   ##############################
   # Configure your system here #
   ##############################
-
-
-  #networking.hostName = "nixos"; # Define your hostname
-
-  # Trying to fix wifi card driver
-  boot.blacklistedKernelModules = [ "rtw88_8822ce" ]; # "wlp10s0" "rtw88_8821ce" "rtl8822ce" ];
-  # boot.kernelParams = [ "modprobe.blacklist=rtw88_8821ce" ]; #    rtl8821ce-dkms
-
-  # Todo: try that
-  # boot.extraModprobeConfig = "blacklist wlp10s0";
-
 
   # I have no idea what it does
   xdg.portal.enable = true;
@@ -106,7 +94,7 @@
     wl-clipboard
     ripgrep
     nodejs # For copilot nvim
-    nil # Nix language for neovim
+    nil # Nix lsp (language server protocol) for errors and warnings in .nix files
 
     # Simple useful tools
     git
@@ -133,7 +121,7 @@
     # Example:
     # - nvd history
     # nvd diff /nix/var/nix/profiles/system-{42,43}-link
-    nil # NixOS LSP (language server protocol) VERY USEFUL for nix language in IDE
+    nil # Nix lsp (language server protocol) for errors and warnings in .nix files
 
     # 2 discord clients for multiple accounts
     discord
