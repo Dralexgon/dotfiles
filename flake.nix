@@ -21,9 +21,14 @@
 
   outputs = { self, nixpkgs,  ... }@inputs:{
 
-    nixosConfigurations.default = self.nixosConfigurations."nixos";
+    nixosConfigurations."nixos" = self.nixosConfigurations."default";
 
-    nixosConfigurations."nixos" = self.nixosConfigurations."nixos-tower-RTX3060";
+    nixosConfigurations."default" = nixpkgs.lib.nixosSystem {
+      specialArgs = {inherit inputs;};
+      modules = [
+        ./nixos/hosts/default/configuration.nix
+      ];
+    };
 
     nixosConfigurations."nixos-tower-RTX3060" = nixpkgs.lib.nixosSystem {
       # Main pc POWERFUL RTXXXX !!!
