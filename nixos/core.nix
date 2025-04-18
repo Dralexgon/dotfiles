@@ -13,10 +13,9 @@
 # in
 
 {
-  imports =
-    [
-      #inputs.nix-minecraft.nixosModules.minecraft-servers
-    ];
+  imports = [
+    #inputs.nix-minecraft.nixosModules.minecraft-servers
+  ];
   #nixpkgs.overlays = [ inputs.nix-minecraft.overlay ];
 
   # Added by flake boot-animation
@@ -47,17 +46,6 @@
   # Configure your system here #
   ##############################
 
-
-  #networking.hostName = "nixos"; # Define your hostname
-
-  # Trying to fix wifi card driver
-  boot.blacklistedKernelModules = [ "wlp10s0" ]; # "rtw88_8821ce" "rtl8822ce" ];
-  # boot.kernelParams = [ "modprobe.blacklist=rtw88_8821ce" ]; #    rtl8821ce-dkms
-
-  # Todo: try that
-  # boot.extraModprobeConfig = "blacklist wlp10s0";
-
-
   # I have no idea what it does
   xdg.portal.enable = true;
   xdg.portal.extraPortals = [
@@ -73,7 +61,7 @@
 
   # fonts.fontDir.enable = true;
 
-  #nix.package = nixpkgs-stable.nix;
+  programs.nix-ld.enable = true;
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -88,9 +76,12 @@
     vscode
     (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.clion ["github-copilot"])
     (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.idea-ultimate ["github-copilot"])
+    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.pycharm-professional ["github-copilot"])
+    #(pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.rust-rover ["github-copilot"])
     
     # Terminal <3 meow
-    kitty
+    kitty # In kitty.conf set linux_display_server to x11 to have the same look as gnome-terminal
+    # Set font to JetBrains Mono Nerd Font Mono if you want to use nerd fonts
 
     # Neovim packages
     neovim
@@ -104,12 +95,14 @@
     wl-clipboard
     ripgrep
     nodejs # For copilot nvim
+    nil # Nix lsp (language server protocol) for errors and warnings in .nix files
 
     # Simple useful tools
     git
+    tree
+    tldr # better man (man pages)
     wget
     unzip
-    tree
     xorg.xkill
 
     # Simple useful apps
@@ -123,9 +116,13 @@
     eartag # Music tag editor
 
     # Simple useful tools for Nixos
-    nix-output-monitor
-    nvd
-    nh
+    nh # Beautiful rebuild switch animation (nh os rebuild)
+    nix-output-monitor # Same but work with more things
+    nvd # View package difference between generations
+    # Example:
+    # - nvd history
+    # nvd diff /nix/var/nix/profiles/system-{42,43}-link
+    nil # Nix lsp (language server protocol) for errors and warnings in .nix files
 
     # 2 discord clients for multiple accounts
     discord

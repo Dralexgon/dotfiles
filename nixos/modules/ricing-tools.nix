@@ -8,6 +8,7 @@
     # Theming (GTK, icons, etc)
     dconf-editor
     nwg-look
+    lxappearance
     gradience
     home-manager
 

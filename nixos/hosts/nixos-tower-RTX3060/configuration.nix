@@ -23,10 +23,11 @@
 
     # Hardware specific modules
     ./../../modules/nvidia-drivers.nix
-    ./../../modules/razer.nix
+    #./../../modules/razer.nix # Derivation doesn't build temporarily
     #./../../modules/swap.nix
 
     # Personal modules
+    ./../../modules/neovim.nix
     ./../../modules/epita.nix
     ./../../modules/gaming.nix
     ./../../modules/boot-animation.nix
@@ -37,5 +38,8 @@
 
   # Configure console keymap
   console.keyMap = "us";
+
+  # Blacklist my buggy wifi card
+  boot.blacklistedKernelModules = [ "rtw88_8822ce" ];
 
 }

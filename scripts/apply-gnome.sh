@@ -14,6 +14,7 @@ cd /tmp || exit
 git clone https://github.com/Fausto-Korpsvart/Catppuccin-GTK-Theme
 (
     cd Catppuccin-GTK-Theme || exit
+    git reset --hard a89b477ab26f8b64062efbeb9cdffc24d2143f2b
     (
         if [ "$gtk" = true ]; then
             cd themes || return

@@ -1,8 +1,9 @@
 { config, pkgs, lib, inputs, ... }:
 
 {
-  #virtualisation.docker.enable = true;
-  #users.extraGroups.docker.members = [ "alex" ];
+  virtualisation.docker.enable = true;
+  users.extraGroups.docker.members = [ "alex" ];
+  users.users."alex".extraGroups = [ "docker" ];
 
   environment.systemPackages = with pkgs; [
     # C
@@ -15,6 +16,11 @@
     gnumake
     clang-tools
     cmake
+    ninja
+
+    # Man pages
+    man-pages
+    man-pages-posix
 
     # Afs
     krb5
