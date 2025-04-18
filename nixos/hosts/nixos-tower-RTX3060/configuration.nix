@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, lib, inputs, ... }:
+{ ... }:
 
 {
   networking.hostName = "nixos-tower-RTX3060";
@@ -27,6 +27,7 @@
     #./../../modules/swap.nix
 
     # Personal modules
+    ./../../modules/experiments.nix
     ./../../modules/neovim.nix
     ./../../modules/epita.nix
     ./../../modules/gaming.nix
@@ -42,4 +43,6 @@
   # Blacklist my buggy wifi card
   boot.blacklistedKernelModules = [ "rtw88_8822ce" ];
 
+  # Disable powersave for wifi because it prevents my card from reconnecting after a wifi crash
+  networking.networkmanager.wifi.powersave = false;
 }
