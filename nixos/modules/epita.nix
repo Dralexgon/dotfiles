@@ -16,6 +16,7 @@
     gnumake
     clang-tools
     cmake
+    ninja
 
     # Man pages
     man-pages
