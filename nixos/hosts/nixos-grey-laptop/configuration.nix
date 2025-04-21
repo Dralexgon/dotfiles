@@ -18,7 +18,8 @@
 
     # Main modules
     ./../../modules/gnome.nix
-    #./../../modules/hyprland.nix
+    ./../../modules/hyprland.nix
+    ./../../modules/wayfire.nix
     #./../../modules/auto-update.nix
 
     # Hardware specific modules
@@ -32,7 +33,7 @@
     #./../../modules/gaming.nix
     ./../../modules/boot-animation.nix
     ./../../modules/ricing.nix
-    #./../../modules/ricing-tools.nix
+    ./../../modules/ricing-tools.nix
     #./../../modules/flatpak.nix
   ];
 
