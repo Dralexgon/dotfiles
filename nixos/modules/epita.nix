@@ -1,4 +1,4 @@
-{ config, pkgs, lib, inputs, ... }:
+{ pkgs, ... }:
 
 {
   virtualisation.docker.enable = true;
@@ -31,6 +31,10 @@
     autoconf
     autoconf-archive
     libtool
+
+    # Javascript
+    nodejs_20
+    yarn
 
     # Mail
     thunderbird
