@@ -39,6 +39,9 @@
     # Mail
     thunderbird
 
+    # Android
+    android-studio
+
     # Net
     # gns3-server
     # gns3-gui
