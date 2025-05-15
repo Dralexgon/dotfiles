@@ -1,9 +1,9 @@
-{ config, pkgs, lib, inputs, ... }:
+{ pkgs, ... }:
 
 {
-  virtualisation.docker.enable = true;
-  users.extraGroups.docker.members = [ "alex" ];
-  users.users."alex".extraGroups = [ "docker" ];
+  # virtualisation.docker.enable = true;
+  # users.extraGroups.docker.members = [ "alex" ];
+  # users.users."alex".extraGroups = [ "docker" ];
 
   environment.systemPackages = with pkgs; [
     # C
@@ -32,8 +32,15 @@
     autoconf-archive
     libtool
 
+    # Javascript
+    nodejs_20
+    yarn
+
     # Mail
     thunderbird
+
+    # Android
+    android-studio
 
     # Net
     # gns3-server

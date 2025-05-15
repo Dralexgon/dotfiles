@@ -27,7 +27,7 @@
     #./../../modules/swap.nix
 
     # Personal modules
-    ./../../modules/experiments.nix
+    ./../../modules/llm.nix
     ./../../modules/neovim.nix
     ./../../modules/epita.nix
     ./../../modules/gaming.nix
