@@ -3,6 +3,6 @@
 {
   swapDevices = [{
     device = "/swapfile";
-    size = 4 * 1024; # 4GB
+    size = 8 * 1024; # 8GB
   }];
 }

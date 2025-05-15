@@ -12,29 +12,29 @@
     #steam # Steam is already installed with the above option
     adwsteamgtk # GTK wrapper for Steam (gtk theme + better ui beacause steam is ugly)
 
-    protonup
-    lutris
-    heroic
-    bottles
+    # protonup
+    # lutris
+    # heroic
+    # bottles
 
     # Unity launcher, to create games
-    unityhub
+    # unityhub
 
     # Minecraft
     prismlauncher # Minecraft launcher
     # modrinth-app # Modrinth launcher
     # It crashes nixos-rebuild sometimes:
-    (pkgs.modrinth-app.overrideAttrs (oldAttrs: {
-      buildCommand =
-        ''
-          gappsWrapperArgs+=(
-             --set WEBKIT_DISABLE_DMABUF_RENDERER 1
-             --set LIBGL_ALWAYS_SOFTWARE 1
-             --set GDK_BACKEND x11
-          )
-        ''
-        + oldAttrs.buildCommand;
-    }))
+    # (pkgs.modrinth-app.overrideAttrs (oldAttrs: {
+    #   buildCommand =
+    #     ''
+    #       gappsWrapperArgs+=(
+    #          --set WEBKIT_DISABLE_DMABUF_RENDERER 1
+    #          --set LIBGL_ALWAYS_SOFTWARE 1
+    #          --set GDK_BACKEND x11
+    #       )
+    #     ''
+    #     + oldAttrs.buildCommand;
+    # }))
     zulu21 # Java for minecraft
 
     libglvnd # For minecraft forge
