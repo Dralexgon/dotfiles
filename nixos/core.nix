@@ -2,15 +2,12 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, lib, inputs, ... }:
+{ pkgs, inputs, ... }:
 
-# let
-#   # implicit pkgs = nixpkgs.legacyPackages.${pkgs.system};
-#   nixpkgs23 = inputs.nixpkgs23.legacyPackages.${pkgs.system};
-#   nixpkgs24 = inputs.nixpkgs24.legacyPackages.${pkgs.system};
-#   nixpkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system};
-#   nixpkgs-unstable = import inputs.nixpkgs-unstable.legacyPackages.${pkgs.system} { config.allowUnfree = true; };
-# in
+let
+  # nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
+  nixpkgs-stable = import inputs.nixpkgs-stable { system = pkgs.system; config.allowUnfree = true; };
+in
 
 {
   imports = [
@@ -46,11 +43,12 @@
   # Configure your system here #
   ##############################
 
-  # I have no idea what it does
-  xdg.portal.enable = true;
-  xdg.portal.extraPortals = [
-    pkgs.xdg-desktop-portal-gtk
-  ];
+  xdg.portal = {
+    enable = true;
+    extraPortals = [
+      pkgs.xdg-desktop-portal-gtk
+    ];
+  };
 
 
   programs.ssh.startAgent = true;
@@ -61,7 +59,12 @@
 
   # fonts.fontDir.enable = true;
 
-  programs.nix-ld.enable = true;
+  programs.nix-ld = {
+    enable = true;
+    libraries = with pkgs; [
+      # Libraries expected to be in /usr/lib
+    ];
+  };
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -74,29 +77,15 @@
     # Text editors/IDE
     vim
     vscode
-    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.clion ["github-copilot"])
-    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.idea-ultimate ["github-copilot"])
-    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.pycharm-professional ["github-copilot"])
-    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.webstorm ["github-copilot"])
+    (nixpkgs-stable.jetbrains.plugins.addPlugins nixpkgs-stable.jetbrains.clion ["github-copilot"])
+    (nixpkgs-stable.jetbrains.plugins.addPlugins nixpkgs-stable.jetbrains.idea-ultimate ["github-copilot"])
+    (nixpkgs-stable.jetbrains.plugins.addPlugins nixpkgs-stable.jetbrains.pycharm-professional ["github-copilot"])
+    (nixpkgs-stable.jetbrains.plugins.addPlugins nixpkgs-stable.jetbrains.webstorm ["github-copilot"])
     #(pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.rust-rover ["github-copilot"])
     
     # Terminal <3 meow
     kitty # In kitty.conf set linux_display_server to x11 to have the same look as gnome-terminal
     # Set font to JetBrains Mono Nerd Font Mono if you want to use nerd fonts
-
-    # Neovim packages
-    neovim
-    lua
-    cargo
-    # jetbrains-mono
-    # font-awesome
-    luarocks
-    lazygit
-    fd
-    wl-clipboard
-    ripgrep
-    nodejs # For copilot nvim
-    nil # Nix lsp (language server protocol) for errors and warnings in .nix files
 
     # Simple useful tools
     git
@@ -107,14 +96,14 @@
     xorg.xkill
 
     # Simple useful apps
-    pinta # Paint
+    drawing # Paint
     clapper # Video player
     gcolor3 # Color picker
     amberol # Music player
-    fragments # Bit toorent client
+    eartag # Music tag editor
+    fragments # Bit torrent client
     #setzer # Latex editor
     #apostrophe # Markdown editor
-    eartag # Music tag editor
 
     # Simple useful tools for Nixos
     nh # Beautiful rebuild switch animation (nh os rebuild)

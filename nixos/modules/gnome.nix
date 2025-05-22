@@ -58,12 +58,12 @@
     # Gnome music contribution
     # gnome-builder
     # meson
-    pkg-config
+    # pkg-config
     # libadwaita
-    gtk4
+    # gtk4
     # flatpak-builder
     # apostrophe # Markdown editor
-    element-desktop
+    # element-desktop
 
     #nix-software-center
   ];

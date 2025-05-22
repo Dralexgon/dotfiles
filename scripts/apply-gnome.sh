@@ -3,12 +3,13 @@
 gtk=true
 icons=true
 
+flavor="macchiato" # Available flavors : latte|macchiato
 gtk_color='purple'
 icons_color='#CBA6F7'
 remove_icons_app=true
 
-echo "Installing Catppuccin Gnome Theme. Special thanks to https://github.com/Fausto-Korpsvart/Catppuccin-GTK-Theme"
 echo "" # A little bit of space
+echo "Installing Catppuccin Gnome Theme. Special thanks to https://github.com/Fausto-Korpsvart/Catppuccin-GTK-Theme"
 
 cd /tmp || exit
 git clone https://github.com/Fausto-Korpsvart/Catppuccin-GTK-Theme
@@ -18,7 +19,7 @@ git clone https://github.com/Fausto-Korpsvart/Catppuccin-GTK-Theme
     (
         if [ "$gtk" = true ]; then
             cd themes || return
-            ./install.sh -l --theme "$gtk_color" --color dark --tweaks outline macchiato float
+            ./install.sh -l --theme "$gtk_color" --color dark --tweaks outline "$flavor" float
         fi
     )
     (
@@ -40,6 +41,6 @@ git clone https://github.com/Fausto-Korpsvart/Catppuccin-GTK-Theme
         fi
     )
 )
-rm -rf Catppuccin-GTK-Theme
+# rm -rf Catppuccin-GTK-Theme
 
 echo "Catppuccin Gnome Theme installed"

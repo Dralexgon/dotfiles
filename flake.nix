@@ -4,6 +4,8 @@
   inputs = {
     # Change depending on your prefered version
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-24.11";
+
 
     # nixpkgs23.url = "github:nixos/nixpkgs/nixos-23.11";
     # nixpkgs24.url = "github:nixos/nixpkgs/nixos-24.11";
@@ -19,7 +21,10 @@
     # };
   };
 
-  outputs = { self, nixpkgs,  ... }@inputs:{
+
+  outputs = { self, nixpkgs,  ... }@inputs:
+
+  {
 
     nixosConfigurations."nixos" = self.nixosConfigurations."default";
 
