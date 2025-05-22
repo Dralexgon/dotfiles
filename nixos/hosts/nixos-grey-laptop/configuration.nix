@@ -20,7 +20,7 @@
     ./../../modules/gnome.nix
     ./../../modules/hyprland.nix
     ./../../modules/wayfire.nix
-    #./../../modules/auto-update.nix
+    ./../../modules/auto-update.nix
 
     # Hardware specific modules
     #./../../modules/nvidia-drivers.nix
@@ -30,7 +30,7 @@
     # Personal modules
     ./../../modules/neovim.nix
     ./../../modules/epita.nix
-    #./../../modules/gaming.nix
+    ./../../modules/gaming.nix
     ./../../modules/boot-animation.nix
     ./../../modules/ricing.nix
     ./../../modules/ricing-tools.nix
