@@ -62,6 +62,7 @@ in
   programs.nix-ld = {
     enable = true;
     libraries = with pkgs; [
+      curl.dev
       # Libraries expected to be in /usr/lib
     ];
   };
@@ -77,10 +78,11 @@ in
     # Text editors/IDE
     vim
     vscode
-    (nixpkgs-stable.jetbrains.plugins.addPlugins nixpkgs-stable.jetbrains.clion ["github-copilot"])
-    (nixpkgs-stable.jetbrains.plugins.addPlugins nixpkgs-stable.jetbrains.idea-ultimate ["github-copilot"])
-    (nixpkgs-stable.jetbrains.plugins.addPlugins nixpkgs-stable.jetbrains.pycharm-professional ["github-copilot"])
-    (nixpkgs-stable.jetbrains.plugins.addPlugins nixpkgs-stable.jetbrains.webstorm ["github-copilot"])
+    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.clion ["github-copilot"])
+    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.idea-ultimate ["github-copilot"])
+    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.pycharm-professional ["github-copilot"])
+    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.webstorm ["github-copilot"])
+    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.goland ["github-copilot"])
     #(pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.rust-rover ["github-copilot"])
     
     # Terminal <3 meow
