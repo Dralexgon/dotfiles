@@ -63,7 +63,8 @@
     # gtk4
     # flatpak-builder
     # apostrophe # Markdown editor
-    # element-desktop
+    # element-desktop # Matrix client
+    # fractal # Better matrix client ?
 
     #nix-software-center
   ];

@@ -1,14 +1,14 @@
-{ config, pkgs, lib, inputs, ... }:
+{ pkgs, ... }:
 
 {
   programs.hyprland.enable = true;
 
-  # Screensharing in hyrpland (not tested)
-  # xdg.portal.enable = true;
-  # xdg.portal.extraPortals = [
-  #   pkgs.xdg-desktop-portal-gtk
-  #   pkgs.xdg-desktop-portal-hyprland
-  # ];
+  # Screen sharing and gtk apps support
+  xdg.portal.enable = true;
+  xdg.portal.extraPortals = [
+    pkgs.xdg-desktop-portal-gtk
+    pkgs.xdg-desktop-portal-hyprland
+  ];
 
   environment.systemPackages = with pkgs; [
 

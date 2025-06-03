@@ -100,12 +100,13 @@ in
     # Simple useful apps
     drawing # Paint
     clapper # Video player
-    gcolor3 # Color picker
+    eyedropper # Color picker
     amberol # Music player
     eartag # Music tag editor
+    inspector # "About your computer" app
     fragments # Bit torrent client
-    #setzer # Latex editor
-    #apostrophe # Markdown editor
+    gnome-frog # Extract text from images
+    turnon # Turn on remote computers
 
     # Simple useful tools for Nixos
     nh # Beautiful rebuild switch animation (nh os rebuild)

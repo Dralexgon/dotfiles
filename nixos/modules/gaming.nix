@@ -21,6 +21,7 @@
 
     # Unity launcher, to create games
     unityhub
+    gameeky # Easy game maker ?
 
     # Minecraft
     prismlauncher # Minecraft launcher

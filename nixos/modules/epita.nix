@@ -35,6 +35,7 @@
     # Javascript
     nodejs_20
     yarn
+    typescript
 
     # Mail
     thunderbird

@@ -1,4 +1,4 @@
-{ config, pkgs, lib, inputs, ... }:
+{ pkgs, ... }:
 
 {
   environment.systemPackages = with pkgs; [
@@ -6,11 +6,16 @@
     btop # System monitor
 
     # Theming (GTK, icons, etc)
-    dconf-editor
-    nwg-look
+    gdm-settings # Settings for the GDM login screen
+    iconic # Custom icons on folders
+    schemes # Create custom code color schemes
+    
+    # For managing themes and other settings
+    home-manager 
     lxappearance
+    nwg-look
+    dconf-editor
     gradience
-    home-manager
 
     # Generate color schemes from images
     python3
