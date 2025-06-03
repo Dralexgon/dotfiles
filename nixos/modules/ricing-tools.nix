@@ -7,7 +7,7 @@
 
     # Theming (GTK, icons, etc)
     gdm-settings # Settings for the GDM login screen
-    iconic # Custom icons on folders
+    # iconic # Custom icons on folders (need to update flake.lock)
     schemes # Create custom code color schemes
     
     # For managing themes and other settings
