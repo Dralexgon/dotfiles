@@ -9,9 +9,9 @@
     calligraphy # Turn text into ascii art
     elastic # Design animations
     gaphor # UML diagram editor
-    #setzer # Latex editor
-    #apostrophe # Markdown editor
-    book-up # Better markdown editor ?
+    # setzer # Latex editor
+    # apostrophe # Markdown editor
+    # book-up # Better markdown editor ?
     folio # Better markdown editor ?
     ghex # Hex editor
     # impression # Write iso on usb # Not needed : right click on iso file and select gnome writer

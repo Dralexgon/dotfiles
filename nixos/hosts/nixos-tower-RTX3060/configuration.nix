@@ -28,6 +28,7 @@
 
     # Personal modules
     ./../../modules/llm.nix
+    ./../../modules/quality-of-life.nix
     ./../../modules/neovim.nix
     ./../../modules/epita.nix
     ./../../modules/gaming.nix
