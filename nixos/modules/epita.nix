@@ -1,10 +1,6 @@
 { pkgs, ... }:
 
 {
-  virtualisation.docker.enable = true;
-  users.extraGroups.docker.members = [ "alex" ];
-  users.users."alex".extraGroups = [ "docker" ];
-
   environment.systemPackages = with pkgs; [
     # C
     gcc
@@ -44,12 +40,13 @@
     android-studio
 
     # Net
-    # gns3-server
-    # gns3-gui
-    # docker
-    # dynamips
-    # ubridge
-    # inetutils
+    gns3-server
+    gns3-gui
+    docker
+    dynamips
+    ubridge
+    inetutils
+    qemu
 
     # Java
     # nixpkgs-stable.jetbrains.idea-ultimate
@@ -57,15 +54,22 @@
     maven
   ];
 
-  # Enable the GNS3 server
-  # Give root permissions to ubridge (/!\ NOT TESTED)
-  # security.wrappers = {
-  #   ubridge = {
-  #     source = "${pkgs.ubridge}/bin/ubridge";
-  #     owner = "root";
-  #     group = "root";
-  #     permissions = "u+sx,g+sx,o+sx";
-  #   };
-  # };
+  virtualisation.docker.enable = true;
+  users.extraGroups.docker.members = [ "alex" ];
+  users.users."alex".extraGroups = [
+    "docker"
+    "ubridge"
+  ];
+
+  # Edit the file : ~/.config/GNS3/2.2/gns3_server.conf
+  # with : ubridge_path = /run/wrappers/bin/ubridge
+  users.groups.ubridge = { };
+  security.wrappers.ubridge = {
+    source = "/run/current-system/sw/bin/ubridge";
+    capabilities = "cap_net_admin,cap_net_raw=ep";
+    owner = "root";
+    group = "ubridge";
+    permissions = "u+rx,g+x";
+  };
 
 }
