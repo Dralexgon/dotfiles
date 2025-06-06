@@ -61,15 +61,15 @@
     "ubridge"
   ];
 
-  # Enable the GNS3 server
-  # Give root permissions to ubridge (/!\ NOT TESTED)
+  # Edit the file : ~/.config/GNS3/2.2/gns3_server.conf
+  # with : ubridge_path = /run/wrappers/bin/ubridge
   users.groups.ubridge = { };
   security.wrappers.ubridge = {
-    source = "${pkgs.ubridge}/bin/ubridge";
+    source = "/run/current-system/sw/bin/ubridge";
     capabilities = "cap_net_admin,cap_net_raw=ep";
     owner = "root";
     group = "ubridge";
-    permissions = "u+rx,g+rx,o+rx";
+    permissions = "u+rx,g+x";
   };
 
 }
