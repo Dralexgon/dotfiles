@@ -47,6 +47,7 @@
     ubridge
     inetutils
     qemu
+    dig # for DNS queries
 
     # Java
     # nixpkgs-stable.jetbrains.idea-ultimate

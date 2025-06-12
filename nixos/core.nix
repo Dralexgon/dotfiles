@@ -98,6 +98,7 @@ in
     xorg.xkill
 
     # Simple useful apps
+    libreoffice # Office suite
     drawing # Paint
     clapper # Video player
     eyedropper # Color picker
