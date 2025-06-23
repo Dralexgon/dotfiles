@@ -62,8 +62,8 @@ in
   programs.nix-ld = {
     enable = true;
     libraries = with pkgs; [
-      curl.dev
       # Libraries expected to be in /usr/lib
+      # curl.dev
     ];
   };
 
@@ -72,8 +72,9 @@ in
   environment.systemPackages = with pkgs; [
     # Web browsers
     firefox
-    #brave
-    #chromium
+    # tor-browser
+    # brave
+    # chromium
 
     # Text editors/IDE
     vim
@@ -133,6 +134,7 @@ in
     ];
   };
 
+  # Minecraft server module
   # services.minecraft-servers = {
   #   enable = false;
   #   eula = true;

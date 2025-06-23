@@ -24,20 +24,26 @@ git clone https://github.com/Fausto-Korpsvart/Catppuccin-GTK-Theme
     )
     (
         if [ "$icons" = true ]; then
+        (
             cd icons || return
+            mkdir -p ~/.icons
+            cp -r Catppuccin-Macchiato ~/.icons
             (
-                cd Catppuccin-Macchiato || return
-                if [ "$remove_icons_app" = true ]; then
-                    rm -rf apps
-                fi
+                cd ~/.icons/Catppuccin-Macchiato || return
                 (
                     cd places || return
                     find . -type f -name 'folder-oomox*.svg' -exec sed -i "s/#7DC4E4/$icons_color/g" {} +
                 )
-
+                if [ "$remove_icons_app" = true ]; then
+                    (
+                        cd apps || return
+                        find -L . ! -type d ! -name '*nautilus*.svg' ! -name '*file-manager*.svg' ! -name '*caja*.svg' -delete
+                        find . -type f -exec sh -c 'cat ../places/64/folder.svg > "$1"' _ {} \;
+                    )
+                fi
+                sed -i "s/Inherits=/Inherits=Adwaita,/g" index.theme
             )
-            mkdir -p ~/.icons
-            cp -r Catppuccin-Macchiato ~/.icons
+        )
         fi
     )
 )
