@@ -6,7 +6,7 @@
 
 let
   # nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
-  nixpkgs-stable = import inputs.nixpkgs-stable { system = pkgs.system; config.allowUnfree = true; };
+  pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.system; config.allowUnfree = true; };
 in
 
 {
@@ -34,7 +34,7 @@ in
   };
   # boot.loader.systemd-boot.enable = true; # Default boot loader
 
-  # For windows dual boot
+  # Sync clock with windows dual boot
   time.hardwareClockInLocalTime = true;
 
 
@@ -51,7 +51,7 @@ in
   };
 
 
-  programs.ssh.startAgent = true;
+  # programs.ssh.startAgent = true;
 
   fonts.packages = with pkgs; [
     jetbrains-mono
@@ -79,12 +79,12 @@ in
     # Text editors/IDE
     vim
     vscode
-    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.clion ["github-copilot"])
-    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.idea-ultimate ["github-copilot"])
-    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.pycharm-professional ["github-copilot"])
-    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.webstorm ["github-copilot"])
-    (pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.goland ["github-copilot"])
-    #(pkgs.jetbrains.plugins.addPlugins pkgs.jetbrains.rust-rover ["github-copilot"])
+    (pkgs-stable.jetbrains.plugins.addPlugins pkgs-stable.jetbrains.clion ["github-copilot"])
+    (pkgs-stable.jetbrains.plugins.addPlugins pkgs-stable.jetbrains.idea-ultimate ["github-copilot"])
+    (pkgs-stable.jetbrains.plugins.addPlugins pkgs-stable.jetbrains.pycharm-professional ["github-copilot"])
+    (pkgs-stable.jetbrains.plugins.addPlugins pkgs-stable.jetbrains.webstorm ["github-copilot"])
+    # (pkgs-stable.jetbrains.plugins.addPlugins pkgs-stable.jetbrains.goland ["github-copilot"])
+    # (pkgs-stable.jetbrains.plugins.addPlugins pkgs-stable.jetbrains.rust-rover ["github-copilot"])
     
     # Terminal <3 meow
     kitty # In kitty.conf set linux_display_server to x11 to have the same look as gnome-terminal
@@ -105,6 +105,7 @@ in
     eyedropper # Color picker
     amberol # Music player
     eartag # Music tag editor
+    papers # PDF viewer
     inspector # "About your computer" app
     fragments # Bit torrent client
     gnome-frog # Extract text from images
