@@ -38,6 +38,6 @@
   ];
 
   # Configure console keymap
-  console.keyMap = "us";
+  console.keyMap = "fr";
 
 }

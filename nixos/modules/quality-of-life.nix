@@ -8,7 +8,7 @@
     cavalier # Cava audio visualizer UI
     calligraphy # Turn text into ascii art
     elastic # Design animations
-    gaphor # UML diagram editor
+    # gaphor # UML diagram editor
     # setzer # Latex editor
     # apostrophe # Markdown editor
     # book-up # Better markdown editor ?
@@ -16,6 +16,10 @@
     ghex # Hex editor
     # impression # Write iso on usb # Not needed : right click on iso file and select gnome writer
     turtle # UI for git
+    cambalache
+    # https://flathub.org/apps/net.code_industry.MasterPDFEditor
+    # https://flathub.org/apps/io.github.Soundux
+
 
     # Not in NixOS :
     # https://gitlab.gnome.org/World/design/icon-library

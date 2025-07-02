@@ -20,7 +20,7 @@
     # bottles
 
     # Unity launcher, to create games
-    unityhub
+    # unityhub
     # gameeky # Easy game maker ?
 
     # Minecraft

@@ -27,7 +27,7 @@
     #./../../modules/swap.nix
 
     # Personal modules
-    ./../../modules/llm.nix
+    # ./../../modules/llm.nix
     ./../../modules/quality-of-life.nix
     ./../../modules/neovim.nix
     ./../../modules/epita.nix
