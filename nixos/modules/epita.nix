@@ -46,12 +46,24 @@
     dynamips
     ubridge
     inetutils
-    qemu
+    qemu # Really useful ?
+    wireshark
 
     # Java
     # nixpkgs-stable.jetbrains.idea-ultimate
     postgresql
     maven
+
+    # Image
+    (python311.withPackages (ps: with ps; [
+      jupyterlab
+      #jupyterthemes
+      #catppuccin-jupyterlab
+      numpy
+      matplotlib
+      scikitimage
+      ipywidgets
+    ]))
   ];
 
   virtualisation.docker.enable = true;
