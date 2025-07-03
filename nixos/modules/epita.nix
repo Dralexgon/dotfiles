@@ -56,13 +56,14 @@
     maven
 
     # Image
-    (python311.withPackages (ps: with ps; [
+    (python312.withPackages (ps: with ps; [
       jupyterlab
       #jupyterthemes
       #catppuccin-jupyterlab
       numpy
       matplotlib
       scikitimage
+      scikit-learn
       ipywidgets
     ]))
   ];

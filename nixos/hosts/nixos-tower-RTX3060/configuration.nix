@@ -29,9 +29,10 @@
     # Personal modules
     # ./../../modules/llm.nix
     ./../../modules/quality-of-life.nix
+    ./../../modules/gaming.nix
+    ./../../modules/jetbrains.nix
     ./../../modules/neovim.nix
     ./../../modules/epita.nix
-    ./../../modules/gaming.nix
     ./../../modules/boot-animation.nix
     ./../../modules/ricing.nix
     ./../../modules/ricing-tools.nix

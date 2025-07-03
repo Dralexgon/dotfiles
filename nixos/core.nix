@@ -5,8 +5,9 @@
 { pkgs, inputs, ... }:
 
 let
-  # nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
+  # older way: nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
   pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.system; config.allowUnfree = true; };
+  # use it as pkgs-stable.example
 in
 
 {
@@ -79,12 +80,7 @@ in
     # Text editors/IDE
     vim
     vscode
-    (pkgs-stable.jetbrains.plugins.addPlugins pkgs-stable.jetbrains.clion ["github-copilot"])
-    (pkgs-stable.jetbrains.plugins.addPlugins pkgs-stable.jetbrains.idea-ultimate ["github-copilot"])
-    (pkgs-stable.jetbrains.plugins.addPlugins pkgs-stable.jetbrains.pycharm-professional ["github-copilot"])
-    (pkgs-stable.jetbrains.plugins.addPlugins pkgs-stable.jetbrains.webstorm ["github-copilot"])
-    # (pkgs-stable.jetbrains.plugins.addPlugins pkgs-stable.jetbrains.goland ["github-copilot"])
-    # (pkgs-stable.jetbrains.plugins.addPlugins pkgs-stable.jetbrains.rust-rover ["github-copilot"])
+    # or activate modules/jetbrains.nix in configuration.nix
     
     # Terminal <3 meow
     kitty # In kitty.conf set linux_display_server to x11 to have the same look as gnome-terminal
