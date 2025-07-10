@@ -18,6 +18,7 @@
 
     # Main modules
     ./../../modules/gnome.nix
+    # ./../../modules/kde-plasma.nix
     ./../../modules/hyprland.nix
     ./../../modules/auto-update.nix
 
