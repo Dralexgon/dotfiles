@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ ... }:
+{ pkgs, config, ... }:
 
 {
   networking.hostName = "nixos-tower-RTX3060";
@@ -19,17 +19,17 @@
     # Main modules
     ./../../modules/gnome.nix
     # ./../../modules/kde-plasma.nix
-    ./../../modules/hyprland.nix
+    # ./../../modules/hyprland.nix
     ./../../modules/auto-update.nix
 
     # Hardware specific modules
-    ./../../modules/nvidia-drivers.nix
+    # ./../../modules/nvidia-drivers.nix
     ./../../modules/razer.nix
     #./../../modules/swap.nix
 
     # Personal modules
     # ./../../modules/llm.nix
-    ./../../modules/quality-of-life.nix
+    # ./../../modules/quality-of-life.nix
     ./../../modules/gaming.nix
     ./../../modules/jetbrains.nix
     ./../../modules/neovim.nix
@@ -46,6 +46,15 @@
   # Blacklist my buggy wifi card
   boot.blacklistedKernelModules = [ "rtw88_8822ce" ];
 
+  # Enable the rtl88x2bu driver for my wifi dongle
+  boot.extraModulePackages = [ config.boot.kernelPackages.rtl88x2bu ];
+
   # Disable powersave for wifi because it prevents my card from reconnecting after a wifi crash
   networking.networkmanager.wifi.powersave = false;
+
+  environment.systemPackages = with pkgs; [
+    wirelesstools
+    usbutils
+    pciutils
+  ];
 }

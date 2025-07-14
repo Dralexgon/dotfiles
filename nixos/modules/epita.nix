@@ -2,70 +2,68 @@
 
 {
   environment.systemPackages = with pkgs; [
-    # C
-    gcc
-    gnumake
-    clang-tools
+    # # C
+    # gcc
+    # gnumake
+    # clang-tools
 
-    # C++
-    gcc
-    gnumake
-    clang-tools
-    cmake
-    ninja
+    # # C++
+    # gcc
+    # gnumake
+    # clang-tools
+    # cmake
+    # ninja
 
     # Man pages
     man-pages
     man-pages-posix
 
-    # Afs
-    krb5
-    sshfs
+    # # Afs
+    # krb5
+    # sshfs
 
-    # GNU autotools
-    automake
-    autoconf
-    autoconf-archive
-    libtool
+    # # GNU autotools
+    # automake
+    # autoconf
+    # autoconf-archive
+    # libtool
 
-    # Javascript
-    nodejs_20
-    yarn
-    typescript
+    # # Javascript
+    # nodejs_20
+    # yarn
+    # typescript
 
     # Mail
     thunderbird
 
-    # Android
-    android-studio
+    # # Android
+    # android-studio
 
-    # Net
-    gns3-server
-    gns3-gui
-    docker
-    dynamips
-    ubridge
-    inetutils
-    qemu # Really useful ?
-    wireshark
-    dig # for DNS queries
+    # # Net
+    # gns3-server
+    # gns3-gui
+    # docker
+    # dynamips
+    # ubridge
+    # inetutils
+    # # qemu # Really useful ?
+    # wireshark
+    # dig # for DNS queries
 
-    # Java
-    # nixpkgs-stable.jetbrains.idea-ultimate
-    postgresql
-    maven
+    # # Java
+    # jetbrains.idea-ultimate
+    # postgresql
+    # maven
 
-    # Image
-    (python312.withPackages (ps: with ps; [
-      jupyterlab
-      #jupyterthemes
-      #catppuccin-jupyterlab
-      numpy
-      matplotlib
-      scikitimage
-      scikit-learn
-      ipywidgets
-    ]))
+    # # Image
+    # (python312.withPackages (ps: with ps; [
+    #   jupyterlab
+    #   numpy
+    #   matplotlib
+    #   scikitimage
+    #   scikit-learn
+    #   ipywidgets
+    # ]))
   ];
 
   virtualisation.docker.enable = true;
