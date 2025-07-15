@@ -20,16 +20,16 @@
     ./../../modules/gnome.nix
     # ./../../modules/kde-plasma.nix
     # ./../../modules/hyprland.nix
-    ./../../modules/auto-update.nix
+    # ./../../modules/auto-update.nix
 
     # Hardware specific modules
-    # ./../../modules/nvidia-drivers.nix
+    ./../../modules/nvidia-drivers.nix
     ./../../modules/razer.nix
     #./../../modules/swap.nix
 
     # Personal modules
     # ./../../modules/llm.nix
-    # ./../../modules/quality-of-life.nix
+    ./../../modules/quality-of-life.nix
     ./../../modules/gaming.nix
     ./../../modules/jetbrains.nix
     ./../../modules/neovim.nix
