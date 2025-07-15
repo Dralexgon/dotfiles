@@ -24,6 +24,7 @@
     # Useful gnome tools
     gnome-tweaks
     gnome-extension-manager
+    gnomeExtensions.appindicator
     gnomeExtensions.emoji-copy
     gnomeExtensions.gsconnect # Android phone integration
     gnomeExtensions.speedinator # Control the speed of gnome-shell animations
