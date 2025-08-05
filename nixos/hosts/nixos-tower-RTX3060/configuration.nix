@@ -33,7 +33,7 @@
     ./../../modules/gaming.nix
     ./../../modules/jetbrains.nix
     ./../../modules/neovim.nix
-    ./../../modules/epita.nix
+    ./../../modules/epita/core.nix
     ./../../modules/boot-animation.nix
     ./../../modules/ricing.nix
     ./../../modules/ricing-tools.nix

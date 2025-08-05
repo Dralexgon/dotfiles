@@ -29,7 +29,7 @@
 
     # Personal modules
     ./../../modules/neovim.nix
-    ./../../modules/epita.nix
+    ./../../modules/epita/core.nix
     ./../../modules/gaming.nix
     ./../../modules/boot-animation.nix
     ./../../modules/ricing.nix
