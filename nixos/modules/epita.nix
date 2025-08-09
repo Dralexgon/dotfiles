@@ -14,6 +14,9 @@
     cmake
     ninja
 
+    # Compilator
+    bison
+
     # Man pages
     man-pages
     man-pages-posix

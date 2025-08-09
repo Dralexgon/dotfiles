@@ -182,9 +182,6 @@ in
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
-  # Configure console keymap
-  console.keyMap = "us";
-
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
