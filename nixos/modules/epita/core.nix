@@ -3,14 +3,14 @@
 {
 
   imports = [
-    ./android.nix
-    ./c.nix
-    ./cpp.nix
-    ./docker.nix
+    # ./android.nix
+    # ./c.nix
+    # ./cpp.nix
+    # ./docker.nix
     ./image.nix
-    ./java.nix
-    ./js.nix
-    ./net.nix
+    # ./java.nix
+    # ./js.nix
+    # ./net.nix
   ];
 
   environment.systemPackages = with pkgs; [

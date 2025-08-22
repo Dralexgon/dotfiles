@@ -65,6 +65,9 @@ in
     libraries = with pkgs; [
       # Libraries expected to be in /usr/lib
       # curl.dev
+      # python313
+      # python313Packages.numpy
+      # python313Packages.jupyterlab
     ];
   };
 

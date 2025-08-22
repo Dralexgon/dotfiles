@@ -18,8 +18,8 @@
 
     # Main modules
     ./../../modules/gnome.nix
-    ./../../modules/hyprland.nix
-    ./../../modules/wayfire.nix
+    # ./../../modules/hyprland.nix
+    # ./../../modules/wayfire.nix
     ./../../modules/auto-update.nix
 
     # Hardware specific modules
@@ -29,8 +29,10 @@
 
     # Personal modules
     ./../../modules/neovim.nix
+    ./../../modules/jetbrains.nix
     ./../../modules/epita/core.nix
-    ./../../modules/gaming.nix
+    # ./../../modules/gaming.nix
+    ./../../modules/minecraft.nix
     ./../../modules/boot-animation.nix
     ./../../modules/ricing.nix
     ./../../modules/ricing-tools.nix
