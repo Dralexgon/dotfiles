@@ -3,10 +3,10 @@
 {
 
   imports = [
-    # ./android.nix
+    ./android.nix
     # ./c.nix
     # ./cpp.nix
-    # ./docker.nix
+    ./docker.nix
     ./image.nix
     # ./java.nix
     # ./js.nix

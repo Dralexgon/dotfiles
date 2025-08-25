@@ -10,10 +10,10 @@
   # Enable the X11 windowing system, needed for Gnome (XWayland).
   services.xserver = {
     enable = true;
-    xkb = {
-      layout = "us";
-      variant = "";
-    };
+    # xkb = {
+    #   layout = "us";
+    #   variant = "";
+    # };
   };
 
   environment.systemPackages = with pkgs; [

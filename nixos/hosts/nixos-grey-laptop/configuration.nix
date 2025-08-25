@@ -42,4 +42,11 @@
   # Configure console keymap
   console.keyMap = "fr";
 
+  services.xserver = {
+    xkb = {
+      layout = "fr";
+      variant = "";
+    };
+  };
+
 }
