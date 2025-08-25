@@ -28,6 +28,7 @@
     ./../../modules/swap.nix
 
     # Personal modules
+    ./../../modules/file-transfer.nix
     ./../../modules/neovim.nix
     ./../../modules/jetbrains.nix
     ./../../modules/epita/core.nix

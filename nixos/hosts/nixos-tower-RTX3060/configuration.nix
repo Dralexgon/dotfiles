@@ -29,6 +29,7 @@
 
     # Personal modules
     # ./../../modules/llm.nix
+    ./../../modules/file-transfer.nix
     ./../../modules/quality-of-life.nix
     ./../../modules/gaming.nix
     ./../../modules/jetbrains.nix

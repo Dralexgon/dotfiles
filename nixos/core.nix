@@ -52,7 +52,7 @@ in
   };
 
 
-  # programs.ssh.startAgent = true;
+  programs.ssh.startAgent = true;
 
   fonts.packages = with pkgs; [
     jetbrains-mono
