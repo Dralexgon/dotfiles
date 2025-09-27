@@ -1,2 +1,5 @@
-nixos-rebuild boot --flake .#nixos-tower-RTX3060 --option sandbox false
-#NIXOS_INSTALL_BOOTLOADER=1 nixos-rebuild boot --flake .#nixos-tower-RTX3060 --option sandbox false
+# sudo su
+# linux partition: mount /dev/nvme... /mnt
+# efi partition: mount /dev/nvme... /mnt/boot
+# nixos-enter
+nixos-rebuild boot --flake .#nixos-tower-RTX3060 --install-bootloader --option sandbox false
