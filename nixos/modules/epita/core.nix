@@ -4,7 +4,7 @@
 
   imports = [
     ./android.nix
-    # ./c.nix
+    ./c.nix
     # ./cpp.nix
     ./docker.nix
     ./image.nix

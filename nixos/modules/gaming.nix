@@ -18,9 +18,5 @@
     # lutris
     # heroic
     # bottles
-
-    # Unity launcher, to create games
-    # unityhub
-    # gameeky # Easy game maker ?
   ];
 }

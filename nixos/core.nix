@@ -8,6 +8,7 @@ let
   # older way: nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
   pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.system; config.allowUnfree = true; };
   # use it as pkgs-stable.example
+  useGrub = false; # Set to false if you don't want to use my custom grub theme or prefer systemd-boot
 in
 
 {
@@ -26,14 +27,14 @@ in
   boot.loader = {
     efi.canTouchEfiVariables = true;
     grub = {
-      enable = true;
+      enable = useGrub;
       efiSupport = true;
       device = "nodev";
       useOSProber = true;
       theme = pkgs.catppuccin-grub;
     };
+    systemd-boot.enable = !useGrub; # Default boot loader
   };
-  # boot.loader.systemd-boot.enable = true; # Default boot loader
 
   # Sync clock with windows dual boot
   time.hardwareClockInLocalTime = true;

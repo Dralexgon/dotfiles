@@ -32,6 +32,8 @@
     ./../../modules/file-transfer.nix
     ./../../modules/quality-of-life.nix
     ./../../modules/gaming.nix
+    ./../../modules/minecraft.nix
+    ./../../modules/game-creation.nix
     ./../../modules/jetbrains.nix
     ./../../modules/neovim.nix
     ./../../modules/epita/core.nix
