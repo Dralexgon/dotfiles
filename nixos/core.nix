@@ -8,7 +8,7 @@ let
   # older way: nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
   pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.system; config.allowUnfree = true; };
   # use it as pkgs-stable.example
-  useGrub = false; # Set to false if you don't want to use my custom grub theme or prefer systemd-boot
+  useGrub = false; # Set to false if you don't want to use my grub theme or prefer systemd-boot
 in
 
 {
@@ -32,6 +32,11 @@ in
       device = "nodev";
       useOSProber = true;
       theme = pkgs.catppuccin-grub;
+      extraConfig = ''
+        menuentry "UEFI Firmware Settings" {
+          fwsetup
+        }
+      '';
     };
     systemd-boot.enable = !useGrub; # Default boot loader
   };
@@ -183,8 +188,7 @@ in
   services.printing.enable = true;
 
   # Enable sound with pipewire.
-  hardware.pulseaudio.enable = false; # old versions
-  # services.pulseaudio.enable = false; # new versions
+  services.pulseaudio.enable = false; # hardware.pulseaudio.enable = false; # old versions
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;

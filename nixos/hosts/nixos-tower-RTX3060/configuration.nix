@@ -41,6 +41,8 @@
     ./../../modules/ricing.nix
     ./../../modules/ricing-tools.nix
     ./../../modules/flatpak.nix
+    ./../../modules/secure-boot.nix
+    ./../../modules/quickshell.nix
   ];
 
   # Configure console keymap
