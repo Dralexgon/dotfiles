@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ inputs, pkgs, ... }:
 
 {
   programs.hyprland.enable = true;
@@ -11,7 +11,6 @@
   ];
 
   environment.systemPackages = with pkgs; [
-
     rofi-wayland # App launcher
     waybar # Status bar at the top of the screen
     kitty # Hyprland console
@@ -27,6 +26,8 @@
     grim # Screenshot
     slurp # Screenshot area selector
     hyprshot # Screenshot
+
+    # inputs.caelestia-shell.packages.${pkgs.system}.default
 
     # Ricing
     python3
