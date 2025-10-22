@@ -3,11 +3,11 @@
 {
 
   imports = [
-    ./android.nix
+    # ./android.nix
     ./c.nix
     # ./cpp.nix
-    ./docker.nix
-    ./image.nix
+    # ./docker.nix
+    # ./image.nix
     # ./java.nix
     # ./js.nix
     # ./net.nix

@@ -27,8 +27,6 @@
     slurp # Screenshot area selector
     hyprshot # Screenshot
 
-    # inputs.caelestia-shell.packages.${pkgs.system}.default
-
     # Ricing
     python3
     pywal
@@ -38,5 +36,7 @@
     bat
     starship
     fzf # FuzzyFinder, used to search file. I should use it more
+
+    # inputs.caelestia-shell.packages.${pkgs.system}.default
   ];
 }

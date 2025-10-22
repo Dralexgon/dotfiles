@@ -28,7 +28,7 @@
       "inputs": {
         "caelestia-cli": "caelestia-cli",
         "nixpkgs": [
-          "nixpkgs-stable"
+          "nixpkgs"
         ],
         "quickshell": "quickshell"
       },
