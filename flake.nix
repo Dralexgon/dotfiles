@@ -34,13 +34,19 @@
       url = "github:caelestia-dots/shell";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nvf = {
+      url = "github:notashelf/nvf";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
 
-  outputs = { self, nixpkgs,  ... }@inputs:
-
+  outputs = { self, nixpkgs, nvf, ... }@inputs:
+  let
+    system = "x86_64-linux";
+  in
   {
-
     nixosConfigurations."nixos" = self.nixosConfigurations."default";
 
     nixosConfigurations."default" = nixpkgs.lib.nixosSystem {
@@ -55,6 +61,7 @@
       specialArgs = {inherit inputs;};
       modules = [
         ./nixos/hosts/nixos-tower-RTX3060/configuration.nix
+        nvf.nixosModules.default
 
         # inputs.boot-animation.nixosModules.default
       ];
@@ -69,6 +76,13 @@
         # inputs.boot-animation.nixosModules.default
       ];
     };
+
+    packages.${system}.default = (
+      nvf.lib.neovimConfiguration {
+        pkgs = nixpkgs.legacyPackages.${system};
+        modules = [ ./nixos/home/nvf-config.nix ];
+      }
+    ).neovim;
 
     # nixosConfigurations."host-RTX3060-alex" = nixpkgs.lib.nixosSystem {
     #   specialArgs = {inherit inputs;};

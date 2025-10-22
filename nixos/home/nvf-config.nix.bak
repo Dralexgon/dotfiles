@@ -1,0 +1,23 @@
+{ ... }:
+
+{
+  vim = {
+    theme = {
+      enable = true;
+      name = "gruvbox";
+      style = "dark";
+    };
+
+    lsp.enable = true;
+    treesitter.enable = true;
+
+    statusline.lualine.enable = true;
+    telescope.enable = true;
+    autocomplete.nvim-cmp.enable = true;
+
+    languages = {
+      nix.enable = true;
+      # c.enable = true;
+    };
+  };
+}
