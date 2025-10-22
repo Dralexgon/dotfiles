@@ -5,7 +5,7 @@
 { ... }:
 
 {
-  networking.hostName = "nixos-grey-laptop";
+  networking.hostName = "nixos-gray-laptop";
 
   imports = [
     # Include the results of the hardware scan.

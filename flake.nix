@@ -60,11 +60,11 @@
       ];
     };
 
-    nixosConfigurations."nixos-grey-laptop" = nixpkgs.lib.nixosSystem {
-      # Work laptop, nixos-grey-laptop: 50 nuance...
+    nixosConfigurations."nixos-gray-laptop" = nixpkgs.lib.nixosSystem {
+      # Work laptop, nixos-gray-laptop: 50 nuance...
       specialArgs = {inherit inputs;};
       modules = [
-        ./nixos/hosts/nixos-grey-laptop/configuration.nix
+        ./nixos/hosts/nixos-gray-laptop/configuration.nix
 
         # inputs.boot-animation.nixosModules.default
       ];
