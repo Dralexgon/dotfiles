@@ -5,6 +5,7 @@
   imports = [
     # ./android.nix
     ./c.nix
+    ./criterion.nix
     # ./cpp.nix
     # ./docker.nix
     # ./image.nix

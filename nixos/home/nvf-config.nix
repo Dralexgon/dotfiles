@@ -1,9 +1,7 @@
-{ ... }:
-
-let
+{...}: let
   isMaximal = true; # set to false for a lighter configuration
-in
-{
+  epita = true;
+in {
   # This is the sample configuration for nvf, aiming to give you a feel of the default options
   # while certain plugins are enabled. While it may partially act as one, this is *not* quite
   # an overview of nvf's module options. To find a complete and curated list of nvf module
@@ -14,7 +12,7 @@ in
     viAlias = true;
     vimAlias = true;
     debugMode = {
-      enable = false;
+      enable = true;
       level = 16;
       logFile = "/tmp/nvim.log";
     };
@@ -60,12 +58,12 @@ in
       # Languages that are enabled in the maximal configuration.
       bash.enable = isMaximal;
       clang.enable = isMaximal;
-      css.enable = isMaximal;
+      css.enable = false;
       html.enable = isMaximal;
       sql.enable = isMaximal;
       java.enable = isMaximal;
       kotlin.enable = isMaximal;
-      ts.enable = isMaximal;
+      ts.enable = false;
       go.enable = isMaximal;
       lua.enable = isMaximal;
       zig.enable = isMaximal;
@@ -128,7 +126,7 @@ in
     theme = {
       enable = true;
       name = "catppuccin";
-      style = "mocha";
+      style = "macchiato";
       transparent = false;
     };
 
@@ -205,7 +203,7 @@ in
       motion = {
         hop.enable = true;
         leap.enable = true;
-        precognition.enable = isMaximal;
+        precognition.enable = false;
       };
       images = {
         image-nvim.enable = false;
@@ -254,11 +252,11 @@ in
     assistant = {
       chatgpt.enable = false;
       copilot = {
-        enable = false;
+        enable = !epita;
         cmp.enable = isMaximal;
       };
       codecompanion-nvim.enable = false;
-      avante-nvim.enable = isMaximal;
+      avante-nvim.enable = !epita;
     };
 
     session = {

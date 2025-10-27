@@ -71,6 +71,8 @@ in
     libraries = with pkgs; [
       # Libraries expected to be in /usr/lib
       # curl.dev
+      clang-tools
+      # criterion # doesn't work here, use modules/epita/criterion.nix instead
     ];
   };
 
@@ -186,6 +188,7 @@ in
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
+  services.printing.drivers = [ pkgs.brlaser pkgs.brgenml1lpr pkgs.brgenml1cupswrapper ];
 
   # Enable sound with pipewire.
   services.pulseaudio.enable = false; # hardware.pulseaudio.enable = false; # old versions
