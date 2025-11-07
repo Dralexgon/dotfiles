@@ -72,7 +72,7 @@ in
       # Libraries expected to be in /usr/lib
       # curl.dev
       clang-tools
-      # criterion # doesn't work here, use modules/epita/criterion.nix instead
+      criterion # doesn't work here, use modules/epita/criterion.nix instead
     ];
   };
 

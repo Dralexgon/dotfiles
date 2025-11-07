@@ -18,5 +18,6 @@
     # lutris
     # heroic
     # bottles
+    protonplus
   ];
 }

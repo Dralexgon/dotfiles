@@ -18,6 +18,6 @@
 
   environment.systemPackages = with pkgs; [
     # TUI that displays GPU usage (Optional)
-    # nvtopPackages.nvidia
+    nvtopPackages.nvidia
   ];
 }
