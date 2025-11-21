@@ -101,6 +101,7 @@ in
     wget
     unzip
     xorg.xkill
+    bluetui # bluetooth tui
 
     # Simple useful apps
     libreoffice # Office suite
@@ -166,6 +167,10 @@ in
 
   # Enable networking
   networking.networkmanager.enable = true;
+
+  # Bluetooth
+  hardware.bluetooth.enable = true;
+  services.blueman.enable = true; # Gui if you Desktop Environment doesn't have it
 
   # Set your time zone.
   time.timeZone = "Europe/Paris";

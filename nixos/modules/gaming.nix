@@ -13,11 +13,10 @@
     adwsteamgtk # GTK wrapper for Steam (gtk theme + better ui beacause steam is ugly)
 
     # osu-lazer
-
-    # protonup
+    
+    protonplus # or protonup
     # lutris
     # heroic
     # bottles
-    protonplus
   ];
 }
