@@ -37,6 +37,7 @@
     starship
     fzf # FuzzyFinder, used to search file. I should use it more
 
-    inputs.caelestia-shell.packages.${pkgs.system}.default
+    # inputs.caelestia-shell.packages.${pkgs.system}.default
+    inputs.caelestia-shell.packages.${pkgs.system}.with-cli
   ];
 }
