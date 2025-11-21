@@ -11,7 +11,7 @@
   ];
 
   environment.systemPackages = with pkgs; [
-    rofi-wayland # App launcher
+    rofi # App launcher
     waybar # Status bar at the top of the screen
     kitty # Hyprland console
     hyprlock # Lock screen
@@ -37,6 +37,6 @@
     starship
     fzf # FuzzyFinder, used to search file. I should use it more
 
-    # inputs.caelestia-shell.packages.${pkgs.system}.default
+    inputs.caelestia-shell.packages.${pkgs.system}.default
   ];
 }

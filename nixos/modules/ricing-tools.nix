@@ -1,5 +1,10 @@
-{ pkgs, ... }:
+{ pkgs, inputs, ... }:
 
+let
+  # older way: nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
+  pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.system; config.allowUnfree = true; };
+  # use it as pkgs-stable.example
+in
 {
   environment.systemPackages = with pkgs; [
     fastfetch # Most important ricing tool (that's the nice logo in the terminal)
@@ -15,7 +20,7 @@
     lxappearance
     nwg-look
     dconf-editor
-    gradience
+    pkgs-stable.gradience
 
     # Generate color schemes from images
     python3
