@@ -8,10 +8,10 @@
 
     criterion # Library to create testsuites for C programs
 
-    # # GNU autotools
-    # automake
-    # autoconf
-    # autoconf-archive
-    # libtool
+    # GNU autotools
+    automake
+    autoconf
+    autoconf-archive
+    libtool
   ];
 }
