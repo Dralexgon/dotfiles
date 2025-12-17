@@ -28,6 +28,8 @@ in
 
     eww # This can be used to create a custom bar. I will try to do my own menu with it
 
+    fish
+
     # To draw art
     # python312Full
     # python3Packages.tkinter
