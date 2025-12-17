@@ -101,7 +101,6 @@ in
     wget
     unzip
     xorg.xkill
-    bluetui # bluetooth tui
 
     # Simple useful apps
     libreoffice # Office suite
