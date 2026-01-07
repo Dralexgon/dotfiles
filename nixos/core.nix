@@ -89,7 +89,7 @@ in
     vim
     vscode
     # or activate modules/jetbrains.nix in configuration.nix
-    
+
     # Terminal <3 meow
     kitty # In kitty.conf set linux_display_server to x11 to have the same look as gnome-terminal
     # Set font to JetBrains Mono Nerd Font Mono if you want to use nerd fonts
@@ -169,7 +169,7 @@ in
 
   # Bluetooth
   hardware.bluetooth.enable = true;
-  services.blueman.enable = true; # Gui if you Desktop Environment doesn't have it
+  # services.blueman.enable = true; # Gui if you Desktop Environment doesn't have it
 
   # Set your time zone.
   time.timeZone = "Europe/Paris";
@@ -216,6 +216,7 @@ in
   # Allow unfree packages v2 (not sure if it works)
   environment.variables = {
     NIXPKGS_ALLOW_UNFREE = "1";
+    NIXPKGS_ALLOW_INSECURE = "1";
   };
 
   # Enable experimental features like flakes
@@ -228,5 +229,4 @@ in
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "24.11"; # Did you read the comment?
-
 }

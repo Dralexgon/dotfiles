@@ -13,5 +13,18 @@
     autoconf
     autoconf-archive
     libtool
+
+    # GNU autotools v2
+    automake
+    autogen
+    autoconf
+    autoconf-archive
+    libtool
+    pkg-config
+    m4
   ];
+
+  environment.variables = {
+    ACLOCAL_PATH = "${pkgs.autoconf-archive}/share/aclocal:${pkgs.autoconf}/share/aclocal:${pkgs.automake}/share/aclocal";
+  };
 }
