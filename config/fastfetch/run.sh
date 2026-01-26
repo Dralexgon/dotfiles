@@ -1,1 +1,1 @@
-fastfetch --logo ~/.config/fastfetch/paimon_hehe.txt
+fastfetch -c config.jsonc --logo paimon_hehe.txt

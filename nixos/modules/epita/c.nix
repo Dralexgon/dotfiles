@@ -22,6 +22,8 @@
     libtool
     pkg-config
     m4
+
+    valgrind # Debugging
   ];
 
   environment.variables = {
