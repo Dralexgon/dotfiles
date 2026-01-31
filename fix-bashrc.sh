@@ -1,0 +1,3 @@
+bash --norc
+source ~/.bashrc
+
