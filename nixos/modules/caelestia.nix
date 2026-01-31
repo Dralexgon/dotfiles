@@ -28,7 +28,7 @@
     imagemagick
     curl
     adw-gtk3
-    papirus-icon-theme
+    # papirus-icon-theme
     kdePackages.qt6ct
     libsForQt5.qt5ct
     nerd-fonts.jetbrains-mono

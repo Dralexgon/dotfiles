@@ -12,7 +12,7 @@
     cava
 
     # catppuccin rice
-    catppuccin-cursors.macchiatoMauve
+    # catppuccin-cursors.macchiatoMauve
     # catppuccin-gtk
   ];
 }
