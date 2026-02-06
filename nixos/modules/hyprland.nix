@@ -1,7 +1,15 @@
 { inputs, pkgs, ... }:
 
+let
+  # older way: nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
+  pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.system; config.allowUnfree = true; };
+  # use it as pkgs-stable.example
+in
 {
-  programs.hyprland.enable = true;
+  programs.hyprland = {
+    enable = true;
+    # package = pkgs-stable.hyprland;
+  };
 
   # Screen sharing and gtk apps support
   xdg.portal.enable = true;

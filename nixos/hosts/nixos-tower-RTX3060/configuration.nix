@@ -26,7 +26,7 @@
     # Hardware specific modules
     ./../../modules/nvidia-drivers.nix
     ./../../modules/razer.nix
-    #./../../modules/swap.nix
+    ./../../modules/swap.nix
 
     # Personal modules
     # ./../../modules/llm.nix
