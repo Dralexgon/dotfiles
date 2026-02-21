@@ -7,9 +7,9 @@
     ./c.nix
     ./criterion.nix
     # ./cpp.nix
-    # ./docker.nix
+    ./docker.nix
     # ./image.nix
-    # ./java.nix
+    ./java.nix
     # ./js.nix
     # ./net.nix
   ];

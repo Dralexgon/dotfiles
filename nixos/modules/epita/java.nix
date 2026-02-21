@@ -5,5 +5,7 @@
     jetbrains.idea-ultimate
     postgresql
     maven
+
+    podman
   ];
 }
