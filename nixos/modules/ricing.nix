@@ -5,7 +5,7 @@
 
     # Ricing visual in the terminal
     fastfetch
-    neofetch
+    # neofetch #unmainted, use fastfetch instead
     cmatrix
     cbonsai
     pipes-rs
