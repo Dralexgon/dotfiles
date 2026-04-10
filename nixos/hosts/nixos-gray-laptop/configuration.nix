@@ -18,7 +18,8 @@
 
     # Main modules
     ./../../modules/gnome.nix
-    # ./../../modules/hyprland.nix
+    ./../../modules/caelestia.nix
+    ./../../modules/hyprland.nix
     # ./../../modules/wayfire.nix
     ./../../modules/auto-update.nix
 

@@ -5,7 +5,6 @@
 
     # Ricing visual in the terminal
     fastfetch
-    neofetch
     cmatrix
     cbonsai
     pipes-rs
