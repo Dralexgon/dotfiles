@@ -14,6 +14,8 @@
     # ./net.nix
   ];
 
+  programs.ssh.pacakge = pkgs.openssh_gssapi; # add GSSAPI support
+
   environment.systemPackages = with pkgs; [
     # Man pages
     man-pages

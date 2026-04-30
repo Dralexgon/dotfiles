@@ -8,11 +8,19 @@
         ]
       },
       "locked": {
+<<<<<<< HEAD
         "lastModified": 1775270702,
         "narHash": "sha256-B6WmiueckON9Pv13onVYF7L0K3kAWEtmOcymZLeYhas=",
         "owner": "caelestia-dots",
         "repo": "cli",
         "rev": "60284ca41e2cd83b6e31617758fc75c84e0493a9",
+=======
+        "lastModified": 1775184860,
+        "narHash": "sha256-ZpYnTmPaz0unxEnuu0GnkmnuU64X93/n3QZe/9mChW0=",
+        "owner": "caelestia-dots",
+        "repo": "cli",
+        "rev": "a019c42244ac187aa22d9a5ee871655bbc0522fb",
+>>>>>>> 412c21ff8f591cf29bb74b0e3397007c67b41390
         "type": "github"
       },
       "original": {
@@ -57,11 +65,19 @@
         "quickshell": "quickshell"
       },
       "locked": {
+<<<<<<< HEAD
         "lastModified": 1775190720,
         "narHash": "sha256-Mrwi2tNpgYm8SdhzzsOQntOexOqeWNQaJ6nsN+71NYk=",
         "owner": "caelestia-dots",
         "repo": "shell",
         "rev": "f924dbfbbb8f1a0fe8c36ccca254063f1bbe0e1b",
+=======
+        "lastModified": 1775144602,
+        "narHash": "sha256-KxnqudOZ/dLPZdMDIuP07eQUVVOVYdFP/m49sbsPCyU=",
+        "owner": "caelestia-dots",
+        "repo": "shell",
+        "rev": "dfc5bcf8b9511fde1fee7de15cdfa79c5f5aeeb6",
+>>>>>>> 412c21ff8f591cf29bb74b0e3397007c67b41390
         "type": "github"
       },
       "original": {
@@ -126,6 +142,27 @@
       "original": {
         "owner": "hercules-ci",
         "repo": "flake-parts",
+        "type": "github"
+      }
+    },
+    "home-manager": {
+      "inputs": {
+        "nixpkgs": [
+          "zen-browser",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1774991950,
+        "narHash": "sha256-kScKj3qJDIWuN9/6PMmgy5esrTUkYinrO5VvILik/zw=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "f2d3e04e278422c7379e067e323734f3e8c585a7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "home-manager",
         "type": "github"
       }
     },
@@ -210,11 +247,19 @@
         "systems": "systems"
       },
       "locked": {
+<<<<<<< HEAD
         "lastModified": 1775424406,
         "narHash": "sha256-ENSQFUK6zs4C5brC4MlrNRM2Krn8OsHdoxPLtezhFyU=",
         "owner": "notashelf",
         "repo": "nvf",
         "rev": "3ffc800a01cbd1f2e68e78b527bb7d56078c6351",
+=======
+        "lastModified": 1775122065,
+        "narHash": "sha256-ZlowJNkQOhpsXDuWbHgB1xY6W8kyzYn9coK9nJsqqNg=",
+        "owner": "notashelf",
+        "repo": "nvf",
+        "rev": "d3304af3d5771e8d5bac6ee9bbdbce56086d54f7",
+>>>>>>> 412c21ff8f591cf29bb74b0e3397007c67b41390
         "type": "github"
       },
       "original": {
@@ -273,11 +318,19 @@
         ]
       },
       "locked": {
+<<<<<<< HEAD
         "lastModified": 1775461526,
         "narHash": "sha256-pRQ1g7YpFrYBB8B6QUSKb3ttGzcQs3Guu8GwDuuSBt0=",
         "ref": "refs/heads/master",
         "rev": "7c5a6c4bd4be1f258aa47626cf5cde02215adad2",
         "revCount": 796,
+=======
+        "lastModified": 1775201427,
+        "narHash": "sha256-yTjyHtMpJiB9fAcPAtvROn5tFAwSqCTnfG7w+LtmpMM=",
+        "ref": "refs/heads/master",
+        "rev": "50cdf9886803c0279aafa43d0b590abdc34f5766",
+        "revCount": 786,
+>>>>>>> 412c21ff8f591cf29bb74b0e3397007c67b41390
         "type": "git",
         "url": "https://git.outfoxxed.me/outfoxxed/quickshell"
       },
@@ -293,7 +346,8 @@
         "nixpkgs": "nixpkgs",
         "nixpkgs-stable": "nixpkgs-stable",
         "nvf": "nvf",
-        "quickshell": "quickshell_3"
+        "quickshell": "quickshell_3",
+        "zen-browser": "zen-browser"
       }
     },
     "systems": {
@@ -308,6 +362,27 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default",
+        "type": "github"
+      }
+    },
+    "zen-browser": {
+      "inputs": {
+        "home-manager": "home-manager",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1775744672,
+        "narHash": "sha256-Qg3Wnn3WYiiii35CE9kE+XX4ooSFzupAnGC1/NjI5C8=",
+        "owner": "0xc000022070",
+        "repo": "zen-browser-flake",
+        "rev": "14a238beb0621977e9bf04cba68919d5650deea9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "0xc000022070",
+        "repo": "zen-browser-flake",
         "type": "github"
       }
     }

@@ -81,6 +81,7 @@ in
   environment.systemPackages = with pkgs; [
     # Web browsers
     firefox
+    inputs.zen-browser.packages."${system}".default
     # tor-browser
     # brave
     # chromium
