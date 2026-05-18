@@ -33,6 +33,7 @@ in
     hyprlock # Lock screen
     hyprpaper # Wallpaper manager
     yazi # File explorer (terminal)
+    nautilus # File explorer (GUI)
     swww # Another wallpaper manager
     swaynotificationcenter # Notification menu (is dunst better ?)
     clipse # Clipboard manager

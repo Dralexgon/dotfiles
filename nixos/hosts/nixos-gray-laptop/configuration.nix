@@ -30,16 +30,16 @@
 
     # Personal modules
     # ./../../modules/file-transfer.nix
-    ./../../modules/neovim.nix
+    # ./../../modules/neovim.nix
     # ./../../modules/epita/core.nix
-    ./../../modules/gaming.nix
-    ./../../modules/minecraft.nix
-    ./../../modules/boot-animation.nix
+    # ./../../modules/gaming.nix
+    # ./../../modules/minecraft.nix
+    # ./../../modules/boot-animation.nix
     ./../../modules/ricing.nix
     ./../../modules/ricing-tools.nix
     #./../../modules/flatpak.nix
   ];
-
+ 
   # Configure console keymap
   console.keyMap = "fr";
 
