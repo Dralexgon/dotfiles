@@ -17,7 +17,7 @@
 
 
     # Main modules
-    ./../../modules/gnome.nix
+    # ./../../modules/gnome.nix
     ./../../modules/caelestia.nix
     ./../../modules/hyprland.nix
     # ./../../modules/wayfire.nix
