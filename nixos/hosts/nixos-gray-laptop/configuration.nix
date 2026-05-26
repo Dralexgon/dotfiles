@@ -31,7 +31,7 @@
     # Personal modules
     # ./../../modules/file-transfer.nix
     # ./../../modules/neovim.nix
-    # ./../../modules/epita/core.nix
+    ./../../modules/epita/core.nix
     # ./../../modules/gaming.nix
     # ./../../modules/minecraft.nix
     # ./../../modules/boot-animation.nix

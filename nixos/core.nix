@@ -174,7 +174,7 @@ in
 
   # Set your time zone.
   time.timeZone = "Europe/Paris";
-  i18n.defaultLocale = "en_US.UTF-8";
+  i18n.defaultLocale = "fr_FR.UTF-8";
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "fr_FR.UTF-8";
     LC_IDENTIFICATION = "fr_FR.UTF-8";
@@ -185,7 +185,7 @@ in
     LC_PAPER = "fr_FR.UTF-8";
     LC_TELEPHONE = "fr_FR.UTF-8";
     LC_TIME = "fr_FR.UTF-8";
-    LC_ALL = "en_US.UTF-8";
+    LC_ALL = "fr_FR.UTF-8";
   };
 
   # Enable touchpad support (enabled default in most desktopManager).
