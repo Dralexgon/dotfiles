@@ -101,7 +101,7 @@ in
     tldr # better man (man pages)
     wget
     unzip
-    xorg.xkill
+    xkill
 
     # Simple useful apps
     libreoffice # Office suite

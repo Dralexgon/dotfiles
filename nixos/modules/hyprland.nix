@@ -34,7 +34,7 @@ in
     hyprpaper # Wallpaper manager
     yazi # File explorer (terminal)
     nautilus # File explorer (GUI)
-    swww # Another wallpaper manager
+    awww # Another wallpaper manager
     swaynotificationcenter # Notification menu (is dunst better ?)
     clipse # Clipboard manager
     wl-clipboard # Another clipboard manager
