@@ -21,7 +21,7 @@
     ./../../modules/caelestia.nix
     ./../../modules/hyprland.nix
     # ./../../modules/wayfire.nix
-    ./../../modules/auto-update.nix
+    # ./../../modules/auto-update.nix
 
     # Hardware specific modules
     #./../../modules/nvidia-drivers.nix
