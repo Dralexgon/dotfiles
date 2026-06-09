@@ -6,6 +6,14 @@ let
   # use it as pkgs-stable.example
 in
 {
+  # services.displayManager.sddm = {
+  #   enable = true;
+
+  #   # Enables experimental Wayland support
+  #   wayland.enable = true;
+  # };
+  services.xserver.displayManager.gdm.enable = true;
+
   programs.hyprland = {
     enable = true;
     # package = pkgs-stable.hyprland;
@@ -24,7 +32,9 @@ in
     kitty # Hyprland console
     hyprlock # Lock screen
     hyprpaper # Wallpaper manager
-    swww # Another wallpaper manager
+    yazi # File explorer (terminal)
+    nautilus # File explorer (GUI)
+    awww # Another wallpaper manager
     swaynotificationcenter # Notification menu (is dunst better ?)
     clipse # Clipboard manager
     wl-clipboard # Another clipboard manager
