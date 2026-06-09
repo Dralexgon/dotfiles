@@ -45,6 +45,7 @@
     ./../../modules/flatpak.nix
     ./../../modules/secure-boot.nix
     ./../../modules/quickshell.nix
+    ./../../modules/windows.nix
   ];
 
   # Configure console keymap
@@ -63,5 +64,6 @@
     wirelesstools
     usbutils
     pciutils
+    gparted
   ];
 }
