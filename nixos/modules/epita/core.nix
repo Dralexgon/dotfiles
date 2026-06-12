@@ -9,7 +9,7 @@
     # ./cpp.nix
     ./docker.nix
     # ./image.nix
-    ./java.nix
+    # ./java.nix
     # ./js.nix
     # ./net.nix
   ];

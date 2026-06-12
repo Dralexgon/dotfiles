@@ -113,6 +113,7 @@ in
     gnome-frog # Extract text from images
     turnon # Turn on remote computers
     onedrivegui # OneDrive client
+    gpu-screen-recorder # Screen recorder that use GPU for encoding (much better performance)
 
     # Simple useful tools for Nixos
     nh # Beautiful rebuild switch animation (nh os rebuild)
