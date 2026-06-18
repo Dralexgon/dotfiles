@@ -35,7 +35,7 @@
     ./../../modules/quality-of-life.nix
     ./../../modules/gaming.nix
     ./../../modules/minecraft.nix
-    ./../../modules/game-creation.nix
+    # ./../../modules/game-creation.nix
     ./../../modules/jetbrains.nix
     ./../../modules/neovim.nix
     ./../../modules/epita/core.nix
@@ -45,6 +45,7 @@
     ./../../modules/flatpak.nix
     ./../../modules/secure-boot.nix
     ./../../modules/quickshell.nix
+    ./../../modules/windows.nix
   ];
 
   # Configure console keymap
@@ -63,5 +64,6 @@
     wirelesstools
     usbutils
     pciutils
+    gparted
   ];
 }
