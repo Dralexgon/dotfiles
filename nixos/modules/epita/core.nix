@@ -12,7 +12,7 @@
     # ./java.nix
     # ./js.nix
     # ./net.nix
-    # ./latex.nix
+    ./latex.nix
   ];
 
   programs.ssh.package = pkgs.openssh_gssapi; # add GSSAPI support
