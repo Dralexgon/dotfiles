@@ -12,7 +12,7 @@ in
   #   # Enables experimental Wayland support
   #   wayland.enable = true;
   # };
-  services.xserver.displayManager.gdm.enable = true;
+  services.displayManager.gdm.enable = true;
 
   programs.hyprland = {
     enable = true;
