@@ -20,7 +20,7 @@ in
     lxappearance
     nwg-look
     dconf-editor
-    pkgs-stable.gradience
+    # gradience
 
     # Generate color schemes from images
     python3

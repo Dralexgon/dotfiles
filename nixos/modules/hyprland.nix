@@ -16,14 +16,14 @@ in
 
   programs.hyprland = {
     enable = true;
-    package = pkgs.hyprland;
+    package = pkgs-stable.hyprland;
   };
 
   # Screen sharing and gtk apps support
   xdg.portal.enable = true;
-  xdg.portal.extraPortals = [
-    pkgs.xdg-desktop-portal-gtk
-    pkgs.xdg-desktop-portal-hyprland
+  xdg.portal.extraPortals = with pkgs; [
+    # xdg-desktop-portal-gtk
+    # xdg-desktop-portal-hyprland
   ];
 
   environment.systemPackages = with pkgs; [
