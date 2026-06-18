@@ -11,8 +11,11 @@ in
 
   #   # Enables experimental Wayland support
   #   wayland.enable = true;
+
+  #   theme = "sddm-astronaut-theme";
   # };
-  services.displayManager.gdm.enable = true;
+  services.displayManager.ly.enable = true;
+  # services.displayManager.gdm.enable = true;
 
   programs.hyprland = {
     enable = true;
