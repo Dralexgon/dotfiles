@@ -16,7 +16,7 @@ in
 
   programs.hyprland = {
     enable = true;
-    package = pkgs-stable.hyprland;
+    package = pkgs.hyprland;
   };
 
   # Screen sharing and gtk apps support

@@ -2,12 +2,12 @@
 
 let
   # older way: nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
-  pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.system; config.allowUnfree = true; };
+  nixpkgs23 = import inputs.nixpkgs23 { system = pkgs.system; config.allowUnfree = true; };
 in
 {
   environment.systemPackages = with pkgs; [
-    pkgs-stable.texliveFull
-    pkgs-stable.fontconfig
+    nixpkgs23.texliveFull
+    nixpkgs23.fontconfig
   ];
 }
 
