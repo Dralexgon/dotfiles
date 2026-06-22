@@ -46,6 +46,7 @@
     ./../../modules/secure-boot.nix
     ./../../modules/quickshell.nix
     ./../../modules/windows.nix
+    ./../../modules/vm.nix
   ];
 
   # Configure console keymap
