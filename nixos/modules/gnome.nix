@@ -1,7 +1,7 @@
 { pkgs, ... }:
 
 {
-  services.xserver = {
+  services = {
     displayManager.gdm.enable = true;
     #displayManager.gdm.enableGnomeKeyring = true;
     desktopManager.gnome.enable = true;

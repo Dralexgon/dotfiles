@@ -17,7 +17,7 @@
 
 
     # Main modules
-    ./../../modules/gnome.nix
+    # ./../../modules/gnome.nix
     # ./../../modules/kde-plasma.nix
     ./../../modules/caelestia.nix
     ./../../modules/hyprland.nix
@@ -46,6 +46,7 @@
     ./../../modules/secure-boot.nix
     ./../../modules/quickshell.nix
     ./../../modules/windows.nix
+    # ./../../modules/vm.nix
   ];
 
   # Configure console keymap
