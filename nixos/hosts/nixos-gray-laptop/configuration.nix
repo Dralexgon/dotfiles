@@ -32,8 +32,8 @@
     # ./../../modules/file-transfer.nix
     # ./../../modules/neovim.nix
     ./../../modules/epita/core.nix
-    # ./../../modules/gaming.nix
-    # ./../../modules/minecraft.nix
+    ./../../modules/gaming.nix
+    ./../../modules/minecraft.nix 
     # ./../../modules/boot-animation.nix
     ./../../modules/ricing.nix
     ./../../modules/ricing-tools.nix
