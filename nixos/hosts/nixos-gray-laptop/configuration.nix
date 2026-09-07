@@ -17,7 +17,7 @@
 
 
     # Main modules
-    # ./../../modules/gnome.nix
+    ./../../modules/gnome.nix
     ./../../modules/caelestia.nix
     ./../../modules/hyprland.nix
     # ./../../modules/wayfire.nix
@@ -37,7 +37,8 @@
     # ./../../modules/boot-animation.nix
     ./../../modules/ricing.nix
     ./../../modules/ricing-tools.nix
-    #./../../modules/flatpak.nix
+    # ./../../modules/flatpak.nix
+    ./../../modules/classidoc.nix
   ];
  
   # Configure console keymap

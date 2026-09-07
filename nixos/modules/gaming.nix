@@ -1,6 +1,8 @@
 { pkgs, ... }:
 
 {
+  # hardware.graphics.enable = true;
+
   programs.steam = {
     enable = true;
     gamescopeSession.enable = true;

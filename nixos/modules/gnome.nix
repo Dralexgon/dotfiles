@@ -2,7 +2,7 @@
 
 {
   services = {
-    # displayManager.gdm.enable = true;
+    # displayManager.gdm.enable = true; # /!\ warning enable that to use it !
     #displayManager.gdm.enableGnomeKeyring = true;
     desktopManager.gnome.enable = true;
   };

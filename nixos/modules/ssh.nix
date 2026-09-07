@@ -17,5 +17,6 @@
 
   environment.systemPackages = with pkgs; [
     fail2ban
+    cloudflared # very useful to make ssh domain
   ];
 }
