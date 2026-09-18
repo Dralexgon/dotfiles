@@ -3,9 +3,9 @@
 {
   services = {
     # displayManager.gdm.enable = true; # /!\ warning enable that to use it !
-    #displayManager.gdm.enableGnomeKeyring = true;
     desktopManager.gnome.enable = true;
   };
+  services.gnome.gnome-keyring.enable = false;
 
   # Enable the X11 windowing system, needed for Gnome (XWayland).
   services.xserver = {

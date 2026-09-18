@@ -5,6 +5,7 @@
     # Change depending on your prefered version
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-26.05";
+    nixpkgs-stable-opencode.url = "github:nixos/nixpkgs/0954f7ee2f6bb3dc7d4e3d0d8bcb8fd4bde4cfc5";
 
 
     nixpkgs23.url = "github:nixos/nixpkgs/nixos-23.11";
