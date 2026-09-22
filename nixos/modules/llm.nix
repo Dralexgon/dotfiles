@@ -2,8 +2,7 @@
 
 {
   environment.systemPackages = with pkgs; [
+    open-webui
     ollama-cuda
-    # Doesn't seem to work:
-    # (alpaca.override { ollama = pkgs.ollama-cuda; })
   ];
 }

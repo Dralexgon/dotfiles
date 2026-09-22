@@ -123,6 +123,9 @@ in
     # - nvd history
     # nvd diff /nix/var/nix/profiles/system-{42,43}-link
     nil # Nix lsp (language server protocol) for errors and warnings in .nix files
+    direnv # Show environment variables in a nice way
+    nixfmt # Format .nix files
+    nixd
 
     # 2 discord clients for multiple accounts
     discord

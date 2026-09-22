@@ -39,10 +39,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nvf = {
-      url = "github:notashelf/nvf";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # nvf = {
+    #   url = "github:notashelf/nvf";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
 
     zen-browser = {
       url = "github:0xc000022070/zen-browser-flake";
@@ -62,7 +62,7 @@
   };
 
 
-  outputs = { self, nixpkgs, nvf, lanzaboote, ... }@inputs:
+  outputs = { self, nixpkgs, lanzaboote, ... }@inputs:
   let
     system = "x86_64-linux";
   in
@@ -81,7 +81,7 @@
       specialArgs = {inherit inputs;};
       modules = [
         ./nixos/hosts/nixos-tower-RTX3060/configuration.nix
-        nvf.nixosModules.default
+        # nvf.nixosModules.default
 
         # inputs.boot-animation.nixosModules.default
         lanzaboote.nixosModules.lanzaboote
@@ -116,12 +116,12 @@
       ];
     };
 
-    packages.${system}.default = (
-      nvf.lib.neovimConfiguration {
-        pkgs = nixpkgs.legacyPackages.${system};
-        modules = [ ./nixos/home/nvf-config.nix ];
-      }
-    ).neovim;
+    # packages.${system}.default = (
+    #   nvf.lib.neovimConfiguration {
+    #     pkgs = nixpkgs.legacyPackages.${system};
+    #     modules = [ ./nixos/home/nvf-config.nix ];
+    #   }
+    # ).neovim;
 
     # nixosConfigurations."host-RTX3060-alex" = nixpkgs.lib.nixosSystem {
     #   specialArgs = {inherit inputs;};

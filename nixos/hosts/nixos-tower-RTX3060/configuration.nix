@@ -29,7 +29,7 @@
     ./../../modules/swap.nix
 
     # Personal modules
-    # ./../../modules/llm.nix
+    ./../../modules/llm.nix
     # ./../../modules/file-transfer.nix
     ./../../modules/ssh.nix
     ./../../modules/quality-of-life.nix
@@ -38,7 +38,7 @@
     # ./../../modules/game-creation.nix
     ./../../modules/jetbrains.nix
     ./../../modules/neovim.nix
-    ./../../modules/epita/core.nix
+    # ./../../modules/epita/core.nix
     ./../../modules/boot-animation.nix
     ./../../modules/ricing.nix
     ./../../modules/ricing-tools.nix
@@ -53,7 +53,7 @@
   console.keyMap = "us";
 
   # Blacklist my buggy wifi card
-  boot.blacklistedKernelModules = [ "rtw88_8822ce" ];
+  # boot.blacklistedKernelModules = [ "rtw88_8822ce" ];
 
   # Enable the rtl88x2bu driver for my wifi dongle
   boot.extraModulePackages = [ config.boot.kernelPackages.rtl88x2bu ];
