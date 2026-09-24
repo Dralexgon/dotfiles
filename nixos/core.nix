@@ -41,6 +41,10 @@ in
     systemd-boot.enable = !useGrub; # Default boot loader
   };
 
+  nix.gc.automatic = true;
+  # nix.gc.options = ["--delete-older-than 30d"];
+  boot.loader.systemd-boot.configurationLimit = 10;
+
 
 
   ##############################
