@@ -29,7 +29,7 @@
     ./../../modules/swap.nix
 
     # Personal modules
-    # ./../../modules/llm.nix
+    ./../../modules/llm.nix
     # ./../../modules/file-transfer.nix
     ./../../modules/ssh.nix
     ./../../modules/quality-of-life.nix
@@ -53,10 +53,10 @@
   console.keyMap = "us";
 
   # Blacklist my buggy wifi card
-  boot.blacklistedKernelModules = [ "rtw88_8822ce" ];
+  # boot.blacklistedKernelModules = [ "rtw88_8822ce" ];
 
   # Enable the rtl88x2bu driver for my wifi dongle
-  boot.extraModulePackages = [ config.boot.kernelPackages.rtl88x2bu ];
+  # boot.extraModulePackages = [ config.boot.kernelPackages.rtl88x2bu ];
 
   # Disable powersave for wifi because it prevents my card from reconnecting after a wifi crash
   networking.networkmanager.wifi.powersave = false;

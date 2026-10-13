@@ -2,7 +2,7 @@
 
 {
   environment.systemPackages = with pkgs; [
-    celeste # Sync your files to any cloud
+    # celeste # Sync your files to any cloud
     cartero # Test http requests
     clapgrep # UI for grep (find text in files)
     cavalier # Cava audio visualizer UI

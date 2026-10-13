@@ -1,0 +1,22 @@
+{
+    "appearance": {
+        "transparency": {
+            "enabled": true
+        }
+    },
+    "bar": {
+        "activeWindow": {
+            "showOnHover": false
+        },
+        "popouts": {
+            "activeWindow": false
+        }
+    },
+    "launcher": {
+        "showOnHover": true
+    },
+    "services": {
+        "clockFormat": "TwentyFourHour",
+        "weatherUnits": "Celsius"
+    }
+}

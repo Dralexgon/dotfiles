@@ -19,14 +19,16 @@ in
 
   programs.hyprland = {
     enable = true;
-    package = pkgs-stable.hyprland;
+    # package = pkgs-stable.hyprland; # to go to an old version of hyprland
+    withUWSM = true; # to enable gtk portals
   };
+  i18n.inputMethod.enable = false; # disable a notif
 
   # Screen sharing and gtk apps support
   xdg.portal.enable = true;
   xdg.portal.extraPortals = with pkgs; [
-    # xdg-desktop-portal-gtk
-    # xdg-desktop-portal-hyprland
+    xdg-desktop-portal-hyprland
+    xdg-desktop-portal-gtk
   ];
 
   environment.systemPackages = with pkgs; [
@@ -43,7 +45,7 @@ in
     wl-clipboard # Another clipboard manager
     wlogout # Logout menu
     pavucontrol # Sound GUI
-    networkmanagerapplet # Wifi menu: nm-applet --indicator
+    # networkmanagerapplet # Wifi menu: nm-applet --indicator
     grim # Screenshot
     slurp # Screenshot area selector
     hyprshot # Screenshot

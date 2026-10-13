@@ -20,6 +20,7 @@
     trash-cli
     foot
     fish
+    fishPlugins.bass
     fastfetch
     starship
     btop
@@ -32,5 +33,12 @@
     kdePackages.qt6ct
     libsForQt5.qt5ct
     nerd-fonts.jetbrains-mono
+    gpu-screen-recorder
+    spicetify-cli
   ];
+
+  # qt = {
+  #   enable = true;
+  #   platformTheme = "qt5ct";  # use "qt6ct" on newer nixpkgs if this option rejects it
+  # };
 }

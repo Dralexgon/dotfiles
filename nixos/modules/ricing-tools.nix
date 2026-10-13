@@ -6,6 +6,8 @@ let
   # use it as pkgs-stable.example
 in
 {
+  programs.dconf.enable = true;
+
   environment.systemPackages = with pkgs; [
     fastfetch # Most important ricing tool (that's the nice logo in the terminal)
     btop # System monitor
@@ -21,6 +23,7 @@ in
     nwg-look
     dconf-editor
     # gradience
+    yaru-theme
 
     # Generate color schemes from images
     python3
