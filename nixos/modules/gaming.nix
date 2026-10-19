@@ -6,9 +6,9 @@
   programs.steam = {
     enable = true;
     gamescopeSession.enable = true;
-    package = pkgs.steam.override {
-      extraPkgs = p: with p; [ e2fsprogs ];
-    };
+    # package = pkgs.steam.override {
+    #   extraPkgs = p: with p; [ e2fsprogs ];
+    # };
   };
 
   programs.gamemode.enable = true;
@@ -23,5 +23,9 @@
     # lutris
     # heroic
     # bottles
+  ];
+
+  imports = [
+    ./albion.nix
   ];
 }
