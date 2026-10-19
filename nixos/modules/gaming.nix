@@ -6,6 +6,9 @@
   programs.steam = {
     enable = true;
     gamescopeSession.enable = true;
+    package = pkgs.steam.override {
+      extraPkgs = p: with p; [ e2fsprogs ];
+    };
   };
 
   programs.gamemode.enable = true;
@@ -15,7 +18,7 @@
     adwsteamgtk # GTK wrapper for Steam (gtk theme + better ui beacause steam is ugly)
 
     # osu-lazer
-    
+
     protonplus # or protonup
     # lutris
     # heroic
