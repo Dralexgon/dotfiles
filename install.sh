@@ -6,3 +6,4 @@ echo "Work in progress..."
 # Copy the configuration.nix to the folder
 # Create hardware-configuration.nix in the folder
 # Modify the flake.nix to include the new host
+# Ask which config dotfiles to symlink
