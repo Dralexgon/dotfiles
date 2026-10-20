@@ -18,4 +18,5 @@ return {
   kbMoveWinToWs              = "SUPER + SHIFT",
   kbBrowser                  = "SUPER + W",
   kbCloseWindow              = "SUPER + SHIFT + Q",
+  kbResizeWindow             = "SUPER + mouse:273", -- right click
 }

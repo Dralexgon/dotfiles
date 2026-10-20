@@ -1,0 +1,12 @@
+{
+    "wallpaper": {
+        "postHook": "~/.config/caelestia/set-icons.sh"
+    },
+    "theme": {
+        "enableGtk": true,
+        "enableQt": true,
+        "iconThemeLight": "Yaru-magenta",
+        "iconThemeDark": "Yaru-magenta-dark",
+        "postHook": "~/.config/caelestia/set-icons.sh"
+    }
+}
