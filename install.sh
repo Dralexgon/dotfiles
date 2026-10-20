@@ -112,21 +112,13 @@ EOF
 }
 
 configure_dotfiles() {
-	local choice selected source target answer
-	local -a options=(
-		"bash|$HOME/.bashrc"
-		"fastfetch|$HOME/.config/fastfetch"
-		"kitty|$HOME/.config/kitty"
-		"rofi|$HOME/.config/rofi"
-		"waybar|$HOME/.config/waybar"
-		"nvim|$HOME/.config/nvim"
-		"burn-my-windows|$HOME/.config/burn-my-windows"
-		"caelestia|$HOME/.config/caelestia"
-		"hypr-made-by-alex|$HOME/.config/hypr"
-		"hypr-old-caelestia|$HOME/.config/hypr"
-		"gnome|$HOME/.config/gnome"
-		"albion|$HOME/.local/share/albion"
-	)
+	local choice selected source target config_name
+	local -a options=("bash|$HOME/.bashrc")
+
+	while IFS= read -r config_name; do
+		[[ "$config_name" == "bash" ]] && continue
+		options+=("$config_name|$HOME/.config/$config_name")
+	done < <(find "$DOTFILES_DIR/config" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort)
 
 	printf '\nAvailable config groups:\n'
 	for choice in "${!options[@]}"; do

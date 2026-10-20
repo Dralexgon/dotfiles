@@ -126,5 +126,5 @@ if [ -f ~/.bashrc-personal ]; then
     source ~/.bashrc-personal
 fi
 
-alias fastfetch="$HOME/.config/fastfetch/run.sh"
-$HOME/.config/fastfetch/run.sh
+alias fastfetch="$HOME/.config/fastfetch-paimon/run.sh"
+fastfetch
