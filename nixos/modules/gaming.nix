@@ -12,6 +12,7 @@
   };
 
   programs.gamemode.enable = true;
+  programs.gamescope.enable = true;
 
   environment.systemPackages = with pkgs; [
     # steam # Steam is already installed with the above option
