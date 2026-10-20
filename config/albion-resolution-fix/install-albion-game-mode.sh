@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-LAUNCHER="$HOME/dotfiles/fix-albion-desktop.sh"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+LAUNCHER="$SCRIPT_DIR/fix-albion-desktop.sh"
 USER_APPS="$HOME/.local/share/applications"
 
 if [[ ! -x "$LAUNCHER" ]]; then
