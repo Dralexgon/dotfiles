@@ -130,7 +130,7 @@ in
     nil # Nix lsp (language server protocol) for errors and warnings in .nix files
 
     # 2 discord clients for multiple accounts
-    discord
+    # discord
     vesktop
   ];
 
