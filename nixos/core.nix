@@ -89,7 +89,7 @@ in
 
     # Text editors/IDE
     vim
-    # vscode
+    vscode
     vscodium
     # or activate modules/jetbrains.nix in configuration.nix
 
