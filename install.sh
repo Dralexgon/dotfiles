@@ -74,12 +74,14 @@ setup_nixos() {
 		-e 's#^    /etc/nixos/hardware-configuration.nix#    ./hardware-configuration.nix#' \
 		"$HOSTS_DIR/default/configuration.nix" > "$config_file"
 
-	cat >> "$config_file" <<EOF
+		sed -i '$d' "$config_file"
+		cat >> "$config_file" <<EOF
 
   users.users."$username" = {
 	isNormalUser = true;
 	extraGroups = [ "networkmanager" "wheel" "docker" ];
   };
+}
 EOF
 
 	if ! command -v nixos-generate-config >/dev/null 2>&1; then
@@ -140,6 +142,9 @@ configure_dotfiles() {
 		fi
 		source="${options[$((choice - 1))]%%|*}"
 		target="${options[$((choice - 1))]#*|}"
+		if [[ "$source" == "bash" ]]; then
+			source="bash/bashrc"
+		fi
 		backup_and_link "$DOTFILES_DIR/config/$source" "$target"
 	done
 }
