@@ -1,19 +1,15 @@
-# ~/.bashrc: executed by bash(1) for non-login shells.
-# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
-# for examples
-
 # If not running interactively, don't do anything
 [[ $- == *i* ]] || return
 [[ $(tty) != /dev/tty* ]] || return
 
+alias v='nix run ~/dotfiles'
+
 # Setup your variables
-
 EDITOR='nvim'
-CONFIGURATION_NIX_FILE='/etc/nixos/configuration.nix'
+#CONFIGURATION_NIX_FILE='/etc/nixos/configuration.nix'
+CONFIGURATION_NIX_FILE=~/dotfiles/nixos/configuration.nix
 
-FLAKE=true
-CONFIGURATION_FLAKE_DIR='~/dotfiles'
-CONFIGURATION_FLAKE_HOST='nixos-grey-laptop'
+FLAKE_DIR=~/dotfiles
 
 # Bash prompt
 PINK='\033[01;95m'
@@ -23,40 +19,56 @@ PS1="\
 \[$PINK\]uwu~ \[$WHITE\]"
 
 # Nix shortcuts
+# alias alex-nix-conf="$EDITOR $CONFIGURATION_NIX_FILE"
+alias alex-nix-conf="code ~/dotfiles"
 
-if ! $FLAKE; then
-    alias alex-nix-conf="$EDITOR $CONFIGURATION_NIX_FILE"
-    alias alex-nix-rebuild-switch="sudo nixos-rebuild switch"
-    alias alex-nix-rebuild-reboot="sudo nixos-rebuild switch && reboot"
-else
-    alias alex-nix-conf="$EDITOR $CONFIGURATION_FLAKE_DIR"
-    alias alex-nix-rebuild-switch="sudo nixos-rebuild switch --flake $CONFIGURATION_FLAKE_DIR/#$CONFIGURATION_FLAKE_HOST"
-    alias alex-nix-rebuild-reboot="sudo nixos-rebuild boot --flake $CONFIGURATION_FLAKE_DIR/#$CONFIGURATION_FLAKE_HOST"
-fi
+#alias alex-nix-rebuild-switch="sudo nixos-rebuild switch"
+#alias alex-nix-rebuild-reboot="sudo nixos-rebuild switch && reboot"
+
+# alias alex-nix-rebuild-switch="sudo nixos-rebuild switch --flake $FLAKE_DIR/#default"
+alias alex-nix-rebuild-switch="nh os switch ~/dotfiles"
+alias alex-nix-rebuild-boot="nh os boot ~/dotfiles"
+alias alex-nix-rebuild-switch-bootloader="sudo nixos-rebuild switch --flake .#nixos-tower-RTX3060 --install-bootloader"
 
 alias alex-nix-generation-list="nixos-rebuild list-generations"
 alex-nix-generation-clean() { # Usage examples: nix-clean-generation 1 2 3
     sudo nix-env --profile /nix/var/nix/profiles/system --delete-generations "$@"
-    nix-collect-garbage
+    nix-collect-garbage -d
 }
 alias alex-nix-package-list="nix-store -q --requisites /run/current-system | awk -F'-' '/\/nix\/store/ {print \$(NF-1)}' | sort -u"
 
 alias alex-sh-conf="$EDITOR ~/.bashrc"
 alias alex-sh-update="source ~/.bashrc"
 
-alias alex-hyprland="$EDITOR .config/hypr/hyprland.conf"
+# alias alex-hyprland="$EDITOR .config/hypr/hyprland.conf"
+alias alex-hyprland="$EDITOR .config/hypr/hyprland"
 
-acp() {
-    find -iname "*.[ch]" -exec clang-format -i {} \; -exec sed -i -e '$a\' {} \;
+pre-commit() {
+    # find -iname "*.[ch]" -exec clang-format -i {} \; -exec sed -i -e '$a\' {} \;
+    find \( -iname "*.c" -o -iname "*.h" -o -iname "*.cc" -o -iname "*.hh" -o -iname "*.hxx" \) -exec clang-format -i {} \; -exec sed -i -e '$a\' {} \;
+}
+
+ac() {
     git add .
     git commit -m "$1"
+    pre-commit
+    git add .
+    git commit -m "clean: [AUTOMATIC] (command alias with clang-format)"
+}
+
+acp() {
+    git add .
+    git commit -m "$1"
+    pre-commit
+    git add .
+    git commit -m "clean: [AUTOMATIC] (command alias with clang-format)"
     git push
 }
 
-acpmt() {
-    find -iname "*.[ch]" -exec clang-format -i {} \; -exec sed -i -e '$a\' {} \;
+acpt() {
+    pre-commit
     git add .
-    git commit -m "$1"
+    git commit -m "clean: [AUTOMATIC] (command alias with clang-format) tag: $1"
     git tag -a "$1" -m "$1"
     git push --follow-tags
 }
@@ -105,19 +117,14 @@ de() {
     fi
 }
 
+export PGDATA="$HOME/postgres_data"
+export PGHOST="/tmp"
+export PGPORT="5432"
+
 #You can add your own custom commands here
 if [ -f ~/.bashrc-personal ]; then
     source ~/.bashrc-personal
 fi
 
-fastfetch
-
-# Temporary, to remove
-export PGDATA="$HOME/postgres_data"
-export PGHOST="/tmp"
-export PGPORT="5432"
-
-# export STARSHIP_CONFIG=~/.config/starship/starship.toml
-# export STARSHIP_CONFIG=~/.config/starship/pastel-powerline.toml
-# export STARSHIP_CONFIG=~/.config/starship/alex.toml
-# eval "$(starship init bash)"
+alias fastfetch="$HOME/.config/fastfetch/run.sh"
+$HOME/.config/fastfetch/run.sh
