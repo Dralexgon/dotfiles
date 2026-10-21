@@ -23,4 +23,17 @@
 
     libglvnd # For minecraft forge
   ];
+
+  # Minecraft server module
+  # services.minecraft-servers = {
+  #   enable = false;
+  #   eula = true;
+  #
+  #   servers = {
+  #     uwu = {
+  #       enable = true;
+  #       openFirewall = true;
+  #     };
+  #   };
+  # };
 }

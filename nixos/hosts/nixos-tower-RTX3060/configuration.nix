@@ -32,11 +32,11 @@
     ./../../modules/llm.nix
     # ./../../modules/file-transfer.nix
     ./../../modules/ssh.nix
-    ./../../modules/quality-of-life.nix
+    # ./../../modules/quality-of-life.nix
     ./../../modules/gaming.nix
     ./../../modules/minecraft.nix
     # ./../../modules/game-creation.nix
-    ./../../modules/jetbrains.nix
+    # ./../../modules/jetbrains.nix # rip jetbrains, AI is taking over
     ./../../modules/neovim.nix
     ./../../modules/epita/core.nix
     ./../../modules/boot-animation.nix

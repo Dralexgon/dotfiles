@@ -115,9 +115,6 @@ in
     papers # PDF viewer
     inspector # "About your computer" app
     fragments # Bit torrent client
-    gnome-frog # Extract text from images
-    turnon # Turn on remote computers
-    onedrivegui # OneDrive client
     gpu-screen-recorder # Screen recorder that use GPU for encoding (much better performance)
 
     # Simple useful tools for Nixos
@@ -143,21 +140,6 @@ in
       #thunderbird
     ];
   };
-
-  # Minecraft server module
-  # services.minecraft-servers = {
-  #   enable = false;
-  #   eula = true;
-  #
-  #   servers = {
-  #     uwu = {
-  #       enable = true;
-  #       openFirewall = true;
-  #     };
-  #   };
-  # };
-
-
 
 
 
