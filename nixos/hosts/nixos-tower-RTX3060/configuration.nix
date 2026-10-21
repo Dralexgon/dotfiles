@@ -29,6 +29,7 @@
     ./../../modules/swap.nix
 
     # Personal modules
+    # ./../../modules/hyprland-utils.nix
     ./../../modules/llm.nix
     # ./../../modules/file-transfer.nix
     ./../../modules/ssh.nix
