@@ -1,5 +1,9 @@
-{ pkgs, ... }:
+{ inputs, pkgs, ... }:
 
+let
+  # older way: nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
+  pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.system; config.allowUnfree = true; };
+in
 {
   services.ollama = {
     enable = true;
@@ -8,6 +12,8 @@
 
   environment.systemPackages = with pkgs; [
     opencode
+    pkgs-stable.open-webui
+    (pkgs.stable-diffusion-cpp.override { vulkanSupport = true; })
 
     python3
     uv

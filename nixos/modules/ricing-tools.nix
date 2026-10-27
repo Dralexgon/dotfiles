@@ -27,7 +27,7 @@ in
 
     # Generate color schemes from images
     python3
-    pywal
+    pkgs-stable.pywal
 
     eww # This can be used to create a custom bar. I will try to do my own menu with it
 

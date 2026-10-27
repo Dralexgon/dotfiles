@@ -25,7 +25,7 @@
 
     # Hardware specific modules
     ./../../modules/nvidia-drivers.nix
-    ./../../modules/razer.nix
+    # ./../../modules/razer.nix
     ./../../modules/swap.nix
 
     # Personal modules
@@ -48,6 +48,7 @@
     ./../../modules/quickshell.nix
     ./../../modules/windows.nix
     # ./../../modules/vm.nix
+    ./../../modules/auto-update.nix
   ];
 
   # Configure console keymap

@@ -89,7 +89,7 @@ in
 
     # Text editors/IDE
     vim
-    vscode
+    pkgs-stable.vscode
     vscodium
     # or activate modules/jetbrains.nix in configuration.nix
 
@@ -110,7 +110,7 @@ in
     drawing # Paint
     clapper # Video player
     eyedropper # Color picker
-    amberol # Music player
+    pkgs-stable.amberol # Music player
     eartag # Music tag editor
     papers # PDF viewer
     inspector # "About your computer" app
