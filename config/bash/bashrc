@@ -9,7 +9,7 @@ EDITOR='nvim'
 #CONFIGURATION_NIX_FILE='/etc/nixos/configuration.nix'
 CONFIGURATION_NIX_FILE=~/dotfiles/nixos/configuration.nix
 
-FLAKE_DIR=~/dotfiles
+FLAKE_DIR='~/dotfiles'
 
 # Bash prompt
 PINK='\033[01;95m'
@@ -20,15 +20,15 @@ PS1="\
 
 # Nix shortcuts
 # alias alex-nix-conf="$EDITOR $CONFIGURATION_NIX_FILE"
-alias alex-nix-conf="code ~/dotfiles"
+alias alex-nix-conf="code $FLAKE_DIR"
 
 #alias alex-nix-rebuild-switch="sudo nixos-rebuild switch"
 #alias alex-nix-rebuild-reboot="sudo nixos-rebuild switch && reboot"
 
 # alias alex-nix-rebuild-switch="sudo nixos-rebuild switch --flake $FLAKE_DIR/#default"
-alias alex-nix-rebuild-switch="nh os switch ~/dotfiles"
-alias alex-nix-rebuild-boot="nh os boot ~/dotfiles"
-alias alex-nix-rebuild-switch-bootloader="sudo nixos-rebuild switch --flake .#nixos-tower-RTX3060 --install-bootloader"
+alias alex-nix-rebuild-switch="nh os switch $FLAKE_DIR"
+alias alex-nix-rebuild-boot="nh os boot $FLAKE_DIR"
+alias alex-nix-rebuild-switch-bootloader="nh os switch $FLAKE_DIR --install-bootloader"
 
 alias alex-nix-generation-list="nixos-rebuild list-generations"
 alex-nix-generation-clean() { # Usage examples: nix-clean-generation 1 2 3

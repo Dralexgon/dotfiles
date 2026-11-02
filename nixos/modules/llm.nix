@@ -10,9 +10,14 @@ in
     package = pkgs.ollama-cuda;
   };
 
+  virtualisation.docker.enable = true;
+  users.users.alex.extraGroups = [ "docker" ];
+
   environment.systemPackages = with pkgs; [
     opencode
     pkgs-stable.open-webui
+    docker
+    docker-compose
     (pkgs.stable-diffusion-cpp.override { vulkanSupport = true; })
 
     python3
