@@ -20,10 +20,36 @@ original_scale=$(hyprctl monitors -j | jq -er \
     --arg monitor "$MONITOR" \
     '.[] | select(.name == $monitor) | .scale')
 
+original_sensitivity=$(hyprctl getoption input:sensitivity 2>/dev/null \
+    | sed -E 's/.*([+-]?[0-9]+(\.[0-9]+)?).*/\1/' \
+    || printf '0\n')
+
 set_monitor_scale() {
+    local target_scale="$1"
+
     hyprctl eval \
-        "hl.monitor({ output = \"$MONITOR\", mode = \"preferred\", position = \"0x0\", scale = $1 })" \
+        "hl.monitor({ output = \"$MONITOR\", mode = \"preferred\", position = \"0x0\", scale = $target_scale })" \
         >/dev/null
+
+    local adjusted_sensitivity
+    adjusted_sensitivity=$(awk -v orig_sensitivity="$original_sensitivity" \
+        -v original_monitor_scale="$original_scale" \
+        -v target_monitor_scale="$target_scale" '
+        BEGIN {
+            if (original_monitor_scale <= 0 || target_monitor_scale <= 0) {
+                print orig_sensitivity
+                exit
+            }
+
+            value = orig_sensitivity * (original_monitor_scale / target_monitor_scale)
+
+            if (value < -1) value = -1
+            if (value > 1) value = 1
+
+            printf "%.4f", value
+        }')
+
+    hyprctl keyword "input:sensitivity" "$adjusted_sensitivity" >/dev/null || true
 }
 
 cleanup() {
