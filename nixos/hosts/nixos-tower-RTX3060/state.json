@@ -10,7 +10,6 @@
     "albion",
     "minecraft",
     "neovim",
-    "epita/core",
     "epita/c",
     "epita/criterion",
     "epita/docker",
@@ -22,7 +21,9 @@
     "secure-boot",
     "windows",
     "auto-update",
-    "llm"
+    "llm",
+    "game-creation",
+    "epita/core"
   ],
   "packages": [
     "wirelesstools",
