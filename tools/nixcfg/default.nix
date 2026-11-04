@@ -7,6 +7,6 @@ pkgs.writeShellApplication {
   name = "nixcfg";
   runtimeInputs = [ pkgs.git ];
   text = ''
-    exec ${python}/bin/python ${./nixcfg.py} "$@"
+    exec ${python}/bin/python ${./.}/nixcfg.py "$@"
   '';
 }

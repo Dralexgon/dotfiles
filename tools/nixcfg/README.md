@@ -1,7 +1,7 @@
 # nixcfg
 
-A terminal UI to turn modules on and off and to add or remove packages,
-for each NixOS host of this flake.
+A terminal UI to turn modules on and off and to enable, disable, add or
+remove packages (in modules or per host), for each NixOS host of this flake.
 
 ```bash
 nix run ~/dotfiles#nixcfg
@@ -56,24 +56,84 @@ imports = [
 You can edit `state.json` by hand too: nixcfg writes it in the same format
 (2-space indent, one item per line), so diffs stay clean.
 
-## Keys
+## Modules tab
 
-| Key | Tab | Action |
+Three columns, like a file manager:
+
+```
+ Modules            │ gaming.nix  2/7          │ gaming.nix
+ ● epita  4/10 ▸    │ ○ steam  # Steam is al…  │ 17   environment.systemPackages = with pkgs; [
+ ● gaming           │ ● adwsteamgtk            │ 18     # steam # Steam is already installed…
+ ● gnome            │ ● protonplus             │ 19     adwsteamgtk
+ ○ jetbrains        │ ○ lutris                 │ 24     # lutris
+```
+
+- **Modules** (left): `●` enabled on this host. A group (`epita 4/10 ▸`)
+  opens with `→` to show its submodules.
+- **Packages** of the highlighted module (middle): `→` enters this column,
+  `←` goes back. `●` means the line is active, `○` that it is commented out.
+  Expressions such as `(python3.withPackages …)` or `inputs.foo.packages…`
+  are shown in italics and are read-only: edit them with `e`.
+- **The file** (right, read-only): follows the highlighted package. Hidden
+  when the terminal is narrower than 120 columns.
+
+| Key | Where | Action |
 |---|---|---|
-| `Space` | Modules | Turn the highlighted module on or off |
+| `Space` / `Enter` | Modules | Turn the module on or off for this host |
+| `→` / `←` | Modules | Open / close a group, or enter / leave the packages column |
 | `n` | Modules | New module: creates `nixos/modules/<name>.nix` (`<name>` can be `folder/name`) from a template, enables it and opens it in `$EDITOR` |
-| `e` | Modules | Edit the highlighted module in `$EDITOR` |
-| `D` | Modules | Delete the highlighted module and disable it on every host |
-| `a` | Packages | Add a package (searches nixpkgs) |
-| `x` / `Delete` | Packages | Remove the highlighted package |
-| `h` | both | Switch host |
-| `g` | both | Show `git diff` of `nixos/` |
-| `b` | both | Build the host's system (no sudo, nothing is activated) |
-| `r` | both | `sudo nixos-rebuild switch` (only for this machine, asks first) |
-| `q` | both | Quit |
+| `D` | Modules | Delete the module and disable it on every host |
+| `Space` / `Enter` | Packages column | Comment or uncomment the package's line |
+| `a` | Packages column | Add a package line to the module (searches nixpkgs) |
+| `x` / `Delete` | Packages column | Delete the package's line |
+| `e` | both columns | Open the module in `$EDITOR`, at the package's line if one is highlighted |
 
-Every change is written to `state.json` right away: use `git diff` and
-`git restore` to review or undo.
+## Packages tab
+
+Every package in one list: the ones in each module (`gnome.nix`,
+`gaming.nix`…) and this host's own extra packages (`this host`, from
+`state.json`). `●` means it is installed on this host: its line is active and
+its module is enabled.
+
+| Key | Action |
+|---|---|
+| `/` | Filter by package or module name (`Enter` or `Esc` goes back to the list) |
+| `Enter` | Jump to the package's line in its module |
+| `a` | Add a package to this host (`state.json`) |
+| `x` / `Delete` | Remove one of this host's packages |
+
+## Everywhere
+
+| Key | Action |
+|---|---|
+| `h` | Switch host |
+| `g` | Show `git diff` of `nixos/` |
+| `b` | Build the host's system (no sudo, nothing is activated) |
+| `r` | `sudo nixos-rebuild switch` (only for this machine, asks first) |
+| `q` | Quit |
+
+Every change is written right away (to `state.json` or to the module file):
+use `git diff` and `git restore` to review or undo.
+
+## Editing modules safely
+
+nixcfg never rewrites a module: it only comments, uncomments, adds or
+deletes **one line** of an `environment.systemPackages` list
+([`modfile.py`](modfile.py)), so your comments and formatting stay. A line
+counts as a package when it is a single attribute path (`kitty`,
+`kdePackages.kate`, with an optional `# comment`). A commented line counts as
+a disabled package when it is one lowercase word right after the `#`
+(`# lutris`, `#nix-software-center`). Section comments like `# Ricing` or
+`# Not sure if...` are ignored.
+
+After each change, nixcfg checks the file with Nix in the background
+(`checking…` next to the module name):
+
+1. `nix-instantiate --parse` on the file (syntax),
+2. an evaluation of `environment.systemPackages` for every host that uses the
+   module (this catches unknown package names, about 3 s per host).
+
+If the check fails, the change is **reverted** and the Nix error is shown.
 
 ## Details
 
@@ -105,5 +165,6 @@ session.
 ## Files
 
 - `nixcfg.py`: the app ([Textual](https://textual.textualize.io/)).
+- `modfile.py`: reads and edits the package lists of module files.
 - `default.nix`: packages it with Python and Textual. It is exposed in
   `flake.nix` as `apps.x86_64-linux.nixcfg`.
