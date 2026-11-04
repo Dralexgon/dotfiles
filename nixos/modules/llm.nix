@@ -25,6 +25,8 @@ in
     portaudio
     ffmpeg
     alsa-utils
+
+    claude-code
   ];
 
   nix.settings = { # avoid compiling from source
