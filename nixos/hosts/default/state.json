@@ -1,0 +1,20 @@
+{
+  "modules": [
+    "gnome",
+    "hyprland",
+    "auto-update",
+    "neovim",
+    "epita/core",
+    "epita/c",
+    "epita/criterion",
+    "epita/docker",
+    "epita/latex",
+    "gaming",
+    "albion",
+    "boot-animation",
+    "ricing",
+    "ricing-tools",
+    "flatpak"
+  ],
+  "packages": []
+}

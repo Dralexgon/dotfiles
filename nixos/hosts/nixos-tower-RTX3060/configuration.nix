@@ -15,40 +15,8 @@
     # You probably shouldn't remove it
     ./../../core.nix
 
-
-    # Main modules
-    ./../../modules/gnome.nix
-    # ./../../modules/kde-plasma.nix
-    ./../../modules/caelestia.nix
-    ./../../modules/hyprland.nix
-    # ./../../modules/auto-update.nix
-
-    # Hardware specific modules
-    ./../../modules/nvidia-drivers.nix
-    # ./../../modules/razer.nix
-    ./../../modules/swap.nix
-
-    # Personal modules
-    # ./../../modules/hyprland-utils.nix
-    ./../../modules/llm.nix
-    # ./../../modules/file-transfer.nix
-    ./../../modules/ssh.nix
-    # ./../../modules/quality-of-life.nix
-    ./../../modules/gaming.nix
-    ./../../modules/minecraft.nix
-    # ./../../modules/game-creation.nix
-    # ./../../modules/jetbrains.nix # rip jetbrains, AI is taking over
-    ./../../modules/neovim.nix
-    ./../../modules/epita/core.nix
-    ./../../modules/boot-animation.nix
-    ./../../modules/ricing.nix
-    ./../../modules/ricing-tools.nix
-    ./../../modules/flatpak.nix
-    ./../../modules/secure-boot.nix
-    ./../../modules/quickshell.nix
-    ./../../modules/windows.nix
-    # ./../../modules/vm.nix
-    ./../../modules/auto-update.nix
+    # Enabled modules and extra packages (edit with `nix run ~/dotfiles#nixcfg`)
+    (import ./../../state.nix ./state.json)
   ];
 
   # Configure console keymap
@@ -62,11 +30,4 @@
 
   # Disable powersave for wifi because it prevents my card from reconnecting after a wifi crash
   networking.networkmanager.wifi.powersave = false;
-
-  environment.systemPackages = with pkgs; [
-    wirelesstools
-    usbutils
-    pciutils
-    gparted
-  ];
 }

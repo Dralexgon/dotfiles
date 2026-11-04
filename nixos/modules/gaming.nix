@@ -25,8 +25,4 @@
     # heroic
     # bottles
   ];
-
-  imports = [
-    ./albion.nix
-  ];
 }

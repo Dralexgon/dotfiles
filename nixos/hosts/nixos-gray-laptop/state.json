@@ -1,0 +1,20 @@
+{
+  "modules": [
+    "gnome",
+    "caelestia",
+    "hyprland",
+    "swap",
+    "neovim",
+    "epita/core",
+    "epita/c",
+    "epita/criterion",
+    "epita/docker",
+    "epita/latex",
+    "gaming",
+    "albion",
+    "minecraft",
+    "ricing",
+    "ricing-tools"
+  ],
+  "packages": []
+}

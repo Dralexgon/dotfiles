@@ -126,6 +126,12 @@
       }
     ).neovim;
 
+    # TUI to toggle modules and packages per host: nix run ~/dotfiles#nixcfg
+    apps.${system}.nixcfg = {
+      type = "app";
+      program = "${import ./tools/nixcfg { pkgs = nixpkgs.legacyPackages.${system}; }}/bin/nixcfg";
+    };
+
     # nixosConfigurations."host-RTX3060-alex" = nixpkgs.lib.nixosSystem {
     #   specialArgs = {inherit inputs;};
     #   modules = [

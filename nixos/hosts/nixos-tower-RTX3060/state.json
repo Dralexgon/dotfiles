@@ -1,0 +1,33 @@
+{
+  "modules": [
+    "gnome",
+    "caelestia",
+    "hyprland",
+    "nvidia-drivers",
+    "swap",
+    "ssh",
+    "gaming",
+    "albion",
+    "minecraft",
+    "neovim",
+    "epita/core",
+    "epita/c",
+    "epita/criterion",
+    "epita/docker",
+    "epita/latex",
+    "boot-animation",
+    "ricing",
+    "ricing-tools",
+    "flatpak",
+    "secure-boot",
+    "windows",
+    "auto-update",
+    "llm"
+  ],
+  "packages": [
+    "wirelesstools",
+    "usbutils",
+    "pciutils",
+    "gparted"
+  ]
+}

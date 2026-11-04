@@ -333,20 +333,20 @@ backup_and_link() {
 	printf 'Linked %s -> %s\n' "$target" "$source"
 }
 
-# Modules are the top-level .nix files plus the core.nix of module folders
-# (e.g. epita/core.nix), as paths relative to nixos/modules.
+# Modules are all the .nix files under nixos/modules, subfolders included
+# (e.g. epita/c.nix), as paths relative to nixos/modules.
 list_modules() {
 	(
 		cd -- "$MODULES_DIR"
-		find . -mindepth 1 -maxdepth 1 -type f -name '*.nix' -printf '%P\n'
-		find . -mindepth 2 -maxdepth 2 -type f -name 'core.nix' -printf '%P\n'
+		find . -type f -name '*.nix' -printf '%P\n'
 	) | sort
 }
 
-# Modules imported (uncommented) by the default host, used as preselection.
+# Modules enabled in the default host's state.json, used as preselection.
+# (state.json lists one module per line, so no JSON parser is needed.)
 default_modules() {
-	sed -nE 's#^[[:space:]]*\./\.\./\.\./modules/([^[:space:]]+\.nix).*#\1#p' \
-		"$HOSTS_DIR/default/configuration.nix"
+	sed -n '/"modules"/,/\]/p' "$HOSTS_DIR/default/state.json" \
+		| sed -nE 's#^[[:space:]]*"([^"]+)",?$#\1.nix#p'
 }
 
 select_modules() {
@@ -379,10 +379,11 @@ write_host_config() {
 	local config_file="$1"
 	local hostname="$2"
 	local username="$3"
-	local i
+	local state_file i
+	local -a enabled=()
+	state_file="$(dirname -- "$config_file")/state.json"
 
-	{
-		cat <<EOF
+	cat > "$config_file" <<EOF
 { config, pkgs, lib, inputs, ... }:
 
 {
@@ -395,16 +396,8 @@ write_host_config() {
     # You probably shouldn't remove it
     ./../../core.nix
 
-    # Modules
-EOF
-		for i in "${!MODULE_OPTIONS[@]}"; do
-			if (( MODULE_CHECKED[i] )); then
-				printf '    ./../../modules/%s.nix\n' "${MODULE_OPTIONS[$i]}"
-			else
-				printf '    # ./../../modules/%s.nix\n' "${MODULE_OPTIONS[$i]}"
-			fi
-		done
-		cat <<EOF
+    # Enabled modules and extra packages (edit with \`nix run ~/dotfiles#nixcfg\`)
+    (import ./../../state.nix ./state.json)
   ];
 
   users.users."$username" = {
@@ -413,7 +406,23 @@ EOF
   };
 }
 EOF
-	} > "$config_file"
+
+	# One module per line, as nixcfg writes it.
+	for i in "${!MODULE_OPTIONS[@]}"; do
+		if (( MODULE_CHECKED[i] )); then
+			enabled+=("${MODULE_OPTIONS[$i]}")
+		fi
+	done
+	{
+		if (( ${#enabled[@]} )); then
+			printf '{\n  "modules": [\n'
+			printf '    "%s"\n' "${enabled[@]}" | sed '$!s/$/,/'
+			printf '  ],\n'
+		else
+			printf '{\n  "modules": [],\n'
+		fi
+		printf '  "packages": []\n}\n'
+	} > "$state_file"
 }
 
 setup_nixos() {
@@ -456,7 +465,7 @@ setup_nixos() {
 	hardware_file="$host_dir/hardware-configuration.nix"
 
 	write_host_config "$config_file" "$hostname" "$username"
-	printf 'Wrote %s\n' "$config_file"
+	printf 'Wrote %s and state.json\n' "$config_file"
 
 	if [[ -n "$HARDWARE_CONFIG" ]]; then
 		cp -- "$HARDWARE_CONFIG" "$hardware_file"
