@@ -23,7 +23,8 @@
     "auto-update",
     "llm",
     "game-creation",
-    "epita/core"
+    "epita/core",
+    "passwordless-rebuild"
   ],
   "packages": [
     "wirelesstools",

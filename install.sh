@@ -335,11 +335,25 @@ backup_and_link() {
 
 # Modules are all the .nix files under nixos/modules, subfolders included
 # (e.g. epita/c.nix), as paths relative to nixos/modules.
+# Modules not shown in the module list: they get their own question with a
+# warning (see ask_risky_modules).
+RISKY_MODULES=("passwordless-rebuild.nix")
+
 list_modules() {
 	(
 		cd -- "$MODULES_DIR"
 		find . -type f -name '*.nix' -printf '%P\n'
-	) | sort
+	) | sort | grep -vxF -f <(printf '%s\n' "${RISKY_MODULES[@]}")
+}
+
+ask_risky_modules() {
+	printf '\n\e[1;33mWarning:\e[0m passwordless-rebuild lets wheel users run '\''sudo nixos-rebuild'\'' without a password.\n' >&2
+	printf 'nixos-rebuild can switch to any config as root, so anything running as your user\n' >&2
+	printf '(scripts, coding agents...) could get root without asking you.\n' >&2
+	if ask_yes_no "Enable passwordless nixos-rebuild?" "n"; then
+		MODULE_OPTIONS+=("passwordless-rebuild")
+		MODULE_CHECKED+=(1)
+	fi
 }
 
 # Modules enabled in the default host's state.json, used as preselection.
@@ -459,6 +473,7 @@ setup_nixos() {
 	fi
 
 	select_modules
+	ask_risky_modules
 
 	mkdir -p "$host_dir"
 	config_file="$host_dir/configuration.nix"
