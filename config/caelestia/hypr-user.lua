@@ -55,6 +55,17 @@ hl.window_rule({
     size = {3840, 1620}
 })
 
+-- nixcfg (kitty --class nixcfg) floats centered above windows, like Caelestia settings but a bit smaller
+hl.window_rule({
+    match = {
+        class = "^(nixcfg)$"
+    },
+    float = true,
+    size = "(monitor_w*0.75) (monitor_h*0.75)",
+    center = true,
+    fullscreen_state = 0 -- kitty asks to be maximized, which would override the size
+})
+
 hl.window_rule({
     name = "no-kitty-fullscreen",
     match = {
