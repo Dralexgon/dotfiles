@@ -56,6 +56,7 @@ EOF
 echo "theme=$theme mode=$mode"
 [ -z "${theme:-}" ] && { echo "Python step failed"; exit 1; }
 
+old_theme=$(gsettings get org.gnome.desktop.interface icon-theme | tr -d "'")
 gsettings set org.gnome.desktop.interface icon-theme "$theme"
 
 if [ "$mode" = "dark" ]; then
@@ -93,4 +94,11 @@ EOF
 fi
 
 # Nautilus loads gtk.css only at startup, so restart it to apply the new colors
+
+# Quickshell (launcher) loads the icon theme only at startup, so restart it when
+# the theme changed. Detached, since this hook may be a child of the shell itself.
+if [ "$theme" != "$old_theme" ]; then
+    echo "icon theme changed ($old_theme -> $theme), restarting caelestia shell"
+    setsid -f sh -c 'sleep 1; caelestia shell -r' >/dev/null 2>&1 </dev/null
+fi
 

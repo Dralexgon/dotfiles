@@ -32,13 +32,14 @@
     papirus-icon-theme
     kdePackages.qt6ct
     libsForQt5.qt5ct
+    qtengine # Qt platform theme set by the caelestia Hyprland env (QT_QPA_PLATFORMTHEME=qtengine)
+    darkly # Qt style used by ~/.config/qtengine/config.json
     nerd-fonts.jetbrains-mono
     gpu-screen-recorder
     spicetify-cli
   ];
 
-  # qt = {
-  #   enable = true;
-  #   platformTheme = "qt5ct";  # use "qt6ct" on newer nixpkgs if this option rejects it
-  # };
+  # Adds the system profile to QT_PLUGIN_PATH so Qt apps (quickshell) can load qtengine.
+  # platformTheme is left unset: QT_QPA_PLATFORMTHEME=qtengine comes from the Hyprland env.
+  qt.enable = true;
 }
