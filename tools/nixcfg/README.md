@@ -106,6 +106,7 @@ its module is enabled.
 
 | Key | Action |
 |---|---|
+| `1` / `2` | Show the Modules / Packages tab |
 | `h` | Switch host |
 | `g` | Show `git diff` of `nixos/` |
 | `b` | Build the host's system (no sudo, nothing is activated) |

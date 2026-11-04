@@ -429,6 +429,8 @@ class NixCfg(App):
     #results { height: 1fr; margin-top: 1; }
     """
     BINDINGS = [
+        Binding("1", "show_tab('modules-tab')", "Modules"),
+        Binding("2", "show_tab('packages-tab')", "Packages"),
         Binding("h", "switch_host", "Host"),
         Binding("n", "new_module", "New module"),
         Binding("e", "edit", "Edit"),
@@ -933,6 +935,9 @@ class NixCfg(App):
     @on(Input.Submitted, "#filter")
     def filter_submitted(self) -> None:
         self.query_one("#all-packages", OptionList).focus()
+
+    def action_show_tab(self, tab: str) -> None:
+        self.query_one("#tabs", TabbedContent).active = tab
 
     def action_focus_filter(self) -> None:
         self.query_one("#filter", Input).focus()
