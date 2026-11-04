@@ -103,6 +103,7 @@ in
 
     # Simple useful tools
     git
+    gh # GitHub CLI (gh auth login, gh auth setup-git)
     tree
     tldr # better man (man pages)
     wget
