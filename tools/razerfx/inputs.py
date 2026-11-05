@@ -135,20 +135,43 @@ class Keyboard:
 
 
 class Audio:
-    """Loudness of 18 log-spaced bands (one per column) of what's playing."""
+    """Loudness of 18 log-spaced bands (one per column) of what's playing, in [0, 1].
+
+    Levels are in dB, so quiet and loud parts both move the bars. Each band
+    is scaled to its own recent peak (mixed with the loudest band's), which
+    keeps the highs moving even though the bass carries most of the energy.
+    """
 
     RATE = 44100
-    CHUNK = 1024
+    HOP = 512  # new samples per analysis: ~86 updates a second
+    FFT = 2048
     BANDS = keymap.COLS
+    RANGE_DB = 24  # dB between an empty and a full bar: smaller = jumpier
+    FALL_DB = 8  # dB per second the reference peaks forget a loud moment
+    FALL = 5.0  # bar heights per second a bar falls back
 
     def __init__(self):
         self.bands = np.zeros(self.BANDS)
         self.last_used = 0.0
         self._running = False
         edges = np.geomspace(40, 16000, self.BANDS + 1)
-        freqs = np.fft.rfftfreq(self.CHUNK * 2, 1 / self.RATE)
-        self._bins = [(freqs >= lo) & (freqs < hi) for lo, hi in zip(edges, edges[1:])]
-        self._peak = 1e-3
+        freqs = np.fft.rfftfreq(self.FFT, 1 / self.RATE)
+        # FFT bins of each band (the nearest one when a bass band falls between bins)
+        self._bins = []
+        for lo, hi in zip(edges, edges[1:]):
+            idx = np.nonzero((freqs >= lo) & (freqs < hi))[0]
+            self._bins.append(idx if len(idx) else [np.abs(freqs - np.sqrt(lo * hi)).argmin()])
+        # Music loses energy with frequency (about -3 dB per octave): give it back
+        centres = np.sqrt(edges[:-1] * edges[1:])
+        self._tilt = 3 * np.log2(centres / centres[0])
+        self._window = np.hanning(self.FFT)
+        self.reset()
+
+    def reset(self):
+        self._buf = np.zeros(self.FFT)
+        self._band_peak = np.full(self.BANDS, -60.0)
+        self._peak = -60.0
+        self._avg = np.zeros(self.BANDS)
 
     def get(self) -> np.ndarray:
         self.last_used = time.monotonic()
@@ -157,12 +180,34 @@ class Audio:
             _thread(self._run, "audio")
         return self.bands
 
+    def analyse(self, samples: np.ndarray) -> np.ndarray:
+        """Feed HOP new samples (floats in [-1, 1]), update and return the bands."""
+        dt = len(samples) / self.RATE
+        self._buf = np.concatenate([self._buf[len(samples):], samples])
+        power = np.abs(np.fft.rfft(self._buf * self._window)) ** 2
+        db = np.array([10 * np.log10(power[b].mean() + 1e-12) for b in self._bins]) + self._tilt
+
+        # Reference peaks jump up at once and slowly come down. They never go
+        # below 0 dB (about -50 dBFS), so silence stays dark instead of
+        # showing amplified noise.
+        self._band_peak = np.maximum(np.maximum(self._band_peak - self.FALL_DB * dt, db), 0)
+        self._peak = max(self._peak - self.FALL_DB * dt, db.max(), 0)
+        ref = 0.6 * self._band_peak + 0.4 * self._peak
+        level = np.clip((db - (ref - self.RANGE_DB)) / self.RANGE_DB, 0, 1)
+
+        # Punch: a band jumping above its recent average (a beat, a note) gets a boost
+        onset = np.clip(level - self._avg, 0, 1)
+        self._avg += (level - self._avg) * min(1, dt * 6)
+        level = np.clip(level ** 1.5 + onset * 0.8, 0, 1)
+
+        # Instant rise, quick linear fall
+        self.bands = np.maximum(level, self.bands - self.FALL * dt)
+        return self.bands
+
     def _run(self):
-        # Capture the default output (sink monitor), mono 16-bit
-        cmd = ["pw-record", "-P", "{ stream.capture.sink=true }", "--rate", str(self.RATE),
-               "--channels", "1", "--format", "s16", "-"]
-        window = np.hanning(self.CHUNK * 2)
-        buf = np.zeros(self.CHUNK * 2)
+        # Capture the default output (sink monitor), mono 16-bit, low latency
+        cmd = ["pw-record", "-P", "{ stream.capture.sink=true }", "--latency", "10ms",
+               "--rate", str(self.RATE), "--channels", "1", "--format", "s16", "-"]
         try:
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         except OSError as e:
@@ -170,21 +215,13 @@ class Audio:
             time.sleep(10)
             self._running = False
             return
+        self.reset()
         try:
             while time.monotonic() - self.last_used < 5:  # stop when unused
-                data = proc.stdout.read(self.CHUNK * 2)
-                if not data:
+                data = proc.stdout.read(self.HOP * 2)
+                if len(data) < self.HOP * 2:
                     break
-                samples = np.frombuffer(data, dtype="<i2") / 32768
-                buf = np.concatenate([buf[len(samples):], samples])
-                spectrum = np.abs(np.fft.rfft(buf * window))
-                levels = np.array([spectrum[b].mean() if b.any() else 0 for b in self._bins])
-                levels = np.log1p(levels * 20)
-                # Auto gain: follow the loudest band, slowly forget it
-                self._peak = max(self._peak * 0.995, levels.max(), 0.05)
-                levels = np.clip(levels / self._peak, 0, 1)
-                # Fast attack, slow decay
-                self.bands = np.where(levels > self.bands, levels, self.bands * 0.85 + levels * 0.15)
+                self.analyse(np.frombuffer(data, dtype="<i2") / 32768)
         finally:
             proc.terminate()
             self.bands = np.zeros(self.BANDS)
