@@ -80,7 +80,8 @@ keyboard stays in the static **primary** colour and the daemon only wakes
 twice a second, so the audio and screen captures stop too. The daemon asks
 the shell every 2 s (`caelestia-shell ipc call gameMode isEnabled`), because
 game mode only lives in the shell's memory. The mouse pointer trail
-(`config/caelestia/cursor-trail.qml`) does the same and disappears.
+(`tools/hypr-cursortrail`) disappears too: it hides while Hyprland animations
+are off, which is what game mode turns off.
 
 ## TUI
 

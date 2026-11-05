@@ -1,6 +1,14 @@
 { inputs, pkgs, ... }:
 
+let
+  # Mouse pointer trail, drawn by Hyprland itself (tools/hypr-cursortrail).
+  # Built against pkgs.hyprland: it refuses to load into another Hyprland version.
+  cursortrail = import ../../tools/hypr-cursortrail { inherit pkgs; };
+in
 {
+  # Stable path for hl.plugin.load in config/caelestia/hypr-user.lua
+  environment.etc."hypr/plugins/cursortrail.so".source = "${cursortrail}/lib/libcursortrail.so";
+
   environment.systemPackages = with pkgs; [
     inputs.caelestia-shell.packages.${pkgs.stdenv.hostPlatform.system}.default
     inputs.caelestia-cli.packages.${pkgs.stdenv.hostPlatform.system}.default
@@ -37,7 +45,6 @@
     nerd-fonts.jetbrains-mono
     gpu-screen-recorder
     spicetify-cli
-    quickshell # runs config/caelestia/cursor-trail.qml (mouse pointer trail)
 
     # Recolours Yaru folders to the exact scheme primary, called by apply-scheme.sh
     (writers.writePython3Bin "caelestia-recolor-folders" {

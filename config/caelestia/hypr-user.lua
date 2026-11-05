@@ -111,7 +111,7 @@ hl.window_rule({
 
 -- change the icon pack (yaru-magenta, yaru-green, etc...) depending on wallpaper when changing wallpaper with caelestia
 
--- Mouse pointer trail (Quickshell overlay, see cursor-trail.qml). Muted socket warning: Hyprland closes the socket after each reply
-hl.on("hyprland.start", function()
-    hl.exec_cmd("quickshell -n -p ~/.config/caelestia/cursor-trail.qml --log-rules 'quickshell.io.socket.warning=false'")
-end)
+-- Mouse pointer trail, a Hyprland plugin (tools/hypr-cursortrail, installed by nixos/modules/caelestia.nix).
+-- Follows the Caelestia scheme and hides in game mode. Tunable with
+-- hl.config({ plugin = { cursortrail = { width = 8, life_ms = 220, color = 0 } } })
+hl.plugin.load("/etc/hypr/plugins/cursortrail.so")
