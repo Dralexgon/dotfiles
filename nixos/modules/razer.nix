@@ -48,6 +48,11 @@ in
   # gives the Razer /dev/input devices to this group)
   users.users."alex" = { extraGroups = [ "openrazer" ]; };
 
+  # The razerfx screen mirror captures the screen on the GPU with
+  # gpu-screen-recorder. This gives its KMS helper the capability to do it
+  # without asking for root (a setcap wrapper), which a service can't answer.
+  programs.gpu-screen-recorder.enable = true;
+
   # The razerfx render loop, which follows ~/.local/state/razerfx/state.json
   # and the Caelestia scheme. Logs: journalctl --user -u razerfx
   systemd.user.services.razerfx = {

@@ -2,6 +2,7 @@
 
 - Keyboard: key presses from evdev (the Razer devices belong to the openrazer group).
 - Audio: what's playing or the microphone, as frequency bands (pw-record).
+- Screen: the focused monitor, one colour per key (gpu-screen-recorder + ffmpeg).
 - Hyprland: workspaces, focused window and keybinds (its IPC sockets).
 - System: CPU load and temperature, microphone mute.
 - Notifications: desktop notifications, seen by monitoring D-Bus.
@@ -231,6 +232,110 @@ class Audio:
             self._running = False
 
 
+class Screen:
+    """The focused monitor, averaged down to one colour per key (ROWS x COLS, RGB 0..1).
+
+    Everything heavy happens on the GPU: gpu-screen-recorder captures the
+    monitor through KMS, scales it to 256x144 and encodes it with NVENC.
+    ffmpeg only decodes that tiny stream and averages it down to 18x6 raw
+    RGB, which costs almost nothing. (Screenshots with grim made Hyprland
+    copy the frame back to the CPU and wait for it, which slowed everything.)
+    """
+
+    FPS = 20
+    SIZE = "256x144"  # what the GPU scales to (16:9, multiples of 16 for the encoder)
+    FRAME = keymap.ROWS * keymap.COLS * 3
+
+    def __init__(self):
+        self.frame = np.zeros((keymap.ROWS, keymap.COLS, 3))
+        self.last_used = 0.0
+        self._running = False
+
+    def get(self) -> np.ndarray:
+        self.last_used = time.monotonic()
+        if not self._running:
+            self._running = True
+            _thread(self._run, "screen")
+        return self.frame
+
+    def _used(self) -> bool:
+        return time.monotonic() - self.last_used < 5
+
+    @staticmethod
+    def _monitor() -> str | None:
+        for m in hyprctl("monitors") or []:
+            if m.get("focused"):
+                return m["name"]
+        return None
+
+    def _run(self):
+        import select
+        import tempfile
+
+        try:
+            while self._used():
+                monitor = self._monitor()
+                if not monitor:
+                    time.sleep(2)
+                    continue
+                with tempfile.TemporaryFile() as errors:
+                    # -fm content: frames only when the screen changes, so a still screen costs nothing
+                    gsr = subprocess.Popen(
+                        ["gpu-screen-recorder", "-w", monitor, "-s", self.SIZE, "-f", str(self.FPS),
+                         "-k", "h264", "-c", "mpegts", "-fm", "content", "-cursor", "no",
+                         "-tune", "performance"],
+                        stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=errors)
+                    ffmpeg = subprocess.Popen(
+                        ["ffmpeg", "-loglevel", "error", "-fflags", "nobuffer", "-flags", "low_delay",
+                         "-probesize", "32", "-analyzeduration", "0", "-f", "mpegts", "-i", "-",
+                         "-vf", f"scale={keymap.COLS}:{keymap.ROWS}:flags=area", "-fps_mode", "passthrough",
+                         "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
+                        stdin=gsr.stdout, stdout=subprocess.PIPE, stderr=errors)
+                    gsr.stdout.close()  # ffmpeg owns it now
+                    try:
+                        self._read(ffmpeg, monitor, select)
+                    finally:
+                        for p in (gsr, ffmpeg):
+                            p.terminate()
+                        for p in (gsr, ffmpeg):
+                            try:
+                                p.wait(timeout=3)
+                            except subprocess.TimeoutExpired:
+                                p.kill()
+                    if gsr.returncode not in (0, -15, None) and self._used():
+                        errors.seek(0)
+                        tail = errors.read().decode(errors="replace").strip().splitlines()[-3:]
+                        log.warning("screen capture stopped: %s", " / ".join(tail))
+                        time.sleep(5)
+        except OSError as e:
+            log.warning("screen capture failed: %s", e)
+            time.sleep(5)
+        finally:
+            self.frame = np.zeros((keymap.ROWS, keymap.COLS, 3))
+            self._running = False
+
+    def _read(self, ffmpeg, monitor, select):
+        """Read frames until unused, the focus moves to another monitor, or the pipeline dies."""
+        fd = ffmpeg.stdout.fileno()
+        buf, checked = b"", time.monotonic()
+        while self._used():
+            if time.monotonic() - checked > 2:
+                checked = time.monotonic()
+                if self._monitor() not in (monitor, None):
+                    return
+            if not select.select([fd], [], [], 0.5)[0]:
+                continue  # still screen: no frames
+            chunk = os.read(fd, 65536)
+            if not chunk:
+                return
+            buf += chunk
+            if len(buf) >= self.FRAME:
+                last = len(buf) // self.FRAME * self.FRAME
+                frame = buf[last - self.FRAME:last]
+                buf = buf[last:]
+                self.frame = np.frombuffer(frame, np.uint8).reshape(keymap.ROWS, keymap.COLS, 3) / 255
+
+
 # Hyprland
 
 
@@ -440,6 +545,7 @@ class Inputs:
         self.keyboard = Keyboard()
         self.audio = Audio()
         self.mic = Audio(sink=False, low=80, high=8000)  # the voice range
+        self.screen = Screen()
         self.hypr = Hyprland()
         self.system = System()
         self.notifications = Notifications()

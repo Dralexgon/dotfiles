@@ -7,8 +7,10 @@ let
 
   bin = pkgs.writeShellApplication {
     name = "razerfx";
-    # pw-record captures audio for the visualiser, wpctl reads the mic mute.
-    runtimeInputs = [ pkgs.pipewire pkgs.wireplumber pkgs.systemd ];
+    # pw-record captures audio for the visualisers, wpctl reads the mic mute,
+    # gpu-screen-recorder + ffmpeg capture the screen for the screen mirror
+    # (gsr finds its KMS helper in /run/wrappers, see razer.nix).
+    runtimeInputs = with pkgs; [ pipewire wireplumber systemd gpu-screen-recorder ffmpeg-headless ];
     # Like nixcfg: runs the source in the dotfiles checkout when there is one,
     # so editing razerfx needs no rebuild (restart the daemon: r in the TUI).
     text = ''

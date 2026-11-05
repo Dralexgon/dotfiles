@@ -43,6 +43,7 @@ in software so that overlays work on top of them.
 |---|---|---|
 | Audio visualiser | `audio` | What's playing, as a spectrum analyser: 18 columns = 18 frequency bands from 40 Hz (left) to 16 kHz (right). Bars rise from the bottom row in **primary** and turn **tertiary** at the top. Gain adjusts itself to the volume. |
 | Mic visualiser | `mic` | Same, but for your **microphone** (the default input), over the voice range: 80 Hz (left) to 8 kHz (right). Bars go from **secondary** at the bottom to **tertiary** at the top. Talk, sing, or watch it light up during calls. |
+| Screen mirror | `screen` | The keyboard **mimics the screen**, like an ambilight: each key takes the colour of the part of the focused monitor it sits under (the screen is split into 6 rows × 18 columns). Colours are saturated and darks stay dark so it reads well on LEDs, and it fades smoothly between frames. The capture runs **on the GPU**: `gpu-screen-recorder` grabs the monitor through KMS, scales it to 256×144 and encodes it with NVENC, then `ffmpeg` decodes that tiny stream down to 18×6. Up to 20 frames a second, and none while the screen doesn't change. |
 | Typing ripples | `ripple` | Each key press sends a ring outward from that key. Each new ring takes the next colour of the scheme gradient. |
 | Live status | `status` | **Number keys 1–0** are Hyprland workspaces 1–10: bright primary = current, dim secondary = has windows, very dim = exists but empty. **The F-row** is a CPU load bar (F1 → F12) that goes from green to red as the CPU heats up (45 °C → 85 °C). |
 
@@ -135,6 +136,9 @@ All of it is in [`nixos/modules/razer.nix`](../../nixos/modules/razer.nix)
   daemon, it lets razerfx read key presses (typing effects, Caps Lock, Super
   hints): openrazer's udev rule gives the Razer `/dev/input` devices to that
   group, so no `input` group is needed and other keyboards stay private.
+- enables `programs.gpu-screen-recorder`, which gives its KMS helper the
+  capability to capture the screen without asking for root (for the screen
+  mirror).
 
 Like nixcfg, the `razerfx` command runs the code from the checkout
 (`~/dotfiles/tools/razerfx`, or `$RAZERFX_DOTFILES/tools/razerfx`), so code
@@ -152,7 +156,7 @@ Logs: `journalctl --user -u razerfx -f`.
 | `tui.py` | The Textual TUI |
 | `daemon.py` | The render loop and the openrazer output |
 | `effects.py` | Every effect and overlay |
-| `inputs.py` | Background readers: keyboard (evdev), audio (`pw-record`), Hyprland (IPC sockets), CPU/temperature/mic, notifications (D-Bus) |
+| `inputs.py` | Background readers: keyboard (evdev), audio and mic (`pw-record`), screen (`gpu-screen-recorder` + `ffmpeg`), Hyprland (IPC sockets), CPU/temperature/mic, notifications (D-Bus) |
 | `keymap.py` | Key → LED position on the 6×18 TKL matrix, and Hyprland key names → keys |
 | `palette.py` | Caelestia colours made LED-friendly |
 | `state.py` | Reading and writing `state.json` |
@@ -183,3 +187,8 @@ first (`systemctl --user stop razerfx`).
 - **Mic visualiser stays dark**: it listens to the default input; check it's
   the right microphone and not muted (`wpctl status`). Quiet background noise
   is ignored on purpose.
+- **Screen mirror stays dark**: it needs Hyprland (to know the focused
+  monitor) and gpu-screen-recorder's KMS helper with its capability
+  (`programs.gpu-screen-recorder.enable` in `razer.nix`, check
+  `ls /run/wrappers/bin/gsr-kms-server`). The journal shows why a capture
+  stopped.

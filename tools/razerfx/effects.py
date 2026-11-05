@@ -201,6 +201,28 @@ class MicVisualiser(AudioVisualiser):
 
 
 @effect
+class ScreenMirror(Base):
+    name, title, category = "screen", "Screen mirror", "Per-key"
+    description = ("The keyboard mimics the screen, like an ambilight: each key takes the colour of "
+                   "the part of the focused monitor it sits under. Colours are boosted for the LEDs.")
+    needs = ("screen",)
+
+    def __init__(self):
+        super().__init__()
+        self.shown = np.zeros((ROWS, COLS, 3))
+
+    def render(self, ctx):
+        target = ctx.inputs.screen.get()
+        # Screens are mostly muted colours: saturate them, and use the gamma
+        # curve so dark greys stay dark instead of lighting up grey-white
+        grey = target.mean(axis=-1, keepdims=True)
+        target = np.clip(grey + (target - grey) * 1.6, 0, 1) ** 2.2
+        # Ease toward the latest capture so motion looks smooth
+        self.shown += (target - self.shown) * min(1.0, ctx.dt / ctx.speed * 8)
+        return self.shown
+
+
+@effect
 class Ripples(Base):
     name, title, category = "ripple", "Typing ripples", "Per-key"
     description = "Each key press sends a ring outward from that key, cycling through the scheme colours."
