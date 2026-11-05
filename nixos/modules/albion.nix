@@ -5,13 +5,13 @@
     enable = true;
     libraries = with pkgs; [
       # base
-      xorg.libX11
-      xorg.libXcursor
-      xorg.libXrandr
-      xorg.libXi
-      xorg.libXext
-      xorg.libXinerama
-      xorg.libXxf86vm
+      libx11
+      libxcursor
+      libxrandr
+      libxi
+      libxext
+      libxinerama
+      libxxf86vm
       libGL
       libglvnd
       vulkan-loader
@@ -35,18 +35,18 @@
       stdenv.cc.cc.lib
 
       # xcb / DRI
-      xorg.libxcb
-      xorg.xcbutil
-      xorg.xcbutilimage
-      xorg.xcbutilkeysyms
-      xorg.xcbutilrenderutil
-      xorg.xcbutilwm
-      xorg.libXcomposite
-      xorg.libXdamage
-      xorg.libXfixes
-      xorg.libXrender
-      xorg.libXtst
-      xorg.libXScrnSaver
+      libxcb
+      libxcb-util
+      libxcb-image
+      libxcb-keysyms
+      libxcb-render-util
+      libxcb-wm
+      libxcomposite
+      libxdamage
+      libxfixes
+      libxrender
+      libxtst
+      libxscrnsaver
       libdrm
       mesa
       libgbm
@@ -70,14 +70,14 @@
       icu
       libsndfile
       SDL2
-      xorg.libXau
-      xorg.libXdmcp
+      libxau
+      libxdmcp
 
       libgpg-error
       e2fsprogs   # provides libcom_err
       krb5        # also ships libcom_err, pulled in by curl/gssapi
 
-      xorg.libxkbfile
+      libxkbfile
       libxslt
       libevent
       minizip

@@ -6,7 +6,7 @@
 
 let
   # older way: nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
-  pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.system; config.allowUnfree = true; };
+  pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.stdenv.hostPlatform.system; config.allowUnfree = true; };
   # use it as pkgs-stable.example
   useGrub = false; # Set to false if you don't want to use my grub theme or prefer systemd-boot
 in
@@ -86,7 +86,7 @@ in
   environment.systemPackages = with pkgs; [
     # Web browsers
     firefox
-    inputs.zen-browser.packages."${system}".default
+    inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
     # tor-browser
     # brave
     # chromium

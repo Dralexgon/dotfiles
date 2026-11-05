@@ -2,7 +2,7 @@
 
 let
   # older way: nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
-  pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.system; config.allowUnfree = true; };
+  pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.stdenv.hostPlatform.system; config.allowUnfree = true; };
 in
 {
   services.ollama = {
