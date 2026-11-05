@@ -9,3 +9,8 @@ I'm currently working on another rice with Hyprland and Caelestia
 - [x] install.sh will have 2 modes : an input one : asking for user input, example : yes/no and a TUI one : where they can select their choice with the arrows (this one will be the default)
 - [x] To create a new configuration.nix, ask the user what hostname and username he wants. Then ask which module he wants to install 
 - [x] Ask the user if they want to caelestia install
+
+### Keybinds
+
+- [ ] Add a read-only Keybinds tab to nixcfg : read the Caelestia defaults (`~/.config/hypr/variables.lua`) with my overrides from `config/caelestia/hypr-vars.lua` on top, and also list my own binds from `config/caelestia/hypr-user.lua` (`hyprctl binds` is useless here, every bind shows up as `__lua`)
+- [ ] Look into a Keybinds page in the Caelestia settings (nexus) to view and edit the `kb*` variables, saving to `hypr-vars.lua` : check upstream for an existing issue/PR first, then propose it as a PR
