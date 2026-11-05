@@ -108,7 +108,8 @@ its module is enabled.
 |---|---|
 | `1` / `2` | Show the Modules / Packages tab |
 | `h` | Switch host |
-| `g` | Show `git diff` of `nixos/` |
+| `g` | Show `git diff` of `nixos/` and `flake.lock` |
+| `u` | `nix flake update` (all hosts share `flake.lock`, asks first) |
 | `b` | Build the host's system (no sudo, nothing is activated) |
 | `r` | `sudo nixos-rebuild switch` (only for this machine, asks first) |
 | `q` | Quit |

@@ -439,6 +439,7 @@ class NixCfg(App):
         Binding("slash", "focus_filter", "Filter"),
         Binding("escape", "leave_filter", show=False),
         Binding("g", "git_diff", "Diff"),
+        Binding("u", "update", "Update"),
         Binding("b", "build", "Build"),
         Binding("r", "rebuild", "Switch"),
         Binding("q", "quit", "Quit"),
@@ -967,7 +968,7 @@ class NixCfg(App):
         self.push_screen(Choose("Host to edit", list_hosts()), switch)
 
     def action_git_diff(self) -> None:
-        diff = ["git", "-C", str(DOTFILES), "diff", "HEAD", "--", "nixos"]
+        diff = ["git", "-C", str(DOTFILES), "diff", "HEAD", "--", "nixos", "flake.lock"]
         if subprocess.call([*diff, "--quiet"]) == 0:
             self.notify("No changes since the last commit.")
             return
@@ -975,6 +976,15 @@ class NixCfg(App):
         # one screen, so the TUI would redraw over it before it can be read.
         with self.suspend():
             subprocess.call(diff, env={**os.environ, "LESS": "R"})
+
+    def action_update(self) -> None:
+        def update(yes: bool) -> None:
+            if yes:
+                with self.suspend():
+                    run_in_terminal(["nix", "flake", "update", "--flake", str(DOTFILES)])
+
+        # flake.lock is shared, so this updates every host, not just this one.
+        self.push_screen(Confirm("Update every flake input (flake.lock, all hosts)?"), update)
 
     def action_build(self) -> None:
         attr = f"{DOTFILES}#nixosConfigurations.{self.host}.config.system.build.toplevel"
