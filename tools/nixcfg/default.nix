@@ -1,13 +1,20 @@
 { pkgs }:
 
 let
-  python = pkgs.python3.withPackages (p: [ p.textual ]);
+  # Also used by the dev shell (flake.nix), which adds textual-dev.
+  pythonPackages = p: [ p.textual ];
+  python = pkgs.python3.withPackages pythonPackages;
 
   bin = pkgs.writeShellApplication {
     name = "nixcfg";
     runtimeInputs = [ pkgs.git ];
+    # Runs the source in the dotfiles checkout when there is one, so editing
+    # nixcfg needs no rebuild. The store copy is only a fallback; a rebuild
+    # is still needed when the Python packages change.
     text = ''
-      exec ${python}/bin/python ${./.}/nixcfg.py "$@"
+      src="''${NIXCFG_DOTFILES:-$HOME/dotfiles}/tools/nixcfg"
+      [ -f "$src/nixcfg.py" ] || src=${./.}
+      exec ${python}/bin/python "$src/nixcfg.py" "$@"
     '';
   };
 
@@ -27,5 +34,6 @@ in
 pkgs.symlinkJoin {
   name = "nixcfg";
   paths = [ bin desktopItem ];
+  passthru = { inherit pythonPackages; };
   meta.mainProgram = "nixcfg";
 }

@@ -75,6 +75,8 @@
   outputs = { self, nixpkgs, nvf, lanzaboote, ... }@inputs:
   let
     system = "x86_64-linux";
+    pkgs = nixpkgs.legacyPackages.${system};
+    nixcfg = import ./tools/nixcfg { inherit pkgs; };
   in
   {
     nixosConfigurations."nixos" = self.nixosConfigurations."default";
@@ -136,7 +138,16 @@
     # TUI to toggle modules and packages per host: nix run ~/dotfiles#nixcfg
     apps.${system}.nixcfg = {
       type = "app";
-      program = "${import ./tools/nixcfg { pkgs = nixpkgs.legacyPackages.${system}; }}/bin/nixcfg";
+      program = "${nixcfg}/bin/nixcfg";
+    };
+
+    # To work on nixcfg: nix develop ~/dotfiles#nixcfg, then
+    # textual run --dev tools/nixcfg/nixcfg.py (live CSS reload, with textual console)
+    devShells.${system}.nixcfg = pkgs.mkShell {
+      packages = [
+        (pkgs.python3.withPackages (p: nixcfg.pythonPackages p ++ [ p.textual-dev ]))
+        pkgs.git
+      ];
     };
 
     # nixosConfigurations."host-RTX3060-alex" = nixpkgs.lib.nixosSystem {

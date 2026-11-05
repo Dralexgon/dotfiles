@@ -170,3 +170,19 @@ session.
 - `modfile.py`: reads and edits the package lists of module files.
 - `default.nix`: packages it with Python and Textual. It is exposed in
   `flake.nix` as `apps.x86_64-linux.nixcfg`.
+
+## Developing
+
+The `nixcfg` command runs `tools/nixcfg/nixcfg.py` from the dotfiles
+checkout (`$NIXCFG_DOTFILES`, or `~/dotfiles`), and only falls back to its
+Nix store copy when there is none. Edits show up on the next launch, with no
+rebuild. Rebuild only when `default.nix` changes (new Python packages, the
+desktop entry...).
+
+For live CSS reload and the Textual console:
+
+```bash
+nix develop ~/dotfiles#nixcfg
+textual run --dev tools/nixcfg/nixcfg.py   # in one terminal
+textual console                            # in another, for print() and logs
+```
