@@ -112,6 +112,7 @@ its module is enabled.
 | `u` | Update `flake.lock` (shared by all hosts, asks first). With `nh`, on this machine: `nh os switch --update` (update, then switch) |
 | `b` | Build the host's system (no sudo, nothing is activated): `nh os build`, or `nix build` |
 | `r` | `nh os switch`, or `sudo nixos-rebuild switch` without `nh` (only for this machine, asks first) |
+| `c` | Delete old system generations of this machine (see below) |
 | `t` | Toggle between nixcfg's colors and the terminal's |
 | `q` | Quit (really stops nixcfg, unlike closing its window) |
 
@@ -137,6 +138,24 @@ After each change, nixcfg checks the file with Nix in the background
    module (this catches unknown package names, about 3 s per host).
 
 If the check fails, the change is **reverted** and the Nix error is shown.
+
+## Generations
+
+`c` lists this machine's system generations (number, date, NixOS version,
+kernel), newest first. `Space` selects one, `o` selects every generation older
+than the highlighted one, `d` deletes the selection (asks first). The current
+generation (the one the next boot uses) can't be selected; the running one is
+marked `running`.
+
+Deleting runs, in a terminal (sudo may ask for your password):
+
+1. `sudo nix-env --profile /nix/var/nix/profiles/system --delete-generations …`
+2. `sudo /nix/var/nix/profiles/system/bin/switch-to-configuration boot`, which
+   rewrites the boot menu without them,
+3. `nix-collect-garbage`, which frees the store paths nothing uses anymore.
+
+`nix.gc` in `core.nix` already deletes generations older than 14 days every
+week; this is for cleaning up sooner.
 
 ## Running in the background
 

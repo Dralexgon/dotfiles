@@ -15,6 +15,7 @@ import shutil
 import socket
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from rich.markup import escape
@@ -79,6 +80,10 @@ TMUX_OPTIONS = [
     "set -s terminal-features[99] '*:RGB'",
     "set -g focus-events on",
 ]
+
+# Each rebuild adds a system-<n>-link here; the profile points to the newest.
+SYSTEM_PROFILE = Path("/nix/var/nix/profiles/system")
+GENERATION_LINK = re.compile(r"^system-(\d+)-link$")
 
 # Below this width, the file preview column is hidden.
 PREVIEW_MIN_WIDTH = 120
@@ -314,6 +319,47 @@ def nh_args(host: str) -> list[str]:
     return [str(DOTFILES), "--hostname", host, *flake_args(host)]
 
 
+def list_generations() -> list[dict]:
+    """This machine's system generations, newest first."""
+    # By link name: several generations can share a store path.
+    current = SYSTEM_PROFILE.readlink().name
+    running = Path("/run/current-system").resolve()
+    generations = []
+    for link in SYSTEM_PROFILE.parent.iterdir():
+        match = GENERATION_LINK.match(link.name)
+        if not match:
+            continue
+        path = link.resolve()
+        try:
+            version = (path / "nixos-version").read_text().strip()
+        except OSError:
+            version = "?"
+        try:
+            kernel = " ".join(p.name for p in (path / "kernel-modules/lib/modules").iterdir())
+        except OSError:
+            kernel = "?"
+        generations.append({
+            "number": int(match[1]),
+            "date": datetime.fromtimestamp(link.lstat().st_mtime),
+            "version": version,
+            "kernel": kernel,
+            "current": link.name == current,
+            "running": path == running,
+        })
+    return sorted(generations, key=lambda g: g["number"], reverse=True)
+
+
+def number_ranges(numbers: list[int]) -> str:
+    """[1, 2, 3, 5] -> "1–3, 5"."""
+    ranges: list[list[int]] = []
+    for n in sorted(numbers):
+        if ranges and n == ranges[-1][1] + 1:
+            ranges[-1][1] = n
+        else:
+            ranges.append([n, n])
+    return ", ".join(str(a) if a == b else f"{a}–{b}" for a, b in ranges)
+
+
 class TextPrompt(ModalScreen[str | None]):
     BINDINGS = [Binding("escape", "dismiss(None)", "Cancel")]
 
@@ -364,6 +410,46 @@ class Choose(ModalScreen[str | None]):
     @on(OptionList.OptionSelected)
     def choose(self, event: OptionList.OptionSelected) -> None:
         self.dismiss(event.option_id)
+
+
+class Generations(ModalScreen[list[int] | None]):
+    """Pick system generations to delete. The current one can't be."""
+    BINDINGS = [
+        Binding("escape", "dismiss(None)", "Cancel"),
+        Binding("o", "select_older", "Older"),
+        Binding("d", "delete", "Delete"),
+    ]
+
+    def __init__(self, generations: list[dict]) -> None:
+        super().__init__()
+        self.generations = generations
+
+    def compose(self) -> ComposeResult:
+        selections = []
+        for g in self.generations:
+            tags = [t for t in ("current", "running") if g[t]]
+            prompt = (f"{g['number']:>4}  {g['date']:%Y-%m-%d %H:%M}  {g['version']}"
+                      f"  linux {g['kernel']}")
+            if tags:
+                prompt += f"  [b]({', '.join(tags)})[/b]"
+            selections.append(Selection(prompt, g["number"], disabled=g["current"]))
+        with Vertical(classes="dialog wide"):
+            yield Label("System generations to delete")
+            yield SelectionList[int](*selections, id="generations")
+            yield Label("[b]space[/b] select   [b]o[/b] select all older   "
+                        "[b]d[/b] delete selected   [b]esc[/b] cancel", classes="hint")
+
+    def action_select_older(self) -> None:
+        listing = self.query_one("#generations", SelectionList)
+        if listing.highlighted is None:
+            return
+        for index in range(listing.highlighted + 1, listing.option_count):
+            option = listing.get_option_at_index(index)
+            if not option.disabled:
+                listing.select(option)
+
+    def action_delete(self) -> None:
+        self.dismiss(sorted(self.query_one("#generations", SelectionList).selected))
 
 
 class PackageSearch(ModalScreen[str | None]):
@@ -545,6 +631,7 @@ class NixCfg(App):
         Binding("u", "update", "Update"),
         Binding("b", "build", "Build"),
         Binding("r", "rebuild", "Switch"),
+        Binding("c", "generations", "Generations"),
         Binding("t", "toggle_theme", "Theme"),
         Binding("q", "quit", "Quit"),
     ]
@@ -1165,6 +1252,35 @@ class NixCfg(App):
                 self.run_command(cmd, "rebuild")
 
         self.push_screen(Confirm(f"Run {' '.join(cmd[:3])} for {self.host}?"), rebuild)
+
+    def action_generations(self) -> None:
+        if self.host != socket.gethostname():
+            self.notify(f"Generations are per machine: this one is {socket.gethostname()}.",
+                        severity="error")
+            return
+
+        def delete(numbers: list[int] | None) -> None:
+            if not numbers:
+                return
+            steps = [
+                ["sudo", "nix-env", "--profile", str(SYSTEM_PROFILE),
+                 "--delete-generations", *map(str, numbers)],
+                # Rewrites the boot menu without them, like nixos-rebuild boot.
+                ["sudo", str(SYSTEM_PROFILE / "bin/switch-to-configuration"), "boot"],
+                # Frees their store paths that nothing else uses.
+                ["nix-collect-garbage"],
+            ]
+            cmd = ["sh", "-c", " && ".join(map(shlex.join, steps))]
+
+            def run(yes: bool) -> None:
+                if yes:
+                    self.run_command(cmd, "generation cleanup")
+
+            self.push_screen(Confirm(f"Delete generation{'s' * (len(numbers) > 1)} "
+                                     f"{number_ranges(numbers)}, "
+                                     "update the boot menu and collect garbage?"), run)
+
+        self.push_screen(Generations(list_generations()), delete)
 
 
 def attach_or_start() -> None:
