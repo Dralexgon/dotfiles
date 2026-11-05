@@ -12,6 +12,12 @@
       pygame
       pyaudio
     ]))
+
+    # Sets the Razer lighting to the Caelestia primary, called by set-icons.sh
+    (writers.writePython3Bin "caelestia-razer-colour" {
+      libraries = with python3Packages; [ openrazer ];
+      flakeIgnore = [ "E203" "E501" ];
+    } (builtins.readFile ../../config/caelestia/razer-colour.py))
   ];
 
   # openrazer copies its .ko files without `make modules_install`, so kbuild

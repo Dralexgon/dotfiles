@@ -108,6 +108,11 @@ else:
 EOF
 fi
 
+# Razer keyboard lighting (only on hosts with the razer module)
+if command -v caelestia-razer-colour >/dev/null; then
+    caelestia-razer-colour "$primary" || echo "razer recolour failed"
+fi
+
 # Nautilus loads gtk.css only at startup, so restart it to apply the new colors
 
 # Quickshell (launcher) loads the icon theme only at startup, so restart it when
