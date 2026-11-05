@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-exec >>/tmp/set-icons.log 2>&1
+exec >>/tmp/apply-scheme.log 2>&1
 echo "--- $(date) hook ran ---"
 
 scheme_out=$(caelestia scheme get 2>&1)

@@ -13,7 +13,7 @@
       pyaudio
     ]))
 
-    # Sets the Razer lighting to the Caelestia primary, called by set-icons.sh
+    # Sets the Razer lighting to the Caelestia primary, called by apply-scheme.sh
     (writers.writePython3Bin "caelestia-razer-colour" {
       libraries = with python3Packages; [ openrazer ];
       flakeIgnore = [ "E203" "E501" ];

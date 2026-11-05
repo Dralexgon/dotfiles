@@ -39,7 +39,7 @@
     spicetify-cli
     quickshell # runs config/caelestia/cursor-trail.qml (mouse pointer trail)
 
-    # Recolours Yaru folders to the exact scheme primary, called by set-icons.sh
+    # Recolours Yaru folders to the exact scheme primary, called by apply-scheme.sh
     (writers.writePython3Bin "caelestia-recolor-folders" {
       libraries = with python3Packages; [ pillow numpy ];
       flakeIgnore = [ "E203" "E501" "W503" ];
