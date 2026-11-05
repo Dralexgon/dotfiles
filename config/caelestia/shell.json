@@ -4,6 +4,15 @@
             "enabled": true
         }
     },
+    "background": {
+        "visualiser": {
+            "enabled": true,
+            "autoHide": true,
+            "blur": true,
+            "rounding": 1,
+            "spacing": 1
+        }
+    },
     "bar": {
         "activeWindow": {
             "showOnHover": false
