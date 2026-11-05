@@ -14,7 +14,12 @@ in
   users.users.alex.extraGroups = [ "docker" ];
 
   environment.systemPackages = with pkgs; [
-    opencode
+    # upstream node_modules hash is stale in nixpkgs, remove once fixed
+    (opencode.overrideAttrs (old: {
+      node_modules = old.node_modules.overrideAttrs {
+        outputHash = "sha256-prx9dX7kUvs/E3zopkaPk5LXh3xJAy5sZeum/W8L7cA=";
+      };
+    }))
     pkgs-stable.open-webui
     docker
     docker-compose
