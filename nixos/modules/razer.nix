@@ -1,5 +1,8 @@
 { config, pkgs, lib, inputs, ... }:
 
+let
+  razerfx = import ../../tools/razerfx { inherit pkgs; };
+in
 {
   environment.systemPackages = with pkgs; [
     # GUI to manage rgb
@@ -13,11 +16,8 @@
       pyaudio
     ]))
 
-    # Sets the Razer lighting to the Caelestia primary, called by apply-scheme.sh
-    (writers.writePython3Bin "caelestia-razer-colour" {
-      libraries = with python3Packages; [ openrazer ];
-      flakeIgnore = [ "E203" "E501" ];
-    } (builtins.readFile ../../config/caelestia/razer-colour.py))
+    # TUI + daemon for the keyboard effects (tools/razerfx)
+    razerfx
   ];
 
   # openrazer copies its .ko files without `make modules_install`, so kbuild
@@ -44,5 +44,22 @@
     users = ["alex"];
   };
 
+  # openrazer: also lets razerfx read key presses (openrazer's udev rule
+  # gives the Razer /dev/input devices to this group)
   users.users."alex" = { extraGroups = [ "openrazer" ]; };
+
+  # The razerfx render loop, which follows ~/.local/state/razerfx/state.json
+  # and the Caelestia scheme. Logs: journalctl --user -u razerfx
+  systemd.user.services.razerfx = {
+    description = "Razer keyboard effects (razerfx)";
+    wantedBy = [ "graphical-session.target" ];
+    partOf = [ "graphical-session.target" ];
+    after = [ "graphical-session.target" "openrazer-daemon.service" ];
+    wants = [ "openrazer-daemon.service" ];
+    serviceConfig = {
+      ExecStart = "${lib.getExe razerfx} daemon";
+      Restart = "on-failure";
+      RestartSec = 3;
+    };
+  };
 }

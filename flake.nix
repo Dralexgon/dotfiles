@@ -77,6 +77,7 @@
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
     nixcfg = import ./tools/nixcfg { inherit pkgs; };
+    razerfx = import ./tools/razerfx { inherit pkgs; };
   in
   {
     nixosConfigurations."nixos" = self.nixosConfigurations."default";
@@ -135,19 +136,35 @@
       }
     ).neovim;
 
-    # TUI to toggle modules and packages per host: nix run ~/dotfiles#nixcfg
-    apps.${system}.nixcfg = {
-      type = "app";
-      program = "${nixcfg}/bin/nixcfg";
+    apps.${system} = {
+      # TUI to toggle modules and packages per host: nix run ~/dotfiles#nixcfg
+      nixcfg = {
+        type = "app";
+        program = "${nixcfg}/bin/nixcfg";
+      };
+
+      # Razer keyboard effects (TUI): nix run ~/dotfiles#razerfx
+      razerfx = {
+        type = "app";
+        program = "${razerfx}/bin/razerfx";
+      };
     };
 
-    # To work on nixcfg: nix develop ~/dotfiles#nixcfg, then
-    # textual run --dev tools/nixcfg/nixcfg.py (live CSS reload, with textual console)
-    devShells.${system}.nixcfg = pkgs.mkShell {
-      packages = [
-        (pkgs.python3.withPackages (p: nixcfg.pythonPackages p ++ [ p.textual-dev ]))
-        pkgs.git
-      ];
+    devShells.${system} = {
+      # To work on nixcfg: nix develop ~/dotfiles#nixcfg, then
+      # textual run --dev tools/nixcfg/nixcfg.py (live CSS reload, with textual console)
+      nixcfg = pkgs.mkShell {
+        packages = [
+          (pkgs.python3.withPackages (p: nixcfg.pythonPackages p ++ [ p.textual-dev ]))
+          pkgs.git
+        ];
+      };
+
+      # To work on razerfx: nix develop ~/dotfiles#razerfx, then
+      # python tools/razerfx/razerfx.py (stop the service first to run the daemon)
+      razerfx = pkgs.mkShell {
+        packages = [ (pkgs.python3.withPackages (p: razerfx.pythonPackages p ++ [ p.textual-dev ])) ];
+      };
     };
 
     # nixosConfigurations."host-RTX3060-alex" = nixpkgs.lib.nixosSystem {

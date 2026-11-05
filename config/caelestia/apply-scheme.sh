@@ -108,10 +108,7 @@ else:
 EOF
 fi
 
-# Razer keyboard lighting (only on hosts with the razer module)
-if command -v caelestia-razer-colour >/dev/null; then
-    caelestia-razer-colour "$primary" || echo "razer recolour failed"
-fi
+# The Razer keyboard follows the scheme by itself (razerfx daemon)
 
 # Nautilus loads gtk.css only at startup, so restart it to apply the new colors
 

@@ -66,6 +66,17 @@ hl.window_rule({
     fullscreen_state = 0 -- kitty asks to be maximized, which would override the size
 })
 
+-- razerfx (kitty --class razerfx, from the app launcher) floats centered like nixcfg
+hl.window_rule({
+    match = {
+        class = "^(razerfx)$"
+    },
+    float = true,
+    size = "(monitor_w*0.6) (monitor_h*0.6)",
+    center = true,
+    fullscreen_state = 0
+})
+
 -- File pickers opened through the portal (browsers, Electron apps, flatpaks...) float at a fixed size.
 -- Caelestia only sizes some dialog titles: "File Upload" (Zen) floats at the size it asks for, which can be bigger than the screen
 hl.window_rule({
