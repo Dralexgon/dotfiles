@@ -628,15 +628,19 @@ class NixCfg(App):
             self.theme = TERMINAL_THEMES[theme.dark if theme else True]
         elif theme:
             self.register_theme(theme)
-            self.theme = "caelestia"
+            if self.theme == "caelestia":
+                # Same name, new colors: setting it again wouldn't restyle.
+                self.mutate_reactive(App.theme)
+            else:
+                self.theme = "caelestia"
         elif self.theme != FALLBACK_THEME:
             self.theme = FALLBACK_THEME
+        self.show_preview(self.highlighted_line())  # its colors are baked in
 
     def action_toggle_theme(self) -> None:
         self.terminal_theme = not self.terminal_theme
         self.scheme_mtime = -1.0  # makes load_theme apply it now
         self.load_theme()
-        self.show_preview(self.highlighted_line())  # its colors are baked in
         self.notify("Terminal colors" if self.terminal_theme else "nixcfg colors")
 
     def refresh_all(self) -> None:
