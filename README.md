@@ -15,3 +15,7 @@ I'm currently working on another rice with Hyprland and Caelestia
 
 - [ ] Add a read-only Keybinds tab to nixcfg : read the Caelestia defaults (`~/.config/hypr/variables.lua`) with my overrides from `config/caelestia/hypr-vars.lua` on top, and also list my own binds from `config/caelestia/hypr-user.lua` (`hyprctl binds` is useless here, every bind shows up as `__lua`)
 - [ ] Look into a Keybinds page in the Caelestia settings (nexus) to view and edit the `kb*` variables, saving to `hypr-vars.lua` : check upstream for an existing issue/PR first, then propose it as a PR
+
+### Cursor trail
+
+- [ ] Make the mouse pointer trail (`config/caelestia/cursor-trail.qml`) a Hyprland plugin : draw it in the compositor render pass, so it stays in sync with the pointer and no longer polls `cursorpos` over the socket

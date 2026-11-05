@@ -99,3 +99,8 @@ hl.window_rule({
 })
 
 -- change the icon pack (yaru-magenta, yaru-green, etc...) depending on wallpaper when changing wallpaper with caelestia
+
+-- Mouse pointer trail (Quickshell overlay, see cursor-trail.qml). Muted socket warning: Hyprland closes the socket after each reply
+hl.on("hyprland.start", function()
+    hl.exec_cmd("quickshell -n -p ~/.config/caelestia/cursor-trail.qml --log-rules 'quickshell.io.socket.warning=false'")
+end)

@@ -37,6 +37,7 @@
     nerd-fonts.jetbrains-mono
     gpu-screen-recorder
     spicetify-cli
+    quickshell # runs config/caelestia/cursor-trail.qml (mouse pointer trail)
 
     # Recolours Yaru folders to the exact scheme primary, called by set-icons.sh
     (writers.writePython3Bin "caelestia-recolor-folders" {
