@@ -87,6 +87,9 @@ hl.bind("SUPER + I", function()
     hl.dispatch(hl.dsp.exec_cmd("kitty --class nixcfg --title nixcfg nixcfg"))
 end)
 
+-- SUPER + SHIFT + Return opens kitty with the plain kitty.conf colours (SUPER + Return uses the Caelestia scheme)
+hl.bind("SUPER + SHIFT + Return", hl.dsp.exec_cmd("kitty"))
+
 hl.window_rule({
     name = "no-kitty-fullscreen",
     match = {

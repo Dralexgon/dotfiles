@@ -6,19 +6,64 @@
     },
     "background": {
         "visualiser": {
-            "enabled": false,
             "autoHide": true,
             "blur": false,
+            "enabled": false,
             "rounding": 1,
             "spacing": 1
         }
     },
     "bar": {
         "activeWindow": {
+            "inverted": true,
             "showOnHover": false
         },
         "popouts": {
             "activeWindow": false
+        },
+        "tray": {
+            "background": false,
+            "compact": true,
+            "recolour": true
+        },
+        "workspaces": {
+            "occupiedBg": false
+        }
+    },
+    "general": {
+        "idle": {
+            "inhibitWhenAudio": true,
+            "inhibitWhenCharging": false,
+            "lockBeforeSleep": true,
+            "timeouts": [
+                {
+                    "enabled": true,
+                    "idleAction": "lock",
+                    "inhibitWhenAudio": false,
+                    "inhibitWhenCharging": false,
+                    "respectInhibitors": true,
+                    "timeout": 300
+                },
+                {
+                    "enabled": true,
+                    "idleAction": "dpms off",
+                    "inhibitWhenAudio": false,
+                    "inhibitWhenCharging": false,
+                    "respectInhibitors": true,
+                    "returnAction": "dpms on",
+                    "timeout": 600
+                },
+                {
+                    "enabled": true,
+                    "idleAction": [
+                        ""
+                    ],
+                    "inhibitWhenAudio": false,
+                    "inhibitWhenCharging": false,
+                    "respectInhibitors": true,
+                    "timeout": 1200
+                }
+            ]
         }
     },
     "launcher": {
@@ -27,30 +72,5 @@
     "services": {
         "clockFormat": "TwentyFourHour",
         "weatherUnits": "Celsius"
-    },
-    "general": {
-        "idle": {
-            "lockBeforeSleep": true,
-            "inhibitWhenAudio": true,
-            "inhibitWhenCharging": false,
-            "timeouts": [
-                {
-                    "timeout": 300,
-                    "idleAction": "lock",
-                    "inhibitWhenAudio": false,
-                    "inhibitWhenCharging": false,
-                    "respectInhibitors": true
-                },
-                {
-                    "timeout": 600,
-                    "idleAction": "dpms off",
-                    "returnAction": "dpms on"
-                },
-                {
-                    "timeout": 1200,
-                    "idleAction": [""]
-                }
-            ]
-        }
     }
 }
