@@ -967,8 +967,14 @@ class NixCfg(App):
         self.push_screen(Choose("Host to edit", list_hosts()), switch)
 
     def action_git_diff(self) -> None:
+        diff = ["git", "-C", str(DOTFILES), "diff", "HEAD", "--", "nixos"]
+        if subprocess.call([*diff, "--quiet"]) == 0:
+            self.notify("No changes since the last commit.")
+            return
+        # Git defaults to LESS=FRX, and F quits at once when the diff fits on
+        # one screen, so the TUI would redraw over it before it can be read.
         with self.suspend():
-            subprocess.call(["git", "-C", str(DOTFILES), "diff", "HEAD", "--", "nixos"])
+            subprocess.call(diff, env={**os.environ, "LESS": "R"})
 
     def action_build(self) -> None:
         attr = f"{DOTFILES}#nixosConfigurations.{self.host}.config.system.build.toplevel"
