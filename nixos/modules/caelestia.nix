@@ -4,10 +4,31 @@ let
   # Mouse pointer trail, drawn by Hyprland itself (tools/hypr-cursortrail).
   # Built against pkgs.hyprland: it refuses to load into another Hyprland version.
   cursortrail = import ../../tools/hypr-cursortrail { inherit pkgs; };
+  # Workspace overview (SUPER + Tab), hyprexpo ported to the current Hyprland (tools/hypr-expo).
+  hyprexpo = import ../../tools/hypr-expo { inherit pkgs; };
+  # Preferred overview, but it often lags behind Hyprland. A failed build leaves lib/ empty instead of
+  # failing the system build, and hypr-user.lua then falls back to hyprexpo. It is retried whenever
+  # nixpkgs updates it (or Hyprland).
+  hyprtasking = pkgs.hyprlandPlugins.hyprtasking.overrideAttrs {
+    buildPhase = ''
+      runHook preBuild
+      ninja -j$NIX_BUILD_CORES || echo "hyprtasking does not build against this Hyprland, hyprexpo will be used instead"
+      runHook postBuild
+    '';
+    installPhase = ''
+      runHook preInstall
+      mkdir -p $out/lib
+      if [ -f libhyprtasking.so ]; then ninja install; fi
+      runHook postInstall
+    '';
+  };
 in
 {
   # Stable path for hl.plugin.load in config/caelestia/hypr-user.lua
   environment.etc."hypr/plugins/cursortrail.so".source = "${cursortrail}/lib/libcursortrail.so";
+  environment.etc."hypr/plugins/hyprexpo.so".source = "${hyprexpo}/lib/libhyprexpo.so";
+  # A directory: libhyprtasking.so is only there when hyprtasking built
+  environment.etc."hypr/plugins/hyprtasking".source = "${hyprtasking}/lib";
 
   environment.systemPackages = with pkgs; [
     inputs.caelestia-shell.packages.${pkgs.stdenv.hostPlatform.system}.default

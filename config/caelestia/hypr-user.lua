@@ -115,3 +115,43 @@ hl.window_rule({
 -- Follows the Caelestia scheme and hides in game mode. Tunable with
 -- hl.config({ plugin = { cursortrail = { width = 8, life_ms = 220, color = 0 } } })
 hl.plugin.load("/etc/hypr/plugins/cursortrail.so")
+
+-- Workspace overview on SUPER + Tab: hyprtasking when it builds against the current Hyprland
+-- (it often lags behind), else hyprexpo (tools/hypr-expo). Both are installed by nixos/modules/caelestia.nix.
+local HYPRTASKING = "/etc/hypr/plugins/hyprtasking/libhyprtasking.so"
+local function file_exists(path)
+    local file = io.open(path, "r")
+    if file then
+        file:close()
+    end
+    return file ~= nil
+end
+-- only one of them: both take over the workspace rendering
+local use_hyprtasking = file_exists(HYPRTASKING)
+hl.plugin.load(use_hyprtasking and HYPRTASKING or "/etc/hypr/plugins/hyprexpo.so")
+
+hl.bind("SUPER + Tab", function()
+    if hl.plugin.hyprtasking then
+        hl.plugin.hyprtasking.toggle("cursor")
+    elseif hl.plugin.hyprexpo then
+        hl.plugin.hyprexpo.expo("toggle") -- click a workspace (or SUPER + Tab again) to go there
+    end
+end)
+
+-- Plugins load after the config runs, then Hyprland runs it again: on the first pass the plugin's
+-- config keys and functions do not exist yet (and an unknown key aborts the rest of this file)
+if hl.plugin.hyprexpo then
+    hl.config({
+        plugin = {
+            hyprexpo = {
+                columns = 3,
+                gap_size = 5,
+                bg_col = 0xff111111,
+                workspace_method = "center current", -- or "first 1"
+                skip_empty = 0 -- 1: only workspaces that exist
+            }
+        }
+    })
+    -- 4-finger swipe up on a trackpad (3 fingers up/down and 4 down/horizontal are Caelestia's)
+    hl.plugin.hyprexpo.gesture(4, "up")
+end

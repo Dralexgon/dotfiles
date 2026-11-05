@@ -33,3 +33,9 @@ Every change to .config should change files in dotfiles. If not create a file he
 ### Cursor trail
 
 - [x] Make the mouse pointer trail a Hyprland plugin (`tools/hypr-cursortrail`) : drawn in the compositor render pass, so it stays in sync with the pointer and no longer polls `cursorpos` over the socket
+
+### Hyprland plugins
+
+- [ ] Try hyprliquid (for example on the kitty terminal)
+- [ ] Add the hyprfocus plugin
+- [ ] Try hyprtasking (workspace overview where windows can be dragged between workspaces): SUPER + Tab already switches to it from hyprexpo as soon as `pkgs.hyprlandPlugins.hyprtasking` builds (it fails on 0.57.1), then tune its config and gestures
