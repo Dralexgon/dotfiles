@@ -5,7 +5,7 @@
     # displayManager.gdm.enable = true; # /!\ warning enable that to use it !
     desktopManager.gnome.enable = true;
   };
-  services.gnome.gnome-keyring.enable = false;
+  services.gnome.gnome-keyring.enable = true;
 
   # Enable the X11 windowing system, needed for Gnome (XWayland).
   services.xserver = {
