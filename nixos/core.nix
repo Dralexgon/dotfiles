@@ -189,6 +189,10 @@ in
   services.printing.enable = true;
   services.printing.drivers = [ pkgs.brlaser pkgs.brgenml1lpr pkgs.brgenml1cupswrapper ];
 
+  # OneDrive sync (abraunegg client). First login: run `onedrive` once.
+  # Choose folders in ~/.config/onedrive/sync_list
+  services.onedrive.enable = true;
+
   # Enable sound with pipewire.
   services.pulseaudio.enable = false; # hardware.pulseaudio.enable = false; # old versions
   security.rtkit.enable = true;
