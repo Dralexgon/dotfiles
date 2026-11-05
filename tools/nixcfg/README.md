@@ -112,6 +112,7 @@ its module is enabled.
 | `u` | Update `flake.lock` (shared by all hosts, asks first). With `nh`, on this machine: `nh os switch --update` (update, then switch) |
 | `b` | Build the host's system (no sudo, nothing is activated): `nh os build`, or `nix build` |
 | `r` | `nh os switch`, or `sudo nixos-rebuild switch` without `nh` (only for this machine, asks first) |
+| `t` | Toggle between nixcfg's colors and the terminal's |
 | `q` | Quit (really stops nixcfg, unlike closing its window) |
 
 Every change is written right away (to `state.json` or to the module file):
@@ -180,6 +181,10 @@ nixcfg uses the colors of your Caelestia shell (the Material You palette in
 follows it live when the wallpaper changes. Without Caelestia it falls back
 to Catppuccin Mocha. `Ctrl+P` → *Change theme* picks another theme for the
 session.
+
+The output of an update, build or switch is shown in the same colors: the
+terminal's palette is changed while the command runs (OSC 4/10/11), then put
+back. `t` switches nixcfg to the terminal's own colors instead, for both.
 
 ## Files
 
