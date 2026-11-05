@@ -19,12 +19,13 @@
     "flatpak",
     "secure-boot",
     "windows",
-    "auto-update",
     "llm",
     "game-creation",
     "passwordless-rebuild",
     "gaming/albion",
-    "theme-catpuccin"
+    "theme-catpuccin",
+    "auto-update",
+    "razer"
   ],
   "packages": [
     "wirelesstools",

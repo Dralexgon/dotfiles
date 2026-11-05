@@ -6,9 +6,9 @@
     },
     "background": {
         "visualiser": {
-            "enabled": true,
+            "enabled": false,
             "autoHide": true,
-            "blur": true,
+            "blur": false,
             "rounding": 1,
             "spacing": 1
         }

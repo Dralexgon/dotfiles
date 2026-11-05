@@ -14,6 +14,25 @@
     ]))
   ];
 
+  # openrazer copies its .ko files without `make modules_install`, so kbuild
+  # never runs kmodigest on them and the module aggregator fails on the
+  # missing .ko.cer files. Generate them ourselves.
+  nixpkgs.overlays = [
+    (final: prev: {
+      kernelPackagesExtensions = prev.kernelPackagesExtensions ++ [
+        (kfinal: kprev: {
+          openrazer = kprev.openrazer.overrideAttrs (old: {
+            postInstall = (old.postInstall or "") + ''
+              for ko in "$binDir"/*.ko; do
+                ${lib.getExe final.buildPackages.kmodigest} "$ko"
+              done
+            '';
+          });
+        })
+      ];
+    })
+  ];
+
   hardware.openrazer = {
     enable = true;
     users = ["alex"];
