@@ -1,5 +1,8 @@
 { inputs, pkgs, ... }:
 
+let
+  pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.stdenv.hostPlatform.system; config.allowUnfree = true; };
+in
 {
   environment.systemPackages = with pkgs; [
     rofi # App launcher
@@ -22,7 +25,7 @@
 
     # Ricing
     python3
-    pywal
+    pkgs-stable.pywal # unstable pywal16 fails to build (makeWrapper --prefix bug)
 
     #ZaneyOS conf
     eza
