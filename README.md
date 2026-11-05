@@ -24,6 +24,12 @@ Every change to .config should change files in dotfiles. If not create a file he
 - [ ] First sync : `onedrive --sync --resync --dry-run` to check what gets downloaded, then without `--dry-run` (needed after every `sync_list` change)
 - [ ] Restart the service with `systemctl --user restart onedrive@onedrive` : the current one started before the login and stays idle
 
+### razerfx
+
+- [ ] Try `FPS = 60` in `tools/razerfx/daemon.py` (smoother wave, plasma, audio visualiser) and measure the CPU cost of razerfx + openrazer-daemon
+- [ ] Draw frames straight through the kernel driver (`/sys/.../matrix_custom_frame` then `matrix_effect_custom`) instead of D-Bus through openrazer-daemon : less CPU, a few ms less latency, makes 60 fps cheap (the USB link caps it around ~100 fps anyway). Write a whole row at once instead of the per-key Python loop. Watch out for openrazer-daemon / Polychromatic overriding it
+- [ ] Rust rewrite : only if the above isn't enough (would save ~2% CPU and ~45 MB RAM, but loses the run-from-checkout setup and the Textual TUI)
+
 ### Cursor trail
 
 - [ ] Make the mouse pointer trail (`config/caelestia/cursor-trail.qml`) a Hyprland plugin : draw it in the compositor render pass, so it stays in sync with the pointer and no longer polls `cursorpos` over the socket
