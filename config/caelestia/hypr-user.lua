@@ -66,6 +66,17 @@ hl.window_rule({
     fullscreen_state = 0 -- kitty asks to be maximized, which would override the size
 })
 
+-- File pickers opened through the portal (browsers, Electron apps, flatpaks...) float at a fixed size.
+-- Caelestia only sizes some dialog titles: "File Upload" (Zen) floats at the size it asks for, which can be bigger than the screen
+hl.window_rule({
+    match = {
+        class = "^(xdg-desktop-portal-gtk)$"
+    },
+    float = true,
+    size = "(monitor_w*0.5) (monitor_h*0.6)",
+    center = true
+})
+
 -- SUPER + I opens nixcfg, or focuses it if it is already open
 hl.bind("SUPER + I", function()
     for _, window in ipairs(hl.get_windows() or {}) do
