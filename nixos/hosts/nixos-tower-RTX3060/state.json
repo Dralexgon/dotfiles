@@ -3,9 +3,7 @@
     "gnome",
     "caelestia",
     "hyprland",
-    "nvidia-drivers",
     "swap",
-    "ssh",
     "gaming/core",
     "gaming/minecraft",
     "neovim",
@@ -23,9 +21,9 @@
     "game-creation",
     "passwordless-rebuild",
     "gaming/albion",
-    "theme-catpuccin",
-    "auto-update",
-    "razer"
+    "razer",
+    "file-transfer",
+    "hyprland-utils"
   ],
   "packages": [
     "wirelesstools",
