@@ -24,7 +24,8 @@
     "gaming/albion",
     "razer",
     "file-transfer",
-    "hyprland-utils"
+    "hyprland-utils",
+    "life-manager"
   ],
   "packages": [
     "wirelesstools",
