@@ -42,6 +42,7 @@ in software so that overlays work on top of them.
 | Effect | Name | What it does |
 |---|---|---|
 | Audio visualiser | `audio` | What's playing, as a spectrum analyser: 18 columns = 18 frequency bands from 40 Hz (left) to 16 kHz (right). Bars rise from the bottom row in **primary** and turn **tertiary** at the top. Gain adjusts itself to the volume. |
+| Mic visualiser | `mic` | Same, but for your **microphone** (the default input), over the voice range: 80 Hz (left) to 8 kHz (right). Bars go from **secondary** at the bottom to **tertiary** at the top. Talk, sing, or watch it light up during calls. |
 | Typing ripples | `ripple` | Each key press sends a ring outward from that key. Each new ring takes the next colour of the scheme gradient. |
 | Live status | `status` | **Number keys 1–0** are Hyprland workspaces 1–10: bright primary = current, dim secondary = has windows, very dim = exists but empty. **The F-row** is a CPU load bar (F1 → F12) that goes from green to red as the CPU heats up (45 °C → 85 °C). |
 
@@ -179,3 +180,6 @@ first (`systemctl --user stop razerfx`).
   layout (as Hyprland names them), whatever the active layout is.
 - **Audio visualiser stays dark**: it listens to the default output through
   `pw-record`; check that something plays on that output.
+- **Mic visualiser stays dark**: it listens to the default input; check it's
+  the right microphone and not muted (`wpctl status`). Quiet background noise
+  is ignored on purpose.

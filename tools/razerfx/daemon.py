@@ -94,7 +94,7 @@ def run():
                         for n in effects.ORDER if n in settings["overlays"]}
             for part in [current, *overlays.values()]:
                 for need in part.needs:
-                    if need != "audio":  # audio starts on first use and stops when unused
+                    if need not in ("audio", "mic"):  # these start on first use, stop when unused
                         getattr(inputs, need).start()
         if palette.reload_if_changed():
             last_frame = None

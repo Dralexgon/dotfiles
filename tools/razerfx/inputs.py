@@ -1,7 +1,7 @@
 """What the effects react to, each read in its own background thread.
 
 - Keyboard: key presses from evdev (the Razer devices belong to the openrazer group).
-- Audio: what's playing, as frequency bands (pw-record on the default sink).
+- Audio: what's playing or the microphone, as frequency bands (pw-record).
 - Hyprland: workspaces, focused window and keybinds (its IPC sockets).
 - System: CPU load and temperature, microphone mute.
 - Notifications: desktop notifications, seen by monitoring D-Bus.
@@ -135,7 +135,8 @@ class Keyboard:
 
 
 class Audio:
-    """Loudness of 18 log-spaced bands (one per column) of what's playing, in [0, 1].
+    """Loudness of 18 log-spaced bands (one per column), in [0, 1], of what's
+    playing (sink=True) or of the microphone (sink=False).
 
     Levels are in dB, so quiet and loud parts both move the bars. Each band
     is scaled to its own recent peak (mixed with the loudest band's), which
@@ -150,11 +151,12 @@ class Audio:
     FALL_DB = 8  # dB per second the reference peaks forget a loud moment
     FALL = 5.0  # bar heights per second a bar falls back
 
-    def __init__(self):
+    def __init__(self, sink=True, low=40, high=16000):
+        self.sink = sink
         self.bands = np.zeros(self.BANDS)
         self.last_used = 0.0
         self._running = False
-        edges = np.geomspace(40, 16000, self.BANDS + 1)
+        edges = np.geomspace(low, high, self.BANDS + 1)
         freqs = np.fft.rfftfreq(self.FFT, 1 / self.RATE)
         # FFT bins of each band (the nearest one when a bass band falls between bins)
         self._bins = []
@@ -205,9 +207,10 @@ class Audio:
         return self.bands
 
     def _run(self):
-        # Capture the default output (sink monitor), mono 16-bit, low latency
-        cmd = ["pw-record", "-P", "{ stream.capture.sink=true }", "--latency", "10ms",
-               "--rate", str(self.RATE), "--channels", "1", "--format", "s16", "-"]
+        # Capture the default output (sink monitor) or the default microphone,
+        # mono 16-bit, low latency
+        cmd = ["pw-record", *(["-P", "{ stream.capture.sink=true }"] if self.sink else []),
+               "--latency", "10ms", "--rate", str(self.RATE), "--channels", "1", "--format", "s16", "-"]
         try:
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         except OSError as e:
@@ -436,6 +439,7 @@ class Inputs:
     def __init__(self):
         self.keyboard = Keyboard()
         self.audio = Audio()
+        self.mic = Audio(sink=False, low=80, high=8000)  # the voice range
         self.hypr = Hyprland()
         self.system = System()
         self.notifications = Notifications()

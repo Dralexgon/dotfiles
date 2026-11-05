@@ -177,13 +177,27 @@ class AudioVisualiser(Base):
                    "Bars go from primary at the bottom to tertiary at the top.")
     needs = ("audio",)
 
+    source = "audio"  # Inputs attribute to listen to
+    bottom, top = "primary", "tertiary"  # bar colours
+
     def render(self, ctx):
-        bands = ctx.inputs.audio.get()
+        bands = getattr(ctx.inputs, self.source).get()
         height = bands * ROWS  # in rows
         level = (ROWS - 1 - ROW)  # 0 at the bottom row
         on = np.clip(height[None, :] - level, 0, 1)
-        colours = ctx.palette.primary * (1 - ROW / ROWS)[..., None] + ctx.palette.tertiary * (ROW / ROWS)[..., None]
-        return colours * on[..., None] + ctx.palette.primary * 0.03
+        bottom, top = getattr(ctx.palette, self.bottom), getattr(ctx.palette, self.top)
+        colours = bottom * (1 - ROW / ROWS)[..., None] + top * (ROW / ROWS)[..., None]
+        return colours * on[..., None] + bottom * 0.03
+
+
+@effect
+class MicVisualiser(AudioVisualiser):
+    name, title, category = "mic", "Mic visualiser", "Per-key"
+    description = ("Your microphone, as a spectrum: one column per frequency band of the voice "
+                   "range (80 Hz to 8 kHz). Bars go from secondary at the bottom to tertiary at the top.")
+    needs = ("mic",)
+    source = "mic"
+    bottom = "secondary"
 
 
 @effect
