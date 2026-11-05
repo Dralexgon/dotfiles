@@ -4,7 +4,7 @@ echo "--- $(date) hook ran ---"
 
 scheme_out=$(caelestia scheme get 2>&1)
 
-read -r theme mode < <(python3 - "$scheme_out" <<'EOF'
+read -r theme mode primary < <(python3 - "$scheme_out" <<'EOF'
 import re, sys, colorsys
 
 text = re.sub(r"\x1b\[[0-9;]*m", "", sys.argv[1])  # strip color codes if any
@@ -49,14 +49,29 @@ print(f"primary={primary} hue={h:.0f} sat={s:.2f} -> {name} ({mode})", file=sys.
 
 if mode == "dark":
     name += "-dark"
-print(name, mode)
+print(name, mode, primary)
 EOF
 )
 
-echo "theme=$theme mode=$mode"
+echo "base=$theme mode=$mode primary=$primary"
 [ -z "${theme:-}" ] && { echo "Python step failed"; exit 1; }
 
+# Copy the closest Yaru variant with its folders recoloured to the exact primary
+if [ "$mode" = "dark" ]; then caelestia_theme=Caelestia-dark; else caelestia_theme=Caelestia; fi
+if caelestia-recolor-folders "$theme" "$primary" "$HOME/.local/share/icons/$caelestia_theme"; then
+    theme=$caelestia_theme
+else
+    echo "folder recolour failed, using $theme"
+fi
+
 old_theme=$(gsettings get org.gnome.desktop.interface icon-theme | tr -d "'")
+stamp="$HOME/.local/state/caelestia/icon-primary"
+old_primary=$(cat "$stamp" 2>/dev/null)
+echo "$primary" >"$stamp"
+# Same name with new colours: switch away and back so GTK apps reload the icons
+if [ "$theme" = "$old_theme" ] && [ "$primary" != "$old_primary" ]; then
+    gsettings set org.gnome.desktop.interface icon-theme hicolor
+fi
 gsettings set org.gnome.desktop.interface icon-theme "$theme"
 
 if [ "$mode" = "dark" ]; then
@@ -96,9 +111,9 @@ fi
 # Nautilus loads gtk.css only at startup, so restart it to apply the new colors
 
 # Quickshell (launcher) loads the icon theme only at startup, so restart it when
-# the theme changed. Detached, since this hook may be a child of the shell itself.
-if [ "$theme" != "$old_theme" ]; then
-    echo "icon theme changed ($old_theme -> $theme), restarting caelestia shell"
+# the theme or its colours changed. Detached, since this hook may be a child of the shell itself.
+if [ "$theme" != "$old_theme" ] || [ "$primary" != "$old_primary" ]; then
+    echo "icon theme changed ($old_theme #$old_primary -> $theme #$primary), restarting caelestia shell"
     setsid -f sh -c 'sleep 1; caelestia shell -r' >/dev/null 2>&1 </dev/null
 fi
 

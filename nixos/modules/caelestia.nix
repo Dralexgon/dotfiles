@@ -37,6 +37,12 @@
     nerd-fonts.jetbrains-mono
     gpu-screen-recorder
     spicetify-cli
+
+    # Recolours Yaru folders to the exact scheme primary, called by set-icons.sh
+    (writers.writePython3Bin "caelestia-recolor-folders" {
+      libraries = with python3Packages; [ pillow numpy ];
+      flakeIgnore = [ "E203" "E501" "W503" ];
+    } (builtins.readFile ../../config/caelestia/recolor-folders.py))
   ];
 
   # Adds the system profile to QT_PLUGIN_PATH so Qt apps (quickshell) can load qtengine.
