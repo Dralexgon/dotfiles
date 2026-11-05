@@ -6,8 +6,8 @@
     "nvidia-drivers",
     "swap",
     "ssh",
-    "gaming",
-    "minecraft",
+    "gaming/core",
+    "gaming/minecraft",
     "neovim",
     "epita/c",
     "epita/criterion",
@@ -24,7 +24,7 @@
     "game-creation",
     "epita/core",
     "passwordless-rebuild",
-    "albion",
+    "gaming/albion",
     "theme-catpuccin"
   ],
   "packages": [

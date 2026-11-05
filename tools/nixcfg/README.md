@@ -30,12 +30,12 @@ nixcfg never edits Nix code. Each host has a `state.json` next to its
 ```
 
 - `modules`: paths relative to `nixos/modules/`, without `.nix`. Every `.nix`
-  file there is a module, subfolders included (`gaming.nix` → `gaming`,
+  file there is a module, subfolders included (`gnome.nix` → `gnome`,
   `epita/c.nix` → `epita/c`). Modules don't import each other: each one is
   turned on and off here.
 - `packages`: nixpkgs attribute paths, nested ones included.
 
-**Groups**: a folder with a `core.nix` (like `epita/`) is a group. Its core
+**Groups**: a folder with a `core.nix` (like `epita/` or `gaming/`) is a group. Its core
 (`epita/core`, shown as `epita`) is the switch for the whole group, and each
 submodule (`epita/c`, `epita/docker`…) is toggled on its own. A submodule is
 only imported when its group is on, so turning a group off keeps your

@@ -2,7 +2,7 @@
 # into a module: imports the enabled modules and installs the listed packages.
 #
 # state.json:
-#   "modules":  paths relative to nixos/modules, without .nix (e.g. "gaming", "epita/c")
+#   "modules":  paths relative to nixos/modules, without .nix (e.g. "gnome", "epita/c")
 #   "packages": nixpkgs attribute paths (e.g. "gparted", "kdePackages.kate")
 #
 # A folder with a core.nix is a group: its core ("epita/core") switches the

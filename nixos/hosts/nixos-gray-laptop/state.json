@@ -10,9 +10,9 @@
     "epita/criterion",
     "epita/docker",
     "epita/latex",
-    "gaming",
-    "albion",
-    "minecraft",
+    "gaming/core",
+    "gaming/albion",
+    "gaming/minecraft",
     "ricing",
     "ricing-tools"
   ],

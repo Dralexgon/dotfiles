@@ -46,7 +46,7 @@ HOSTS_DIR = DOTFILES / "nixos" / "hosts"
 MODULES_DIR = DOTFILES / "nixos" / "modules"
 
 # A module is any .nix file under nixos/modules, named by its path without .nix
-# ("gaming", "epita/core", "epita/c").
+# ("gnome", "epita/core", "epita/c").
 MODULE_NAME = re.compile(r"^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$")
 
 MODULE_TEMPLATE = """\
