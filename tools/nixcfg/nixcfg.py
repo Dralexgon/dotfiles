@@ -334,12 +334,12 @@ class PackageSearch(ModalScreen[str | None]):
 
 
 class Columns(Horizontal):
-    """Modules | packages | file preview. The preview hides on narrow terminals."""
+    """Modules | packages | file preview: the preview takes the right half, the
+    two lists share the left half. The preview hides on narrow terminals."""
 
     def on_resize(self) -> None:
         wide = self.app.size.width >= PREVIEW_MIN_WIDTH
         self.query_one("#preview-col").display = wide
-        self.query_one("#pkg-col").set_class(not wide, "wide")
 
 
 class ModuleList(SelectionList[str]):
@@ -368,12 +368,11 @@ class NixCfg(App):
     Underline > .underline--bar { background: $foreground 8%; color: $primary; }
     TabPane { padding: 1 0 0 0; }
 
-    #modules { width: 38; }
-    #pkg-col { width: 44; border-left: vkey $foreground 10%; }
-    #pkg-col.wide { width: 1fr; }
+    #modules { width: 1fr; }
+    #pkg-col { width: 1fr; border-left: vkey $foreground 10%; }
     #pkg-title { height: 1; padding: 0 2; }
     #preview-col {
-        width: 1fr; border-left: vkey $foreground 10%; padding: 0 1;
+        width: 2fr; border-left: vkey $foreground 10%; padding: 0 1;
         scrollbar-size-vertical: 1; scrollbar-background: $background;
         scrollbar-color: $primary 30%;
     }
