@@ -4,7 +4,7 @@ set -Eeuo pipefail
 MONITOR="DP-2"
 GAME_WIDTH="3840"
 GAME_HEIGHT="1620" # even larger : 1620
-GAME_DIR="${ALBION_DIR:-$HOME/albiononline}"
+GAME_DIR="${ALBION_DIR:-$HOME/games/albiononline}"
 GAME_BIN="$GAME_DIR/game_x64/Albion-Online"
 
 command -v hyprctl >/dev/null

@@ -6,7 +6,7 @@ LAUNCHER="$SCRIPT_DIR/fix-albion-desktop.sh"
 USER_APPS="$HOME/.local/share/applications"
 NORMAL_DESKTOP="sandbox-interactive_com-albiononline_1.desktop"
 BIGGER_DESKTOP="sandbox-interactive_com-albiononline_1-bigger-resolution.desktop"
-DEFAULT_ALBION_LAUNCHER="${ALBION_DIR:-$HOME/albiononline}/Albion-Online"
+DEFAULT_ALBION_LAUNCHER="${ALBION_DIR:-$HOME/games/albiononline}/Albion-Online"
 
 is_wrapper_exec() {
     grep -Eq '^Exec=.*fix-albion-desktop\.sh([[:space:]]|$)' "$1"
