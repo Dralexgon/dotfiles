@@ -66,6 +66,16 @@ hl.window_rule({
     fullscreen_state = 0 -- kitty asks to be maximized, which would override the size
 })
 
+-- SUPER + I opens nixcfg, or focuses it if it is already open
+hl.bind("SUPER + I", function()
+    for _, window in ipairs(hl.get_windows() or {}) do
+        if window.class == "nixcfg" then
+            return hl.dispatch(hl.dsp.focus({ window = "address:" .. window.address }))
+        end
+    end
+    hl.dispatch(hl.dsp.exec_cmd("kitty --class nixcfg --title nixcfg nixcfg"))
+end)
+
 hl.window_rule({
     name = "no-kitty-fullscreen",
     match = {
