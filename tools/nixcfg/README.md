@@ -146,6 +146,11 @@ the app launcher or `nixcfg`) reattaches to it, right where it was. When a
 command finishes, a desktop notification tells whether it worked. Press `q`
 to really quit.
 
+While it runs, a ❄ icon shows in the bar's tray ([`tray.py`](tray.py), a
+StatusNotifierItem): click it to open or focus the window. Hovering it in
+Caelestia shows its menu, with what is running and **Quit nixcfg** (disabled
+while an update or rebuild runs).
+
 - `nixcfg --foreground` runs it in the current terminal, without tmux.
 - `tmux -L nixcfg kill-server` stops a nixcfg left in the background.
 
@@ -180,7 +185,8 @@ session.
 
 - `nixcfg.py`: the app ([Textual](https://textual.textualize.io/)).
 - `modfile.py`: reads and edits the package lists of module files.
-- `default.nix`: packages it with Python and Textual. It is exposed in
+- `tray.py`: the tray icon (D-Bus, with `dbus-fast`).
+- `default.nix`: packages it with Python, Textual and dbus-fast. It is exposed in
   `flake.nix` as `apps.x86_64-linux.nixcfg`.
 
 ## Developing

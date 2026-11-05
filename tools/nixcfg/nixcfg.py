@@ -239,6 +239,29 @@ def run_in_terminal(cmd: list[str], what: str) -> None:
     input(f"\n{status}. Press Enter to go back to nixcfg...")
 
 
+def show_window() -> None:
+    """Focus the nixcfg window, or open one attached to the session."""
+    try:
+        proc = subprocess.run(["hyprctl", "clients", "-j"], capture_output=True, text=True)
+        clients = json.loads(proc.stdout)
+    except (OSError, ValueError):
+        clients = []
+    for client in clients:
+        if client.get("class") == "nixcfg":
+            # Same as the SUPER + I bind in config/caelestia/hypr-user.lua.
+            subprocess.run(["hyprctl", "eval", "hl.dispatch(hl.dsp.focus("
+                            f'{{ window = "address:{client["address"]}" }}))'],
+                           capture_output=True)
+            return
+    nixcfg = shutil.which("nixcfg")
+    command = [nixcfg] if nixcfg else [sys.executable, str(Path(__file__).resolve())]
+    # Without these, the new nixcfg would think it is already in the session.
+    env = {k: v for k, v in os.environ.items() if k not in ("NIXCFG_SESSION", "TMUX", "TMUX_PANE")}
+    subprocess.Popen(["kitty", "--class", "nixcfg", "--title", "nixcfg", *command],
+                     env=env, start_new_session=True, stdin=subprocess.DEVNULL,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
 def has_nh() -> bool:
     return shutil.which("nh") is not None
 
@@ -493,6 +516,7 @@ class NixCfg(App):
         self.good: dict[Path, str] = {}  # last module text that passed the check
         self.check_status = ""
         self.jumping = False  # switching tabs to show a package's module
+        self.tray = None
 
     def compose(self) -> ComposeResult:
         yield Static(id="titlebar")
@@ -519,6 +543,28 @@ class NixCfg(App):
         modules = self.query_one("#modules", ModuleList)
         modules.focus()
         modules.highlighted = 0
+        if os.environ.get("NIXCFG_SESSION"):
+            self.start_tray()
+
+    def start_tray(self) -> None:
+        """Show an icon in the bar while nixcfg runs in the background."""
+        try:
+            import tray
+        except ImportError:  # dbus-fast is missing until the next rebuild
+            return
+        self.tray = tray.Tray(on_open=show_window,
+                              on_quit=lambda: self.call_from_thread(self.exit))
+        self.tray.start()
+
+    def run_command(self, cmd: list[str], what: str) -> None:
+        if self.tray:
+            self.tray.set_busy(f"{what.capitalize()} running…")
+        try:
+            with self.suspend():
+                run_in_terminal(cmd, what)
+        finally:
+            if self.tray:
+                self.tray.set_busy("")
 
     # Display
 
@@ -1023,8 +1069,7 @@ class NixCfg(App):
 
         def update(yes: bool) -> None:
             if yes:
-                with self.suspend():
-                    run_in_terminal(cmd, "update")
+                self.run_command(cmd, "update")
 
         # flake.lock is shared, so this updates every host, not just this one.
         question = "Update every flake input (flake.lock, all hosts)"
@@ -1037,8 +1082,7 @@ class NixCfg(App):
         else:
             attr = f"{DOTFILES}#nixosConfigurations.{self.host}.config.system.build.toplevel"
             cmd = ["nix", "build", "--no-link", *flake_args(self.host), attr]
-        with self.suspend():
-            run_in_terminal(cmd, "build")
+        self.run_command(cmd, "build")
 
     def action_rebuild(self) -> None:
         if self.host != socket.gethostname():
@@ -1057,8 +1101,7 @@ class NixCfg(App):
 
         def rebuild(yes: bool) -> None:
             if yes:
-                with self.suspend():
-                    run_in_terminal(cmd, "rebuild")
+                self.run_command(cmd, "rebuild")
 
         self.push_screen(Confirm(f"Run {' '.join(cmd[:3])} for {self.host}?"), rebuild)
 

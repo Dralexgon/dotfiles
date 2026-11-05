@@ -2,7 +2,7 @@
 
 let
   # Also used by the dev shell (flake.nix), which adds textual-dev.
-  pythonPackages = p: [ p.textual ];
+  pythonPackages = p: [ p.textual p.dbus-fast ];
   python = pkgs.python3.withPackages pythonPackages;
 
   bin = pkgs.writeShellApplication {
