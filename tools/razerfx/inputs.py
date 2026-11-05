@@ -6,6 +6,7 @@
 - Hyprland: workspaces, focused window and keybinds (its IPC sockets).
 - System: CPU load and temperature, microphone mute.
 - Notifications: desktop notifications, seen by monitoring D-Bus.
+- GameMode: whether Caelestia's game mode is on (its IPC), polled every 2 s.
 
 Threads start lazily, when an effect or overlay first asks for their data,
 and never crash the daemon: on errors they log, wait and retry.
@@ -16,6 +17,7 @@ import glob
 import json
 import logging
 import os
+import shutil
 import socket
 import subprocess
 import threading
@@ -540,6 +542,38 @@ class Notifications:
             await asyncio.sleep(5)
 
 
+# Game mode
+
+
+class GameMode:
+    """Caelestia's game mode. It only lives in the shell's memory, so ask its IPC
+    (`caelestia-shell ipc call`, ~40 ms) every 2 s."""
+
+    def __init__(self):
+        self.enabled = False
+        self._started = False
+
+    def start(self):
+        if not self._started:
+            self._started = True
+            _thread(self._run, "gamemode")
+
+    def _run(self):
+        # User services don't always have the system profile in PATH
+        exe = shutil.which("caelestia-shell") or "/run/current-system/sw/bin/caelestia-shell"
+        while True:
+            try:
+                out = subprocess.run([exe, "ipc", "call", "gameMode", "isEnabled"],
+                                     capture_output=True, text=True, timeout=2).stdout
+                enabled = out.strip() == "true"  # shell not running: stays off
+                if enabled != self.enabled:
+                    log.info("game mode %s", "on" if enabled else "off")
+                self.enabled = enabled
+            except (OSError, subprocess.SubprocessError):
+                self.enabled = False
+            time.sleep(2)
+
+
 class Inputs:
     def __init__(self):
         self.keyboard = Keyboard()
@@ -549,3 +583,4 @@ class Inputs:
         self.hypr = Hyprland()
         self.system = System()
         self.notifications = Notifications()
+        self.game_mode = GameMode()

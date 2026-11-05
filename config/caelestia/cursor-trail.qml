@@ -17,6 +17,7 @@ ShellRoot {
     property real lastX: NaN
     property real lastY: NaN
     property real now: Date.now()
+    property bool gameMode: false              // Caelestia's game mode: no trail, no overlay
 
     // Follow the Caelestia colour scheme
     FileView {
@@ -62,9 +63,32 @@ ShellRoot {
 
     Timer {
         interval: 8
-        running: true
+        running: !root.gameMode
         repeat: true
         onTriggered: if (!hypr.connected) hypr.connected = true
+    }
+
+    // Caelestia's game mode only lives in the shell's memory, so ask its IPC (~40 ms) every 2 s.
+    // While it's on, stop polling the pointer and remove the overlay (a fullscreen game
+    // can then skip compositing)
+    Process {
+        id: gameModeCheck
+        command: ["caelestia-shell", "ipc", "call", "gameMode", "isEnabled"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.gameMode = text.trim() === "true";
+                if (root.gameMode)
+                    root.points = [];
+            }
+        }
+    }
+
+    Timer {
+        interval: 2000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: gameModeCheck.running = true
     }
 
     // Age the trail and drop expired points once per frame
@@ -84,6 +108,7 @@ ShellRoot {
             id: win
             required property var modelData
             screen: modelData
+            visible: !root.gameMode
             anchors { top: true; bottom: true; left: true; right: true }
             color: "transparent"
             exclusionMode: ExclusionMode.Ignore
@@ -100,16 +125,18 @@ ShellRoot {
                     required property int index
                     readonly property var a: root.points[index]
                     readonly property var b: root.points[index + 1]
-                    readonly property real life: b ? 1 - (root.now - b.t) / root.lifeMs : 0
-                    readonly property real dx: b ? b.x - a.x : 0
-                    readonly property real dy: b ? b.y - a.y : 0
+                    // Both ends: while points shrink, a binding can see the new a with a stale b
+                    readonly property bool ok: !!a && !!b
+                    readonly property real life: ok ? 1 - (root.now - b.t) / root.lifeMs : 0
+                    readonly property real dx: ok ? b.x - a.x : 0
+                    readonly property real dy: ok ? b.y - a.y : 0
 
                     visible: life > 0
                     // Centred on the segment and one height longer, so the radius gives round caps
                     width: Math.hypot(dx, dy) + height
                     height: Math.max(root.maxWidth * life, 1)
-                    x: b ? (a.x + b.x) / 2 - win.modelData.x - width / 2 : 0
-                    y: b ? (a.y + b.y) / 2 - win.modelData.y - height / 2 : 0
+                    x: ok ? (a.x + b.x) / 2 - win.modelData.x - width / 2 : 0
+                    y: ok ? (a.y + b.y) / 2 - win.modelData.y - height / 2 : 0
                     rotation: Math.atan2(dy, dx) * 180 / Math.PI
                     radius: height / 2
                     antialiasing: true

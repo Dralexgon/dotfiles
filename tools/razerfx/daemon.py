@@ -3,6 +3,9 @@
 It follows state.json and the Caelestia scheme as they change, and only
 sends a frame to the keyboard when it differs from the last one, so a
 static effect costs (almost) nothing.
+
+While Caelestia's game mode is on, effects and overlays pause: the keyboard
+stays in the static primary colour and the loop only wakes twice a second.
 """
 
 import logging
@@ -70,6 +73,7 @@ def run():
 
     inputs = Inputs()
     inputs.keyboard.start()
+    inputs.game_mode.start()
     palette = Palette()
     flash = effects.Flash()
 
@@ -100,12 +104,17 @@ def run():
             last_frame = None
 
         speed = float(settings["speed"])
-        ctx = effects.Context(t=t, dt=dt_real * speed, now=now, last=last, speed=speed,
-                              palette=palette, inputs=inputs, state=settings)
-        frame = current.render(ctx)
-        for part in overlays.values():
-            frame = part.apply(frame, ctx)
-        frame = flash.apply(frame, ctx)
+        game_mode = inputs.game_mode.enabled
+        if game_mode:
+            # Nothing renders, so the audio and screen captures stop by themselves
+            frame = effects.fill(palette.primary)
+        else:
+            ctx = effects.Context(t=t, dt=dt_real * speed, now=now, last=last, speed=speed,
+                                  palette=palette, inputs=inputs, state=settings)
+            frame = current.render(ctx)
+            for part in overlays.values():
+                frame = part.apply(frame, ctx)
+            frame = flash.apply(frame, ctx)
         frame = np.clip(frame * float(settings["brightness"]), 0, 1)
         out = np.round(frame * 255).astype(np.uint8)
 
@@ -119,4 +128,4 @@ def run():
 
         t += dt_real * speed
         last = now
-        time.sleep(max(0, 1 / FPS - (time.monotonic() - now)))
+        time.sleep(max(0, (0.5 if game_mode else 1 / FPS) - (time.monotonic() - now)))

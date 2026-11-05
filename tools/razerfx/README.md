@@ -72,6 +72,16 @@ Drawn on top of the effect, always in this order (so the Super hints win):
 There is also a **flash** that is always available: `razerfx flash [colour]`
 pulses the keyboard twice. It's meant for scripts and hooks (see below).
 
+## Game mode
+
+While Caelestia's **game mode** is on (Utilities panel, or
+`caelestia shell gameMode toggle`), effects, overlays and flashes pause: the
+keyboard stays in the static **primary** colour and the daemon only wakes
+twice a second, so the audio and screen captures stop too. The daemon asks
+the shell every 2 s (`caelestia-shell ipc call gameMode isEnabled`), because
+game mode only lives in the shell's memory. The mouse pointer trail
+(`config/caelestia/cursor-trail.qml`) does the same and disappears.
+
 ## TUI
 
 Effects on the left (Enter to apply, `●` marks the current one), overlays on
