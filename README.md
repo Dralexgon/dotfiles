@@ -4,6 +4,8 @@ I'm currently working on another rice with Hyprland and Caelestia
 
 ## TODO
 
+Every change to .config should change files in dotfiles. If not create a file here and create a symlink.
+
 ### install.sh
 
 - [x] install.sh will have 2 modes : an input one : asking for user input, example : yes/no and a TUI one : where they can select their choice with the arrows (this one will be the default)
