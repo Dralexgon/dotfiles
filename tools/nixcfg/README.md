@@ -109,10 +109,10 @@ its module is enabled.
 | `1` / `2` | Show the Modules / Packages tab |
 | `h` | Switch host |
 | `g` | Show `git diff` of `nixos/` and `flake.lock` |
-| `u` | `nix flake update` (all hosts share `flake.lock`, asks first) |
-| `b` | Build the host's system (no sudo, nothing is activated) |
-| `r` | `sudo nixos-rebuild switch` (only for this machine, asks first) |
-| `q` | Quit |
+| `u` | Update `flake.lock` (shared by all hosts, asks first). With `nh`, on this machine: `nh os switch --update` (update, then switch) |
+| `b` | Build the host's system (no sudo, nothing is activated): `nh os build`, or `nix build` |
+| `r` | `nh os switch`, or `sudo nixos-rebuild switch` without `nh` (only for this machine, asks first) |
+| `q` | Quit (really stops nixcfg, unlike closing its window) |
 
 Every change is written right away (to `state.json` or to the module file):
 use `git diff` and `git restore` to review or undo.
@@ -136,6 +136,18 @@ After each change, nixcfg checks the file with Nix in the background
    module (this catches unknown package names, about 3 s per host).
 
 If the check fails, the change is **reverted** and the Nix error is shown.
+
+## Running in the background
+
+Like Discord, closing the nixcfg window does not stop it: nixcfg runs in its
+own hidden tmux session (socket `nixcfg`, separate from your own tmux), so an
+update, build or rebuild keeps going. Launching nixcfg again (`SUPER + I`,
+the app launcher or `nixcfg`) reattaches to it, right where it was. When a
+command finishes, a desktop notification tells whether it worked. Press `q`
+to really quit.
+
+- `nixcfg --foreground` runs it in the current terminal, without tmux.
+- `tmux -L nixcfg kill-server` stops a nixcfg left in the background.
 
 ## Details
 

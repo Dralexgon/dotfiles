@@ -7,7 +7,9 @@ let
 
   bin = pkgs.writeShellApplication {
     name = "nixcfg";
-    runtimeInputs = [ pkgs.git ];
+    # tmux keeps nixcfg running when its window is closed; libnotify tells
+    # when an update or rebuild finished.
+    runtimeInputs = [ pkgs.git pkgs.tmux pkgs.libnotify ];
     # Runs the source in the dotfiles checkout when there is one, so editing
     # nixcfg needs no rebuild. The store copy is only a fallback; a rebuild
     # is still needed when the Python packages change.
