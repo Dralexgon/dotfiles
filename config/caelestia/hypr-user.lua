@@ -137,6 +137,16 @@ pcall(hl.config, {
     }
 })
 
+-- Petals, blood drops or images thrown behind the mouse pointer, a Hyprland plugin (tools/hypr-cursorfx,
+-- installed by nixos/modules/caelestia.nix). Stays off in game mode. Switch live with
+-- hyprctl eval 'hl.config({ plugin = { cursorfx = { style = "blood" } } })'   (petals | blood | image | off)
+-- Tunable with hl.config({ plugin = { cursorfx = { style = "petals", image = "~/Pictures/bat.png", density = 5,
+-- size = 14, life_ms = 1400, max_particles = 400, color = 0, blood_color = 0xFF8A0012, splat_ms = 1600 } } })
+-- (wrap it in pcall like petals above: the keys do not exist on the first config pass)
+hl.plugin.load("/etc/hypr/plugins/cursorfx.so")
+-- Blood drops shaken off the pointer (the keys do not exist on the first config pass, hence pcall)
+pcall(hl.config, { plugin = { cursorfx = { style = "blood" } } })
+
 -- Liquid Glass / Acrylic / Mica window effects, a Hyprland plugin (tools/hypr-liquid, installed by
 -- nixos/modules/caelestia.nix). Options: https://github.com/zaregototsukai/hyprliquid#configuration
 -- hl.plugin.load("/etc/hypr/plugins/hyprliquid.so")

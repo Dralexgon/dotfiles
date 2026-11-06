@@ -10,6 +10,8 @@ let
   hyprliquid = import ../../tools/hypr-liquid { inherit pkgs; src = inputs.hyprliquid; };
   # Closing windows shatter into petals blown by the wind (tools/hypr-petals).
   petals = import ../../tools/hypr-petals { inherit pkgs; };
+  # Petals, blood drops or images thrown behind the mouse pointer (tools/hypr-cursorfx).
+  cursorfx = import ../../tools/hypr-cursorfx { inherit pkgs; };
   # Preferred overview, but it often lags behind Hyprland. A failed build leaves lib/ empty instead of
   # failing the system build, and hypr-user.lua then falls back to hyprexpo. It is retried whenever
   # nixpkgs updates it (or Hyprland).
@@ -33,6 +35,7 @@ in
   environment.etc."hypr/plugins/hyprexpo.so".source = "${hyprexpo}/lib/libhyprexpo.so";
   environment.etc."hypr/plugins/hyprliquid.so".source = "${hyprliquid}/lib/libhyprliquid.so";
   environment.etc."hypr/plugins/petals.so".source = "${petals}/lib/libpetals.so";
+  environment.etc."hypr/plugins/cursorfx.so".source = "${cursorfx}/lib/libcursorfx.so";
   # A directory: libhyprtasking.so is only there when hyprtasking built
   environment.etc."hypr/plugins/hyprtasking".source = "${hyprtasking}/lib";
 
