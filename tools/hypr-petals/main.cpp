@@ -51,6 +51,7 @@
 #include <hyprland/src/managers/eventLoop/EventLoopManager.hpp>
 #include <hyprland/src/managers/eventLoop/EventLoopTimer.hpp>
 #include <hyprland/src/config/ConfigValue.hpp>
+#include <hyprland/src/config/ConfigManager.hpp>
 #include <hyprland/src/config/values/types/ColorValue.hpp>
 #include <hyprland/src/config/values/types/FloatValue.hpp>
 #include <hyprland/src/config/values/types/IntValue.hpp>
@@ -63,6 +64,7 @@
 #include <random>
 #include <regex>
 #include <sstream>
+#include <typeindex>
 #include <vector>
 
 using namespace Render::GL;
@@ -429,7 +431,11 @@ void main() {
             p.tumble += p.tumbleRate * dt * ramp;
 
             const double life = age / b.duration;
-            p.alpha           = 1.0 - std::clamp((life - 0.4) / 0.6, 0.0, 1.0);
+            // Closing petals fade out over the second half of their flight. Opening ones play this
+            // backwards, so they only fade in over the first 15%: otherwise they spend most of their
+            // flight faint, where the rim glow takes over and they look milky instead of see-through.
+            const double fadeFrom = b.reverse ? 0.85 : 0.4;
+            p.alpha               = 1.0 - std::clamp((life - fadeFrom) / (1.0 - fadeFrom), 0.0, 1.0);
             p.alpha *= p.alpha;
             p.scale = 1.0 - 0.45 * life;
         }
@@ -668,15 +674,42 @@ void main() {
     // Opening windows are not drawn until their petals have assembled them (except into our snapshot)
     void hkRenderWindow(void* thisptr, Render::CRenderContext& ctx, PHLWINDOW window, PHLMONITOR monitor, const Render::SWindowRenderPresentation& presentation,
                         const Time::steady_tp& now, bool decorate, Render::eRenderPassMode mode, bool ignorePosition, bool standalone) {
-        if (!g->snapshotting && !g->hidden.empty() && isHidden(window))
+        if (!g->hidden.empty() && isHidden(window)) {
+            if (!g->snapshotting)
+                return;
+            // Our snapshot of an opening window: its fade-in has barely started, which would leave
+            // the petals nearly empty. Draw it fully faded in (its own opacity rules still apply).
+            auto shown         = presentation;
+            shown.fadeAlpha    = 1.F;
+            shown.alphaVisible = true;
+            (*(origRenderWindow)g->renderHook->m_original)(thisptr, ctx, window, monitor, shown, now, decorate, mode, ignorePosition, standalone);
             return;
+        }
         (*(origRenderWindow)g->renderHook->m_original)(thisptr, ctx, window, monitor, presentation, now, decorate, mode, ignorePosition, standalone);
     }
 
+    // hyprliquid (Liquid Glass on kitty) draws its glass while the surface is drawn, refracting what
+    // is behind it. In our snapshot nothing is behind, so it would bake an opaque dark slab into the
+    // petals. Closing windows never get it (hyprliquid drops them before Hyprland snapshots), so turn
+    // it off around our snapshots too, and both look alike.
+    bool* hyprliquidEnabled() {
+        static const std::string NAME = "plugin:hyprliquid:enabled";
+        const auto               opt  = Config::mgr()->getConfigValue(NAME);
+        if (!opt.dataptr || !opt.type || std::type_index(*opt.type) != typeid(Config::BOOL))
+            return nullptr; // not loaded (reading a missing option would assert)
+        return CConfigValue<Config::BOOL>(NAME).ptr();
+    }
+
     SP<Render::IFramebuffer> snapshot(PHLWINDOW w) {
+        bool* const liquid = hyprliquidEnabled();
+        const bool  was    = liquid && *liquid;
+        if (liquid)
+            *liquid = false;
         g->snapshotting = true;
         const auto fb   = g_pHyprRenderer->makeSnapshotFB(w);
         g->snapshotting = false;
+        if (liquid)
+            *liquid = was;
         return fb && fb->getTexture() ? fb : nullptr;
     }
 
