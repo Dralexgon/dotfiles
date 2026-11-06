@@ -116,6 +116,12 @@ hl.window_rule({
 -- hl.config({ plugin = { cursortrail = { width = 8, life_ms = 220, color = 0 } } })
 hl.plugin.load("/etc/hypr/plugins/cursortrail.so")
 
+-- Closing windows shatter into petals blown away by the wind, a Hyprland plugin (tools/hypr-petals,
+-- installed by nixos/modules/caelestia.nix). It replaces windowsOut for the windows it shatters and
+-- stays off in game mode. Tunable with hl.config({ plugin = { petals = { size = 44, max_petals = 240,
+-- duration_ms = 1700, spread_ms = 380, wind_x = 1.0, wind_y = -0.45, wind_strength = 750, tint = 0.3, color = 0 } } })
+hl.plugin.load("/etc/hypr/plugins/petals.so")
+
 -- Liquid Glass / Acrylic / Mica window effects, a Hyprland plugin (tools/hypr-liquid, installed by
 -- nixos/modules/caelestia.nix). Options: https://github.com/zaregototsukai/hyprliquid#configuration
 hl.plugin.load("/etc/hypr/plugins/hyprliquid.so")
