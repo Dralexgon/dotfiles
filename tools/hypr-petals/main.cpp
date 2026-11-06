@@ -6,8 +6,9 @@
 //    Desktop::CWindowFadeout::create for the windowsOut / fadeOut animation. That function is
 //    hooked: the plugin keeps the snapshot and returns no fadeout, so the stock animation is skipped.
 //  - The window's box is cut into a grid of cells. Each cell is a quad showing its own patch of the
-//    snapshot; a shader morphs it from a rectangle into a petal shape (the window "cracks"), then the
-//    petals peel off one after another (downwind side first), flutter, spin, tumble and fade.
+//    snapshot. As it leaves its spot, a shader morphs it from a rectangle into a petal shape, so the
+//    window cracks and peels off one petal after another (downwind side first); then they flutter,
+//    spin, tumble and fade.
 //  - Opening windows play the same thing backwards: a new window stays hidden (its renderWindow is
 //    hooked) for open_delay_ms so the client has drawn a first frame, then it is snapshotted and a
 //    close burst is simulated ahead of time with the wind reversed. The snapshot is retaken every
@@ -122,12 +123,6 @@ namespace {
                 refresh->cancel();
                 g_pEventLoopManager->removeTimer(refresh);
             }
-        }
-
-        // time on the close timeline (drives the morph)
-        double closeTime(Clock::time_point now) const {
-            const double t = std::chrono::duration<double>(now - start).count();
-            return reverse ? std::max(total - t, 0.0) : t;
         }
     };
 
@@ -592,9 +587,6 @@ void main() {
         for (const auto& b : g->bursts) {
             SBurstDraw d;
             d.tex           = b->tex;
-            const double t  = b->closeTime(Clock::now());
-            const double m  = std::clamp(t / MORPH_S, 0.0, 1.0);
-            const double mm = m * m * (3 - 2 * m);
             const double r  = petalRadius(*b);
 
             for (const auto& p : b->petals) {
@@ -603,6 +595,13 @@ void main() {
                 if (CBox{p.pos.x - r, p.pos.y - r, 2 * r, 2 * r}.intersection(monBox).empty())
                     continue;
 
+                // A petal is a plain cell on its spot and takes its shape (growing over its
+                // neighbours) as it moves away: packed petals overlapping would draw a darker heart
+                // pattern over see-through windows. By distance, not time, since landing petals
+                // slow down and hover right above their spot.
+                const Vector2D away  = p.pos - p.home;
+                const double   m     = std::clamp(std::sqrt(away.x * away.x + away.y * away.y) / (b->cell * 0.6), 0.0, 1.0);
+                const double mm    = m * m * (3 - 2 * m);
                 const double grow  = 1.0 + (GROW - 1.0) * mm;
                 const double side  = b->cell * grow * p.scale;
                 const double flip  = std::cos(p.tumble); // fake 3D: squash one axis
