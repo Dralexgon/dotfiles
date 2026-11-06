@@ -55,3 +55,12 @@ Every change to .config should change files in dotfiles. If not create a file he
 - [ ] try to use HyprCapture instead for screenshots
 - [ ] Try hy3 (i3-style tiling), with i3 as the default layout
 - [ ] Try a parallax wallpaper effect: no Hyprland plugin for it, but `hyprlax` (daemon, in nixpkgs) does workspace parallax and `shiftpaper` (experimental) does cursor-driven depth parallax. Caelestia draws its own wallpaper, so it would need to be turned off
+
+### Login screen (vampire style)
+
+Currently `ly` in `nixos/modules/hyprland.nix`. Try each option:
+
+- [ ] ly with a red doom fire: `services.displayManager.ly.settings` with `animation = "doom"`, `doom_top_color = "0x00FF2020"`, `doom_middle_color = "0x00A00000"`, `doom_bottom_color = "0x00300000"`, `border_fg = "0x00B00000"`, `bigclock = "en"`
+- [ ] SDDM with `sddm-astronaut` (already commented out in `hyprland.nix`), recolored through its `embeddedTheme` / `themeConfig` overrides: Predatoria art or a gothic video loop as the background, Cinzel or UnifrakturMaguntia font, palette `#0b0507` / `#8a0303` / `#ff2a2a` / bone-white text
+- [ ] Custom greeter in QML (SDDM QML theme, or Quickshell + greetd like Caelestia): blood drips from the top edge that splat (same idea as windowfx/cursorfx), password field bleeds and shakes on a wrong password, red eyelid vignette on login, Predatoria crest above the clock, "Speak the word, mortal…" placeholder
+  - Match hyprlock with the same palette, and maybe switch Plymouth to `red_loader` / `hexagon_red`, so boot → login → lock looks like one theme
