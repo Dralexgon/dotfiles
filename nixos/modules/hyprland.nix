@@ -14,7 +14,20 @@ in
 
   #   theme = "sddm-astronaut-theme";
   # };
-  services.displayManager.ly.enable = true;
+  # Vampire login screen: blood red DOOM fire behind the ly box
+  services.displayManager.ly = {
+    enable = true;
+    settings = {
+      animation = "doom";
+      doom_top_color = "0x00300000"; # flame tips (low intensity): dried blood
+      doom_middle_color = "0x00A00000"; # crimson
+      doom_bottom_color = "0x00FF2020"; # fire base (high intensity): bright blood
+      doom_fire_height = 6; # 1 thru 9
+      border_fg = "0x00B00000";
+      fg = "0x00E8DCCB"; # bone white text
+      bigclock = "en";
+    };
+  };
   # services.displayManager.gdm.enable = true;
 
   programs.hyprland = {
