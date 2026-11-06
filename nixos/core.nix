@@ -65,6 +65,17 @@ in
 
   # programs.ssh.startAgent = true;
 
+  # GitHub HTTPS credentials through gh, found on PATH: `gh auth setup-git` writes a /nix/store path
+  # into ~/.gitconfig that breaks once gh updates and the old store path is garbage-collected.
+  # Don't run `gh auth setup-git` (and answer no to it in `gh auth login`).
+  programs.git = {
+    enable = true;
+    config.credential = {
+      "https://github.com".helper = [ "" "!gh auth git-credential" ];
+      "https://gist.github.com".helper = [ "" "!gh auth git-credential" ];
+    };
+  };
+
   fonts.packages = with pkgs; [
     jetbrains-mono
   ];
