@@ -15,6 +15,13 @@ let
   # Preferred overview, but it often lags behind Hyprland. A failed build leaves lib/ empty instead of
   # failing the system build, and hypr-user.lua then falls back to hyprexpo. It is retried whenever
   # nixpkgs updates it (or Hyprland).
+  # caelestia-cli only reads schemes from its own data dir, so our schemes (config/caelestia/schemes) are
+  # copied into it. The package has its own patchPhase, which skips postPatch, hence appending to it.
+  caelestia-cli = inputs.caelestia-cli.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (old: {
+    patchPhase = (old.patchPhase or "") + ''
+      cp -r ${../../config/caelestia/schemes}/. src/caelestia/data/schemes/
+    '';
+  });
   hyprtasking = pkgs.hyprlandPlugins.hyprtasking.overrideAttrs {
     buildPhase = ''
       runHook preBuild
@@ -41,7 +48,7 @@ in
 
   environment.systemPackages = with pkgs; [
     inputs.caelestia-shell.packages.${pkgs.stdenv.hostPlatform.system}.default
-    inputs.caelestia-cli.packages.${pkgs.stdenv.hostPlatform.system}.default
+    caelestia-cli
 
     # Not sure if all these dependencies are necessary or not
     xdg-desktop-portal-hyprland
