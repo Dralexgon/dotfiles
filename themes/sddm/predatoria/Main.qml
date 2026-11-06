@@ -30,7 +30,15 @@ Rectangle {
         busy = true;
         message.text = "";
         lids.close();
-        sddm.login(userAt(userIndex), pw.text, sessionIndex);
+        // Authenticate only once the eyelids are fully shut: a successful
+        // login tears the greeter down instantly, cutting the animation.
+        loginDelay.restart();
+    }
+
+    Timer {
+        id: loginDelay
+        interval: 850 // lid animation (700 ms) + a short beat in the dark
+        onTriggered: sddm.login(root.userAt(root.userIndex), pw.text, root.sessionIndex)
     }
 
     // Hidden lookups into the models (role values are only reachable from delegates)
