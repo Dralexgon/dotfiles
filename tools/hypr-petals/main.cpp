@@ -9,8 +9,9 @@
 //    snapshot; a shader morphs it from a rectangle into a petal shape (the window "cracks"), then the
 //    petals peel off one after another (downwind side first), flutter, spin, tumble and fade.
 //  - Opening windows play the same thing backwards: a new window stays hidden (its renderWindow is
-//    hooked) for open_delay_ms so the client has drawn its content, then it is snapshotted and a
-//    close burst is simulated ahead of time with the wind reversed. Played backwards, the petals ride
+//    hooked) for open_delay_ms so the client has drawn a first frame, then it is snapshotted and a
+//    close burst is simulated ahead of time with the wind reversed. The snapshot is retaken every
+//    open_refresh_ms while the petals fly in, so they pick up the content the client draws late. Played backwards, the petals ride
 //    the wind in, land, fuse into the window, and the real window takes their place.
 //  - Petals live in global logical coordinates, so they fly across monitors. They are drawn on top
 //    of everything at the end of each frame.
@@ -29,7 +30,8 @@
 //  plugin:petals:open           1 = assemble opening windows from petals too           (1)
 //  plugin:petals:open_duration_ms  flight time of one petal when opening               (900)
 //  plugin:petals:open_spread_ms    delay between the first and the last petal landing  (280)
-//  plugin:petals:open_delay_ms     wait for the client to draw its content             (600)
+//  plugin:petals:open_delay_ms     wait for the client's first frame                   (60)
+//  plugin:petals:open_refresh_ms   retake the snapshot this often while opening, 0 = never (80)
 //
 // Like cursortrail, nothing happens while animations are off (Caelestia's game mode).
 // Assumes unrotated monitors (the snapshot is sampled in untransformed monitor pixels).
@@ -111,6 +113,14 @@ namespace {
         int                      frames  = 0;
         std::vector<SFrame>      track;  // frames * petals
         PHLWINDOWREF             window; // hidden until the petals have assembled it
+        SP<CEventLoopTimer>      refresh; // retakes the snapshot while the petals fly in
+
+        ~SBurst() {
+            if (refresh) {
+                refresh->cancel();
+                g_pEventLoopManager->removeTimer(refresh);
+            }
+        }
 
         // time on the close timeline (drives the morph)
         double closeTime(Clock::time_point now) const {
@@ -134,7 +144,7 @@ namespace {
         bool                            snapshotting = false;
         CBox                            lastDrawn; // global logical
 
-        SP<Config::Values::CIntValue>   enabled, maxPetals, durationMs, spreadMs, open, openDurationMs, openSpreadMs, openDelayMs;
+        SP<Config::Values::CIntValue>   enabled, maxPetals, durationMs, spreadMs, open, openDurationMs, openSpreadMs, openDelayMs, openRefreshMs;
         SP<Config::Values::CFloatValue> size, windX, windY, windStrength, tint;
         SP<Config::Values::CColorValue> color;
 
@@ -663,6 +673,26 @@ void main() {
         (*(origRenderWindow)g->renderHook->m_original)(thisptr, ctx, window, monitor, presentation, now, decorate, mode, ignorePosition, standalone);
     }
 
+    SP<Render::IFramebuffer> snapshot(PHLWINDOW w) {
+        g->snapshotting = true;
+        const auto fb   = g_pHyprRenderer->makeSnapshotFB(w);
+        g->snapshotting = false;
+        return fb && fb->getTexture() ? fb : nullptr;
+    }
+
+    // Event loop, outside any render: the client may have drawn more since the last snapshot
+    void refreshSnapshot(const PHLWINDOWREF& ref, const SP<CEventLoopTimer>& self) {
+        const auto it = std::ranges::find_if(g->bursts, [&ref](const UP<SBurst>& b) { return b->reverse && b->window == ref; });
+        const auto w  = ref.lock();
+        if (it == g->bursts.end() || !w || !w->mapped())
+            return;
+        if (const auto fb = snapshot(w)) {
+            (*it)->fb  = fb;
+            (*it)->tex = fb->getTexture();
+        }
+        self->updateTimeout(std::chrono::milliseconds(std::max<int64_t>(g->openRefreshMs->value(), 16)));
+    }
+
     // Runs from the event loop, outside any render: snapshot the new window and start assembling it
     void assemble(const PHLWINDOWREF& ref) {
         const auto w = ref.lock();
@@ -675,16 +705,19 @@ void main() {
         w->finishAnimation();
         w->presentation().alpha(Desktop::View::WINDOW_ALPHA_FADE)->warp();
 
-        g->snapshotting = true;
-        const auto fb   = g_pHyprRenderer->makeSnapshotFB(w);
-        g->snapshotting = false;
-
-        const auto b = fb ? startBurst(w, fb, true) : nullptr;
+        const auto fb = snapshot(w);
+        const auto b  = fb ? startBurst(w, fb, true) : nullptr;
         if (!b) {
             unhide(ref);
             return;
         }
         b->window = ref;
+
+        if (const auto every = g->openRefreshMs->value(); every > 0) {
+            b->refresh = makeShared<CEventLoopTimer>(
+                std::chrono::milliseconds(std::max<int64_t>(every, 16)), [ref](SP<CEventLoopTimer> self, void*) { refreshSnapshot(ref, self); }, nullptr);
+            g_pEventLoopManager->addTimer(b->refresh);
+        }
         g_pHyprRenderer->damageBox(CBox{w->position(Desktop::View::IGeometric::GEOMETRIC_CURRENT), w->size(Desktop::View::IGeometric::GEOMETRIC_CURRENT)});
     }
 
@@ -736,12 +769,13 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g->open           = makeShared<Config::Values::CIntValue>("plugin:petals:open", "Assemble opening windows from petals", 1);
     g->openDurationMs = makeShared<Config::Values::CIntValue>("plugin:petals:open_duration_ms", "Flight time of one petal when opening, in ms", 900);
     g->openSpreadMs   = makeShared<Config::Values::CIntValue>("plugin:petals:open_spread_ms", "Delay between the first and last petal landing, in ms", 280);
-    g->openDelayMs    = makeShared<Config::Values::CIntValue>("plugin:petals:open_delay_ms", "Wait for the client to draw its content, in ms", 600);
+    g->openDelayMs    = makeShared<Config::Values::CIntValue>("plugin:petals:open_delay_ms", "Wait for the client's first frame, in ms", 60);
+    g->openRefreshMs  = makeShared<Config::Values::CIntValue>("plugin:petals:open_refresh_ms", "Retake the snapshot this often while opening, in ms (0 = never)", 80);
     for (const auto& v : {SP<Config::Values::IValue>(g->enabled), SP<Config::Values::IValue>(g->size), SP<Config::Values::IValue>(g->maxPetals),
                           SP<Config::Values::IValue>(g->durationMs), SP<Config::Values::IValue>(g->spreadMs), SP<Config::Values::IValue>(g->windX),
                           SP<Config::Values::IValue>(g->windY), SP<Config::Values::IValue>(g->windStrength), SP<Config::Values::IValue>(g->tint),
                           SP<Config::Values::IValue>(g->color), SP<Config::Values::IValue>(g->open), SP<Config::Values::IValue>(g->openDurationMs),
-                          SP<Config::Values::IValue>(g->openSpreadMs), SP<Config::Values::IValue>(g->openDelayMs)})
+                          SP<Config::Values::IValue>(g->openSpreadMs), SP<Config::Values::IValue>(g->openDelayMs), SP<Config::Values::IValue>(g->openRefreshMs)})
         HyprlandAPI::addConfigValueV2(handle, v);
 
     // Searched by mangled name: the plain "create" matches far too many symbols

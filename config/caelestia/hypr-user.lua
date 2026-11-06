@@ -120,7 +120,7 @@ hl.plugin.load("/etc/hypr/plugins/cursortrail.so")
 -- installed by nixos/modules/caelestia.nix), and opening windows assemble from petals. It replaces
 -- windowsOut / windowsIn for those windows and stays off in game mode. Tunable with hl.config({ plugin = { petals = { size = 44, max_petals = 240,
 -- duration_ms = 1700, spread_ms = 380, wind_x = 1.0, wind_y = -0.45, wind_strength = 750, tint = 0.3, color = 0,
--- open = 1, open_duration_ms = 900, open_spread_ms = 280, open_delay_ms = 600 } } })
+-- open = 1, open_duration_ms = 900, open_spread_ms = 280, open_delay_ms = 60, open_refresh_ms = 80 } } })
 hl.plugin.load("/etc/hypr/plugins/petals.so")
 
 -- Liquid Glass / Acrylic / Mica window effects, a Hyprland plugin (tools/hypr-liquid, installed by
