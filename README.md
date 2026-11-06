@@ -1,6 +1,15 @@
 # My dotfiles (Not finished !)
 
-I'm currently working on another rice with Hyprland and Caelestia
+The goal of this rice is too have multiple rices that I can change dymanicly, live, hot reload.
+The current rices (Hyrpland and Caelestia) are :
+- adaptative : the colors changes depending on the wallpaper
+- vampire : bright red and bloddy vibes
+- petals : pink and soft vibes
+
+The legacy rices were :
+- a Gnome purple Catppuccin rice with cool animations 
+- a uwu color scheme with a gtk theme on Gnome or Hyprland
+Not the priority, it could be in another repo later
 
 ## TODO
 
