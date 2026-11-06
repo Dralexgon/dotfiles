@@ -184,6 +184,22 @@
         "type": "github"
       }
     },
+    "hyprliquid": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793695234,
+        "narHash": "sha256-iNlVZSRU3v7cHh9JFf/zfJa3R7HdNDZumMIbz/Pb3NY=",
+        "owner": "zaregototsukai",
+        "repo": "hyprliquid",
+        "rev": "145337110b82f21bb69b9a2624c5fe67a702d847",
+        "type": "github"
+      },
+      "original": {
+        "owner": "zaregototsukai",
+        "repo": "hyprliquid",
+        "type": "github"
+      }
+    },
     "lanzaboote": {
       "inputs": {
         "crane": "crane",
@@ -446,6 +462,7 @@
       "inputs": {
         "caelestia-cli": "caelestia-cli",
         "caelestia-shell": "caelestia-shell_2",
+        "hyprliquid": "hyprliquid",
         "lanzaboote": "lanzaboote",
         "nixpkgs": "nixpkgs",
         "nixpkgs-stable": "nixpkgs-stable",

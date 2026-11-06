@@ -36,6 +36,11 @@ Every change to .config should change files in dotfiles. If not create a file he
 
 ### Hyprland plugins
 
-- [ ] Try hyprliquid (for example on the kitty terminal)
+- [x] Try hyprliquid (for example on the kitty terminal): `tools/hypr-liquid`, Liquid Glass on kitty in `config/caelestia/hypr-user.lua`
+  - The glass only bends the background near the edges, in a band as wide as the corner rounding (15 px by default, so it barely shows). For a stronger glass look, add `["hyprliquid:rounding_lua"] = 64` to the kitty rule: the normal `rounding` rule is capped at 20 in Lua
+  - Keep `no_blur = true`: with Hyprland's blur it looks frosted, not like glass
 - [ ] Add the hyprfocus plugin
 - [ ] Try hyprtasking (workspace overview where windows can be dragged between workspaces): SUPER + Tab already switches to it from hyprexpo as soon as `pkgs.hyprlandPlugins.hyprtasking` builds (it fails on 0.57.1), then tune its config and gestures
+- [ ] Try the imgborders plugin
+- [ ] Try the `csgo-vulkan-fix` plugin for Albion instead of the current way of changing the resolution
+- [ ] try to use HyprCapture instead for screenshots

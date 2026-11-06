@@ -6,6 +6,8 @@ let
   cursortrail = import ../../tools/hypr-cursortrail { inherit pkgs; };
   # Workspace overview (SUPER + Tab), hyprexpo ported to the current Hyprland (tools/hypr-expo).
   hyprexpo = import ../../tools/hypr-expo { inherit pkgs; };
+  # Liquid Glass / Acrylic / Mica window effects (flake input hyprliquid, tools/hypr-liquid).
+  hyprliquid = import ../../tools/hypr-liquid { inherit pkgs; src = inputs.hyprliquid; };
   # Preferred overview, but it often lags behind Hyprland. A failed build leaves lib/ empty instead of
   # failing the system build, and hypr-user.lua then falls back to hyprexpo. It is retried whenever
   # nixpkgs updates it (or Hyprland).
@@ -27,6 +29,7 @@ in
   # Stable path for hl.plugin.load in config/caelestia/hypr-user.lua
   environment.etc."hypr/plugins/cursortrail.so".source = "${cursortrail}/lib/libcursortrail.so";
   environment.etc."hypr/plugins/hyprexpo.so".source = "${hyprexpo}/lib/libhyprexpo.so";
+  environment.etc."hypr/plugins/hyprliquid.so".source = "${hyprliquid}/lib/libhyprliquid.so";
   # A directory: libhyprtasking.so is only there when hyprtasking built
   environment.etc."hypr/plugins/hyprtasking".source = "${hyprtasking}/lib";
 

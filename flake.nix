@@ -54,6 +54,13 @@
       };
     };
 
+    # Liquid Glass / Acrylic / Mica window effects, a Hyprland plugin built by tools/hypr-liquid
+    # against pkgs.hyprland (its own flake pins another Hyprland), so only its source is used.
+    hyprliquid = {
+      url = "github:zaregototsukai/hyprliquid";
+      flake = false;
+    };
+
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";

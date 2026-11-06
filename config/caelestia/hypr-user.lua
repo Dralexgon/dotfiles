@@ -116,6 +116,24 @@ hl.window_rule({
 -- hl.config({ plugin = { cursortrail = { width = 8, life_ms = 220, color = 0 } } })
 hl.plugin.load("/etc/hypr/plugins/cursortrail.so")
 
+-- Liquid Glass / Acrylic / Mica window effects, a Hyprland plugin (tools/hypr-liquid, installed by
+-- nixos/modules/caelestia.nix). Options: https://github.com/zaregototsukai/hyprliquid#configuration
+hl.plugin.load("/etc/hypr/plugins/hyprliquid.so")
+-- Unknown rule keys abort the file before the plugin is loaded (see the hyprexpo note below)
+if hl.plugin.hyprliquid then
+    hl.window_rule({
+        name = "kitty-liquid-glass",
+        match = {
+            class = "^kitty$"
+        },
+        no_blur = true, -- the glass refracts the sharp background (blur hides the effect)
+        ["hyprliquid:effect"] = "liquid_glass", -- or acrylic, acrylic_thin, mica, mica_alt, aero
+        ["hyprliquid:tint_color"] = "rgba(0x14, 0x0c, 0x1e, 0.45)", -- dark violet, keeps text readable
+        ["hyprliquid:highlight_style"] = 2, -- top-left and bottom-right edges
+        ["hyprliquid:glass_dispersion"] = true
+    })
+end
+
 -- Workspace overview on SUPER + Tab: hyprtasking when it builds against the current Hyprland
 -- (it often lags behind), else hyprexpo (tools/hypr-expo). Both are installed by nixos/modules/caelestia.nix.
 local HYPRTASKING = "/etc/hypr/plugins/hyprtasking/libhyprtasking.so"
