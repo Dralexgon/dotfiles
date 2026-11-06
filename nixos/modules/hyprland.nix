@@ -78,8 +78,14 @@ in
     enable = true;
     package = pkgs.kdePackages.sddm; # the theme is Qt6
     wayland.enable = true;
+    # weston (the default) shows no mouse pointer on NVIDIA; kwin does
+    wayland.compositor = "kwin";
     theme = "sddm-astronaut-theme";
     extraPackages = [ sddm-vampire ];
+    settings.Theme = {
+      CursorTheme = "Bibata-Modern-Classic"; # sweet-cursors (Hyprland's) isn't in nixpkgs
+      CursorSize = 48; # 4K
+    };
   };
   services.displayManager.defaultSession = "hyprland-uwsm";
 
@@ -116,6 +122,7 @@ in
   environment.systemPackages = with pkgs; [
     kitty # Hyprland console
     sddm-vampire
+    bibata-cursors # SDDM pointer
   ];
 
   fonts.packages = [ pkgs.cinzel ];
