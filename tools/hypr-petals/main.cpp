@@ -1,4 +1,5 @@
-// petals: a Hyprland plugin that shatters closing windows into petals blown away by the wind.
+// petals: a Hyprland plugin that shatters closing windows into petals blown away by the wind,
+// and assembles opening windows from petals brought by the wind.
 //
 // How it works:
 //  - Hyprland snapshots a closing window into a monitor-sized framebuffer and hands it to
@@ -7,6 +8,10 @@
 //  - The window's box is cut into a grid of cells. Each cell is a quad showing its own patch of the
 //    snapshot; a shader morphs it from a rectangle into a petal shape (the window "cracks"), then the
 //    petals peel off one after another (downwind side first), flutter, spin, tumble and fade.
+//  - Opening windows play the same thing backwards: a new window stays hidden (its renderWindow is
+//    hooked) for open_delay_ms so the client has drawn its content, then it is snapshotted and a
+//    close burst is simulated ahead of time with the wind reversed. Played backwards, the petals ride
+//    the wind in, land, fuse into the window, and the real window takes their place.
 //  - Petals live in global logical coordinates, so they fly across monitors. They are drawn on top
 //    of everything at the end of each frame.
 //
@@ -21,6 +26,10 @@
 //  plugin:petals:wind_strength  wind speed in logical px/s                             (750)
 //  plugin:petals:tint           how much petals take the colour, 0..1                  (0.3)
 //  plugin:petals:color          0xAARRGGBB, 0 = follow the Caelestia scheme            (0)
+//  plugin:petals:open           1 = assemble opening windows from petals too           (1)
+//  plugin:petals:open_duration_ms  flight time of one petal when opening               (900)
+//  plugin:petals:open_spread_ms    delay between the first and the last petal landing  (280)
+//  plugin:petals:open_delay_ms     wait for the client to draw its content             (600)
 //
 // Like cursortrail, nothing happens while animations are off (Caelestia's game mode).
 // Assumes unrotated monitors (the snapshot is sampled in untransformed monitor pixels).
@@ -29,12 +38,16 @@
 #include <hyprland/src/event/EventBus.hpp>
 #include <hyprland/src/output/Monitor.hpp>
 #include <hyprland/src/desktop/view/window/Window.hpp>
+#include <hyprland/src/desktop/view/window/WindowPresentation.hpp>
 #include <hyprland/src/desktop/state/WindowFadeout.hpp>
 #include <hyprland/src/render/Framebuffer.hpp>
 #include <hyprland/src/render/OpenGL.hpp>
 #include <hyprland/src/render/Renderer.hpp>
 #include <hyprland/src/render/Shader.hpp>
 #include <hyprland/src/render/pass/PassElement.hpp>
+#include <hyprland/src/render/WindowRenderPresentation.hpp>
+#include <hyprland/src/managers/eventLoop/EventLoopManager.hpp>
+#include <hyprland/src/managers/eventLoop/EventLoopTimer.hpp>
 #include <hyprland/src/config/ConfigValue.hpp>
 #include <hyprland/src/config/values/types/ColorValue.hpp>
 #include <hyprland/src/config/values/types/FloatValue.hpp>
@@ -59,6 +72,7 @@ namespace {
     constexpr double GROW      = 1.35; // petals overlap their neighbours once morphed
     constexpr double MAX_DT    = 1.0 / 20.0;
     constexpr double PI        = 3.14159265358979323846;
+    constexpr double TRACK_FPS = 120.0; // precomputed open animations
 
     struct SPetal {
         Vector2D home;    // cell centre, global logical
@@ -73,6 +87,11 @@ namespace {
         double   alpha = 1, scale = 1;
     };
 
+    struct SFrame {
+        Vector2D pos;
+        float    rot, tumble, alpha, scale;
+    };
+
     struct SBurst {
         SP<Render::IFramebuffer> fb; // keeps the snapshot alive
         SP<Render::ITexture>     tex;
@@ -83,16 +102,39 @@ namespace {
         Clock::time_point        start;
         Clock::time_point        lastStep;
         double                   duration = 1.7;
+        Vector2D                 wind;      // unit direction the petals are blown to
         std::mt19937             rng;
+
+        // opening: the close simulation, recorded and played backwards
+        bool                     reverse = false;
+        double                   total   = 0; // s
+        int                      frames  = 0;
+        std::vector<SFrame>      track;  // frames * petals
+        PHLWINDOWREF             window; // hidden until the petals have assembled it
+
+        // time on the close timeline (drives the morph)
+        double closeTime(Clock::time_point now) const {
+            const double t = std::chrono::duration<double>(now - start).count();
+            return reverse ? std::max(total - t, 0.0) : t;
+        }
+    };
+
+    struct SPending {
+        PHLWINDOWREF          window;
+        SP<CEventLoopTimer>   timer;
     };
 
     struct SState {
         HANDLE                          handle    = nullptr;
         CFunctionHook*                  createHook = nullptr;
+        CFunctionHook*                  renderHook = nullptr;
         std::vector<UP<SBurst>>         bursts;
+        std::vector<SPending>           pending; // opened, waiting for their first real frame
+        std::vector<PHLWINDOWREF>       hidden;  // opened, not rendered until assembled
+        bool                            snapshotting = false;
         CBox                            lastDrawn; // global logical
 
-        SP<Config::Values::CIntValue>   enabled, maxPetals, durationMs, spreadMs;
+        SP<Config::Values::CIntValue>   enabled, maxPetals, durationMs, spreadMs, open, openDurationMs, openSpreadMs, openDelayMs;
         SP<Config::Values::CFloatValue> size, windX, windY, windStrength, tint;
         SP<Config::Values::CColorValue> color;
 
@@ -103,7 +145,7 @@ namespace {
         SP<CShader>                     shader;
         GLint locProj = -1, locTex = -1, locUvOrigin = -1, locUvSpan = -1, locMorph = -1, locAlpha = -1, locTint = -1, locTintAmt = -1, locBack = -1;
 
-        CHyprSignalListener             stageListener, preChecksListener;
+        CHyprSignalListener             stageListener, preChecksListener, openListener, destroyListener;
     };
 
     UP<SState> g;
@@ -222,10 +264,13 @@ void main() {
         return b.cell * GROW * 0.7072 + 2.0;
     }
 
-    void startBurst(PHLWINDOW window, SP<Render::IFramebuffer> fb) {
+    bool step(SBurst& b, double t, double dt);
+
+    // reverse: an opening window, simulated now and played backwards later
+    SBurst* startBurst(PHLWINDOW window, SP<Render::IFramebuffer> fb, bool reverse) {
         const auto mon = window->m_monitor.lock();
         if (!mon || !fb || !fb->getTexture())
-            return;
+            return nullptr;
 
         static auto PBORDER = CConfigValue<Config::INTEGER>("general:border_size");
         const double border  = *PBORDER + 1.0;
@@ -233,13 +278,16 @@ void main() {
         const Vector2D wpos = window->position(Desktop::View::IGeometric::GEOMETRIC_CURRENT) - Vector2D{border, border};
         const Vector2D wsize = window->size(Desktop::View::IGeometric::GEOMETRIC_CURRENT) + Vector2D{border * 2, border * 2};
         if (wsize.x < 4 || wsize.y < 4)
-            return;
+            return nullptr;
 
         auto b       = makeUnique<SBurst>();
         b->fb         = fb;
         b->tex        = fb->getTexture();
         b->snapSizePx = mon->m_transformedSize;
-        b->duration   = std::max<int64_t>(g->durationMs->value(), 100) / 1000.0;
+        b->reverse    = reverse;
+        b->duration   = std::max<int64_t>((reverse ? g->openDurationMs : g->durationMs)->value(), 100) / 1000.0;
+        // played backwards, petals blown against the wind arrive with it
+        b->wind       = reverse ? windDir() * -1.0 : windDir();
         b->start = b->lastStep = Clock::now();
         b->rng.seed(std::random_device{}());
 
@@ -255,10 +303,10 @@ void main() {
         // square quads (petals are drawn square), sampling a square patch of the snapshot
         b->uvCell = Vector2D{b->cell * mon->m_scale / b->snapSizePx.x, b->cell * mon->m_scale / b->snapSizePx.y};
 
-        const Vector2D dir    = windDir();
+        const Vector2D dir    = b->wind;
         const Vector2D centre = wpos + wsize / 2.0;
         const double   extent = std::abs(dir.x) * wsize.x / 2.0 + std::abs(dir.y) * wsize.y / 2.0;
-        const double   spread = std::max<int64_t>(g->spreadMs->value(), 0) / 1000.0;
+        const double   spread = std::max<int64_t>((reverse ? g->openSpreadMs : g->spreadMs)->value(), 0) / 1000.0;
         const Vector2D perp   = {-dir.y, dir.x};
 
         auto&          rng = b->rng;
@@ -289,18 +337,60 @@ void main() {
             }
         }
 
+        if (reverse) {
+            double lastRelease = 0;
+            for (const auto& p : b->petals)
+                lastRelease = std::max(lastRelease, p.release);
+            b->total  = lastRelease + b->duration;
+            b->frames = sc<int>(std::ceil(b->total * TRACK_FPS)) + 1;
+            b->track.resize(sc<size_t>(b->frames) * b->petals.size());
+            for (int f = 0; f < b->frames; f++) {
+                if (f > 0)
+                    step(*b, f / TRACK_FPS, 1.0 / TRACK_FPS);
+                for (size_t i = 0; i < b->petals.size(); i++) {
+                    const auto& p = b->petals[i];
+                    b->track[f * b->petals.size() + i] = {p.pos, sc<float>(p.rot), sc<float>(p.tumble), sc<float>(p.alpha), sc<float>(p.scale)};
+                }
+            }
+            b->start = Clock::now(); // the simulation above took some time
+        }
+
         g->bursts.emplace_back(std::move(b));
+        return g->bursts.back().get();
     }
 
-    // Advance the simulation; returns false once every petal is gone
+    // Opening windows: show the recorded close simulation, backwards. False once assembled.
+    bool playBack(SBurst& b, Clock::time_point now) {
+        const double t = std::chrono::duration<double>(now - b.start).count();
+        if (t >= b.total)
+            return false;
+        const int f = std::clamp(sc<int>((b.total - t) * TRACK_FPS), 0, b.frames - 1);
+        for (size_t i = 0; i < b.petals.size(); i++) {
+            auto&       p  = b.petals[i];
+            const auto& fr = b.track[f * b.petals.size() + i];
+            p.pos          = fr.pos;
+            p.rot          = fr.rot;
+            p.tumble       = fr.tumble;
+            p.alpha        = fr.alpha;
+            p.scale        = fr.scale;
+        }
+        return true;
+    }
+
     bool step(SBurst& b, Clock::time_point now) {
+        if (b.reverse)
+            return playBack(b, now);
         const double dt = std::clamp(std::chrono::duration<double>(now - b.lastStep).count(), 0.0, MAX_DT);
         const double t  = std::chrono::duration<double>(now - b.start).count();
         b.lastStep      = now;
         if (dt <= 0)
             return true;
+        return step(b, t, dt);
+    }
 
-        const Vector2D dir      = windDir();
+    // Advance the simulation to close time t; returns false once every petal is gone
+    bool step(SBurst& b, double t, double dt) {
+        const Vector2D dir      = b.wind;
         const Vector2D perp     = {-dir.y, dir.x};
         const double   strength = g->windStrength->value();
         const double   follow   = 1.0 - std::exp(-2.2 * dt);
@@ -486,7 +576,7 @@ void main() {
         for (const auto& b : g->bursts) {
             SBurstDraw d;
             d.tex           = b->tex;
-            const double t  = std::chrono::duration<double>(Clock::now() - b->start).count();
+            const double t  = b->closeTime(Clock::now());
             const double m  = std::clamp(t / MORPH_S, 0.0, 1.0);
             const double mm = m * m * (3 - 2 * m);
             const double r  = petalRadius(*b);
@@ -530,16 +620,91 @@ void main() {
 
     using origCreate = SP<Desktop::CWindowFadeout> (*)(PHLWINDOW, SP<Render::IFramebuffer>, float, SP<Render::IFramebuffer>);
 
+    bool isHidden(const PHLWINDOW& w);
+    void unhide(const PHLWINDOWREF& ref);
+
     SP<Desktop::CWindowFadeout> hkCreate(PHLWINDOW window, SP<Render::IFramebuffer> snapshot, float sourceAlpha, SP<Render::IFramebuffer> workspaceSnapshot) {
+        // closed while still assembling: its snapshot is empty (it was hidden), just drop the petals
+        if (window && isHidden(window)) {
+            const PHLWINDOWREF ref = window;
+            std::erase_if(g->bursts, [&ref](const UP<SBurst>& b) { return b->reverse && b->window == ref; });
+            unhide(ref);
+            return nullptr;
+        }
         if (active() && window && snapshot && snapshot->getTexture() && !window->backend().traits().suggestsNoBorder) {
             const auto before = g->bursts.size();
-            startBurst(window, snapshot);
+            startBurst(window, snapshot, false);
             if (g->bursts.size() > before) {
                 g_pHyprRenderer->damageBox(burstsBox());
                 return nullptr; // no stock fadeout: the petals replace it
             }
         }
         return (*(origCreate)g->createHook->m_original)(window, snapshot, sourceAlpha, workspaceSnapshot);
+    }
+
+    bool isHidden(const PHLWINDOW& w) {
+        return std::ranges::any_of(g->hidden, [&w](const PHLWINDOWREF& h) { return h.lock() == w; });
+    }
+
+    void unhide(const PHLWINDOWREF& ref) {
+        std::erase_if(g->hidden, [&ref](const PHLWINDOWREF& h) { return h.expired() || h == ref; });
+        if (const auto w = ref.lock())
+            g_pHyprRenderer->damageWindow(w, true);
+    }
+
+    using origRenderWindow = void (*)(void*, Render::CRenderContext&, PHLWINDOW, PHLMONITOR, const Render::SWindowRenderPresentation&, const Time::steady_tp&, bool,
+                                      Render::eRenderPassMode, bool, bool);
+
+    // Opening windows are not drawn until their petals have assembled them (except into our snapshot)
+    void hkRenderWindow(void* thisptr, Render::CRenderContext& ctx, PHLWINDOW window, PHLMONITOR monitor, const Render::SWindowRenderPresentation& presentation,
+                        const Time::steady_tp& now, bool decorate, Render::eRenderPassMode mode, bool ignorePosition, bool standalone) {
+        if (!g->snapshotting && !g->hidden.empty() && isHidden(window))
+            return;
+        (*(origRenderWindow)g->renderHook->m_original)(thisptr, ctx, window, monitor, presentation, now, decorate, mode, ignorePosition, standalone);
+    }
+
+    // Runs from the event loop, outside any render: snapshot the new window and start assembling it
+    void assemble(const PHLWINDOWREF& ref) {
+        const auto w = ref.lock();
+        if (!w || !w->mapped() || !active()) {
+            unhide(ref);
+            return;
+        }
+
+        // the petals land where the window ends up, fully opaque: skip the stock windowsIn animation
+        w->finishAnimation();
+        w->presentation().alpha(Desktop::View::WINDOW_ALPHA_FADE)->warp();
+
+        g->snapshotting = true;
+        const auto fb   = g_pHyprRenderer->makeSnapshotFB(w);
+        g->snapshotting = false;
+
+        const auto b = fb ? startBurst(w, fb, true) : nullptr;
+        if (!b) {
+            unhide(ref);
+            return;
+        }
+        b->window = ref;
+        g_pHyprRenderer->damageBox(CBox{w->position(Desktop::View::IGeometric::GEOMETRIC_CURRENT), w->size(Desktop::View::IGeometric::GEOMETRIC_CURRENT)});
+    }
+
+    void onOpen(PHLWINDOW w) {
+        if (!w || !active() || !g->open->value() || !g->renderHook || w->backend().traits().suggestsNoBorder)
+            return;
+
+        const PHLWINDOWREF ref = w;
+        g->hidden.push_back(ref);
+
+        const auto delay = std::chrono::milliseconds(std::clamp<int64_t>(g->openDelayMs->value(), 0, 1000));
+        auto       timer = makeShared<CEventLoopTimer>(
+            delay,
+            [ref](SP<CEventLoopTimer> self, void*) {
+                std::erase_if(g->pending, [&self](const SPending& p) { return p.timer == self; });
+                assemble(ref);
+            },
+            nullptr);
+        g->pending.push_back({ref, timer});
+        g_pEventLoopManager->addTimer(timer);
     }
 }
 
@@ -568,10 +733,15 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g->windStrength = makeShared<Config::Values::CFloatValue>("plugin:petals:wind_strength", "Wind speed in logical px/s", 750.F);
     g->tint         = makeShared<Config::Values::CFloatValue>("plugin:petals:tint", "How much the petals take the colour, 0..1", 0.3F);
     g->color        = makeShared<Config::Values::CColorValue>("plugin:petals:color", "Petal colour, 0 follows the Caelestia scheme primary", 0);
+    g->open           = makeShared<Config::Values::CIntValue>("plugin:petals:open", "Assemble opening windows from petals", 1);
+    g->openDurationMs = makeShared<Config::Values::CIntValue>("plugin:petals:open_duration_ms", "Flight time of one petal when opening, in ms", 900);
+    g->openSpreadMs   = makeShared<Config::Values::CIntValue>("plugin:petals:open_spread_ms", "Delay between the first and last petal landing, in ms", 280);
+    g->openDelayMs    = makeShared<Config::Values::CIntValue>("plugin:petals:open_delay_ms", "Wait for the client to draw its content, in ms", 600);
     for (const auto& v : {SP<Config::Values::IValue>(g->enabled), SP<Config::Values::IValue>(g->size), SP<Config::Values::IValue>(g->maxPetals),
                           SP<Config::Values::IValue>(g->durationMs), SP<Config::Values::IValue>(g->spreadMs), SP<Config::Values::IValue>(g->windX),
                           SP<Config::Values::IValue>(g->windY), SP<Config::Values::IValue>(g->windStrength), SP<Config::Values::IValue>(g->tint),
-                          SP<Config::Values::IValue>(g->color)})
+                          SP<Config::Values::IValue>(g->color), SP<Config::Values::IValue>(g->open), SP<Config::Values::IValue>(g->openDurationMs),
+                          SP<Config::Values::IValue>(g->openSpreadMs), SP<Config::Values::IValue>(g->openDelayMs)})
         HyprlandAPI::addConfigValueV2(handle, v);
 
     // Searched by mangled name: the plain "create" matches far too many symbols
@@ -590,6 +760,19 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
         throw std::runtime_error("[petals] " + why);
     }
 
+    // Optional: without it only closing windows get petals
+    for (const auto& fn : HyprlandAPI::findFunctionsByName(handle, "IHyprRenderer12renderWindow")) {
+        g->renderHook = HyprlandAPI::createFunctionHook(handle, fn.address, (void*)&hkRenderWindow);
+        if (g->renderHook && !g->renderHook->hook()) {
+            HyprlandAPI::removeFunctionHook(handle, g->renderHook);
+            g->renderHook = nullptr;
+        }
+        break;
+    }
+
+    g->openListener    = Event::bus()->m_events.window.openLate.listen([](PHLWINDOW w) { onOpen(w); });
+    g->destroyListener = Event::bus()->m_events.window.destroy.listen([](PHLWINDOWREF) { std::erase_if(g->hidden, [](const PHLWINDOWREF& h) { return h.expired(); }); });
+
     g->stageListener = Event::bus()->m_events.render.stage.listen([](const Event::SRenderStageEvent& ev) {
         if (ev.stage == RENDER_LAST_MOMENT && ev.context)
             addPetals(ev.context->get(), ev.monitor);
@@ -600,7 +783,13 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
         if (g->bursts.empty() && g->lastDrawn.empty())
             return;
         const auto now = Clock::now();
-        std::erase_if(g->bursts, [now](const UP<SBurst>& b) { return !step(*b, now); });
+        std::erase_if(g->bursts, [now](const UP<SBurst>& b) {
+            if (step(*b, now))
+                return false;
+            if (b->reverse)
+                unhide(b->window); // assembled: the real window takes over
+            return true;
+        });
         const CBox current = burstsBox();
         const CBox damage  = boxUnion(current, g->lastDrawn);
         g->lastDrawn       = current;
@@ -616,6 +805,13 @@ APICALL EXPORT void PLUGIN_EXIT() {
         return;
     if (!g->lastDrawn.empty())
         g_pHyprRenderer->damageBox(g->lastDrawn);
+    for (auto& p : g->pending) {
+        p.timer->cancel();
+        g_pEventLoopManager->removeTimer(p.timer);
+    }
+    g->pending.clear();
+    for (const auto& h : std::vector<PHLWINDOWREF>(g->hidden))
+        unhide(h);
     g->bursts.clear();
     if (g->shader) {
         g_pHyprOpenGL->makeEGLCurrent();
