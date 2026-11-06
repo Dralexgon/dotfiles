@@ -25,7 +25,8 @@
     "razer",
     "file-transfer",
     "hyprland-utils",
-    "life-manager"
+    "life-manager",
+    "auto-update"
   ],
   "packages": [
     "wirelesstools",

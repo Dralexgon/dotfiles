@@ -21,16 +21,56 @@
         "popouts": {
             "activeWindow": false
         },
+        "statusIcons": [
+            {
+                "enabled": true,
+                "id": "lockStatus"
+            },
+            {
+                "enabled": false,
+                "id": "audio"
+            },
+            {
+                "enabled": false,
+                "id": "microphone"
+            },
+            {
+                "enabled": true,
+                "id": "kbLayout"
+            },
+            {
+                "enabled": true,
+                "id": "network"
+            },
+            {
+                "enabled": true,
+                "id": "bluetooth"
+            },
+            {
+                "enabled": true,
+                "id": "battery"
+            }
+        ],
         "tray": {
             "background": false,
             "compact": true,
             "recolour": true
         },
         "workspaces": {
-            "occupiedBg": false
+            "occupiedBg": false,
+            "shown": 5
         }
     },
     "general": {
+        "apps": {
+            "explorer": [
+                "nautilus",
+                "--new-window"
+            ],
+            "terminal": [
+                "kitty"
+            ]
+        },
         "idle": {
             "inhibitWhenAudio": true,
             "inhibitWhenCharging": false,
@@ -67,6 +107,15 @@
         }
     },
     "launcher": {
+        "favouriteApps": [
+            "zen-beta"
+        ],
+        "hiddenApps": [
+            "xterm",
+            "footclient",
+            "foot-server",
+            "rofi"
+        ],
         "showOnHover": true
     },
     "services": {

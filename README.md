@@ -44,3 +44,4 @@ Every change to .config should change files in dotfiles. If not create a file he
 - [ ] Try the imgborders plugin
 - [ ] Try the `csgo-vulkan-fix` plugin for Albion instead of the current way of changing the resolution
 - [ ] try to use HyprCapture instead for screenshots
+- [ ] Try hy3 (i3-style tiling), with i3 as the default layout
