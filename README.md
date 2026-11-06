@@ -45,3 +45,4 @@ Every change to .config should change files in dotfiles. If not create a file he
 - [ ] Try the `csgo-vulkan-fix` plugin for Albion instead of the current way of changing the resolution
 - [ ] try to use HyprCapture instead for screenshots
 - [ ] Try hy3 (i3-style tiling), with i3 as the default layout
+- [ ] Try a parallax wallpaper effect: no Hyprland plugin for it, but `hyprlax` (daemon, in nixpkgs) does workspace parallax and `shiftpaper` (experimental) does cursor-driven depth parallax. Caelestia draws its own wallpaper, so it would need to be turned off

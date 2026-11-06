@@ -139,7 +139,7 @@ pcall(hl.config, {
 
 -- Liquid Glass / Acrylic / Mica window effects, a Hyprland plugin (tools/hypr-liquid, installed by
 -- nixos/modules/caelestia.nix). Options: https://github.com/zaregototsukai/hyprliquid#configuration
-hl.plugin.load("/etc/hypr/plugins/hyprliquid.so")
+-- hl.plugin.load("/etc/hypr/plugins/hyprliquid.so")
 -- Unknown rule keys abort the file before the plugin is loaded (see the hyprexpo note below)
 if hl.plugin.hyprliquid then
     hl.window_rule({
