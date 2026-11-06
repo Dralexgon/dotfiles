@@ -93,7 +93,7 @@ in
     theme = "predatoria";
     settings.Theme = {
       CursorTheme = "Bibata-Modern-Classic"; # sweet-cursors (Hyprland's) isn't in nixpkgs
-      CursorSize = 48; # 4K
+      CursorSize = 24; # kwin already scales it by the 4K output scale
     };
   };
   services.displayManager.defaultSession = "hyprland-uwsm";

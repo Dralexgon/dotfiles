@@ -121,5 +121,13 @@
     "services": {
         "clockFormat": "TwentyFourHour",
         "weatherUnits": "Celsius"
+    },
+    "session": {
+        "commands": {
+            "logout": [
+                "uwsm",
+                "stop"
+            ]
+        }
     }
 }
