@@ -1,5 +1,5 @@
 hl.monitor({
-    output = "DP-2", -- your monitor name, use hyprctl monitors
+    output = "DP-1", -- your monitor name, use hyprctl monitors
     mode = "3840x2160@164.99Hz",
     position = "0x0",
     scale = 1.5
