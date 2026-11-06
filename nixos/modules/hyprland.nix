@@ -71,17 +71,26 @@ let
       cp ${../../themes/sddm/vampire.jpg} $out/share/sddm/themes/sddm-astronaut-theme/Backgrounds/vampire.jpg
     '';
   });
+
+  # Custom QML greeter: blood drips, Predatoria crest, bleeding password field, eyelids on login
+  sddm-predatoria = pkgs.runCommand "sddm-predatoria-theme" { } ''
+    mkdir -p $out/share/sddm/themes
+    cp -r ${../../themes/sddm/predatoria} $out/share/sddm/themes/predatoria
+    chmod u+w $out/share/sddm/themes/predatoria
+    cp ${../../themes/sddm/vampire.jpg} $out/share/sddm/themes/predatoria/background.jpg
+  '';
 in
 {
-  # Vampire login screen: sddm-astronaut recolored with the caelestia "vampire" scheme
+  # Vampire login screen: custom "predatoria" QML theme (themes/sddm/predatoria)
+  # Previous try: sddm-astronaut recolored with the caelestia "vampire" scheme,
+  # to get it back: theme = "sddm-astronaut-theme"; extraPackages = [ sddm-vampire ];
   services.displayManager.sddm = {
     enable = true;
     package = pkgs.kdePackages.sddm; # the theme is Qt6
     wayland.enable = true;
     # weston (the default) shows no mouse pointer on NVIDIA; kwin does
     wayland.compositor = "kwin";
-    theme = "sddm-astronaut-theme";
-    extraPackages = [ sddm-vampire ];
+    theme = "predatoria";
     settings.Theme = {
       CursorTheme = "Bibata-Modern-Classic"; # sweet-cursors (Hyprland's) isn't in nixpkgs
       CursorSize = 48; # 4K
@@ -121,7 +130,7 @@ in
 
   environment.systemPackages = with pkgs; [
     kitty # Hyprland console
-    sddm-vampire
+    sddm-predatoria
     bibata-cursors # SDDM pointer
   ];
 

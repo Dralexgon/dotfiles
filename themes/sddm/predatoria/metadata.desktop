@@ -1,0 +1,12 @@
+[SddmGreeterTheme]
+Name=predatoria
+Description=Vampire login screen for the Empress of Wholmund
+Author=Dralexgon
+License=MIT
+Type=sddm-theme
+Version=1.0
+ConfigFile=theme.conf
+MainScript=Main.qml
+Theme-Id=predatoria
+Theme-API=2.0
+QtVersion=6
