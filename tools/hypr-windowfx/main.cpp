@@ -1,5 +1,15 @@
-// petals: a Hyprland plugin that shatters closing windows into petals blown away by the wind,
-// and assembles opening windows from petals brought by the wind.
+// windowfx: a Hyprland plugin animating closing windows, and opening ones (the same thing played
+// backwards).
+//
+// Styles (plugin:windowfx:style):
+//  petals  the window shatters into petals in the Caelestia scheme colour, blown away by the
+//          wind; opening windows assemble from petals brought by the wind.
+//  blood   blood runs down the window from the top in uneven drip streaks until it is soaked,
+//          then it drains from the bottom up: the cells splash off as teardrop droplets thrown
+//          every way (many upwards), slowed by the air, then falling with gravity; they stretch
+//          with speed and fade. Opening windows rise from the drops, and
+//          the blood runs off them upwards to uncover the window.
+//  off     stock windowsIn / windowsOut animations.
 //
 // How it works:
 //  - Hyprland snapshots a closing window into a monitor-sized framebuffer and hands it to
@@ -17,23 +27,31 @@
 //  - Petals live in global logical coordinates, so they fly across monitors. They are drawn on top
 //    of everything at the end of each frame.
 //
-// Config (all optional, e.g. hl.config({ plugin = { petals = { size = 42 } } })):
-//  plugin:petals:enabled        1 = shatter closing windows, 0 = stock animation       (1)
-//  plugin:petals:size           petal size in logical px                               (44)
-//  plugin:petals:max_petals     cap per window, petals grow on big windows             (240)
-//  plugin:petals:duration_ms    flight time of one petal                               (1700)
-//  plugin:petals:spread_ms      delay between the first and the last petal leaving     (380)
-//  plugin:petals:wind_x         wind direction, x                                      (1.0)
-//  plugin:petals:wind_y         wind direction, y (negative = up)                      (-0.45)
-//  plugin:petals:wind_strength  wind speed in logical px/s                             (750)
-//  plugin:petals:tint           how much petals take the colour, 0..1                  (0.3)
-//  plugin:petals:color          0xAARRGGBB, 0 = follow the Caelestia scheme            (0)
-//  plugin:petals:open           1 = assemble opening windows from petals too           (1)
-//  plugin:petals:open_duration_ms  flight time of one petal when opening               (900)
-//  plugin:petals:open_spread_ms    delay between the first and the last petal landing  (280)
-//  plugin:petals:open_delay_ms     wait for the client's first frame                   (60)
-//  plugin:petals:open_refresh_ms   retake the snapshot this often while opening, 0 = never (80)
-//  plugin:petals:open_speed        playback speed of the whole opening, 2 = twice as fast  (1.0)
+// Config (all optional, e.g. hl.config({ plugin = { windowfx = { style = "blood" } } })):
+//  plugin:windowfx:style          petals | blood | off                                   (petals)
+//  plugin:windowfx:max_pieces     petals cap per window, petals grow on big windows      (240)
+//  plugin:windowfx:open           1 = animate opening windows too                        (1)
+//  plugin:windowfx:open_duration_ms  flight time of one piece when opening               (900)
+//  plugin:windowfx:open_spread_ms    delay between the first and the last piece landing  (280)
+//  plugin:windowfx:open_delay_ms     wait for the client's first frame                   (60)
+//  plugin:windowfx:open_refresh_ms   retake the snapshot this often while opening, 0 = never (80)
+//  plugin:windowfx:open_speed        playback speed of the whole opening, 2 = twice as fast  (1.0)
+// petals:
+//  plugin:windowfx:size           petal size in logical px                               (44)
+//  plugin:windowfx:duration_ms    flight time of one petal                               (1700)
+//  plugin:windowfx:spread_ms      delay between the first and the last petal leaving     (380)
+//  plugin:windowfx:wind_x         wind direction, x                                      (1.0)
+//  plugin:windowfx:wind_y         wind direction, y (negative = up)                      (-0.45)
+//  plugin:windowfx:wind_strength  wind speed in logical px/s                             (750)
+//  plugin:windowfx:tint           how much petals take the colour, 0..1                  (0.3)
+//  plugin:windowfx:color          0xAARRGGBB, 0 = follow the Caelestia scheme            (0)
+// blood:
+//  plugin:windowfx:blood_color        0xAARRGGBB                                         (0xFF8A0012)
+//  plugin:windowfx:blood_size         cell size in logical px (droplets are 30-100% of it) (18)
+//  plugin:windowfx:blood_max_drops    cap per window, cells grow on big windows          (1500)
+//  plugin:windowfx:blood_duration_ms  fall time of one drop                              (1000)
+//  plugin:windowfx:blood_spread_ms    pace of the blood running down and draining off    (420)
+//  plugin:windowfx:blood_gravity      logical px/s²                                      (1900)
 //
 // Like cursortrail, nothing happens while animations are off (Caelestia's game mode).
 // Assumes unrotated monitors (the snapshot is sampled in untransformed monitor pixels).
@@ -57,6 +75,7 @@
 #include <hyprland/src/config/values/types/ColorValue.hpp>
 #include <hyprland/src/config/values/types/FloatValue.hpp>
 #include <hyprland/src/config/values/types/IntValue.hpp>
+#include <hyprland/src/config/values/types/StringValue.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -79,7 +98,17 @@ namespace {
     constexpr double MAX_DT    = 1.0 / 20.0;
     constexpr double PI        = 3.14159265358979323846;
     constexpr double TRACK_FPS = 120.0; // precomputed open animations
+    constexpr double BLOOD_GROW    = 1.2;  // drops are fatter than their cell
+    constexpr double BLOOD_STRETCH = 0.9;  // extra length of a drop at full speed
+    constexpr double SOAK_S        = 0.2;  // blood running down one cell
 
+    enum eStyle {
+        STYLE_OFF,
+        STYLE_PETALS,
+        STYLE_BLOOD,
+    };
+
+    // A piece of the window: a petal, or a blood drop
     struct SPetal {
         Vector2D home;    // cell centre, global logical
         Vector2D pos;     // current centre, global logical
@@ -89,16 +118,22 @@ namespace {
         double   rot = 0, spin;
         double   tumble = 0, tumbleRate;
         double   flutterPhase, flutterFreq, flutterAmp;
-        double   gust;    // per-petal wind multiplier
+        double   gust;    // per-petal wind (or gravity) multiplier
         double   alpha = 1, scale = 1;
+        // blood
+        double   soakAt  = 0; // s after the burst starts, when the blood reaches this cell
+        double   soak    = 0; // 0..1, how far the blood ran down this cell
+        double   stretch = 1; // drop length / width
+        double   drop    = 1; // droplet size once it left the window, of its cell
     };
 
     struct SFrame {
         Vector2D pos;
-        float    rot, tumble, alpha, scale;
+        float    rot, tumble, alpha, scale, soak, stretch;
     };
 
     struct SBurst {
+        eStyle                   style = STYLE_PETALS;
         SP<Render::IFramebuffer> fb; // keeps the snapshot alive
         SP<Render::ITexture>     tex;
         Vector2D                 snapSizePx; // monitor pixels of the snapshot
@@ -143,16 +178,18 @@ namespace {
         bool                            snapshotting = false;
         CBox                            lastDrawn; // global logical
 
-        SP<Config::Values::CIntValue>   enabled, maxPetals, durationMs, spreadMs, open, openDurationMs, openSpreadMs, openDelayMs, openRefreshMs;
-        SP<Config::Values::CFloatValue> size, windX, windY, windStrength, tint, openSpeed;
-        SP<Config::Values::CColorValue> color;
+        SP<Config::Values::CStringValue> style;
+        SP<Config::Values::CIntValue>    maxPetals, bloodMaxDrops, durationMs, spreadMs, open, openDurationMs, openSpreadMs, openDelayMs, openRefreshMs, bloodDurationMs, bloodSpreadMs;
+        SP<Config::Values::CFloatValue>  size, windX, windY, windStrength, tint, openSpeed, bloodSize, bloodGravity;
+        SP<Config::Values::CColorValue>  color, bloodColor;
 
         CHyprColor                      schemeColor{0xF5 / 255.0, 0xC2 / 255.0, 0xE7 / 255.0, 1.0};
         std::filesystem::file_time_type schemeMtime{};
         Clock::time_point               schemeChecked{};
 
         SP<CShader>                     shader;
-        GLint locProj = -1, locTex = -1, locUvOrigin = -1, locUvSpan = -1, locMorph = -1, locAlpha = -1, locTint = -1, locTintAmt = -1, locBack = -1;
+        GLint locProj = -1, locTex = -1, locUvOrigin = -1, locUvSpan = -1, locMorph = -1, locAlpha = -1, locTint = -1, locTintAmt = -1, locBack = -1,
+              locBlood = -1, locSoak = -1, locBloodColor = -1;
 
         CHyprSignalListener             stageListener, preChecksListener, openListener, destroyListener;
     };
@@ -180,8 +217,45 @@ uniform float alpha;
 uniform vec4 tint;
 uniform float tintAmt;
 uniform float back;
+uniform float blood;      // 1 = blood style
+uniform float soak;       // 0..1, how far the blood ran down this cell
+uniform vec4 bloodColor;  // premultiplied, opaque
 in vec2 v_local;
 layout(location = 0) out vec4 fragColor;
+
+// Falling drop (y down): pointed top, round bottom
+float drop(vec2 q) {
+    float w = mix(0.05, 1.0, smoothstep(-1.0, 0.25, q.y));
+    return length(vec2(q.x / w, q.y - 0.05)) - 0.93;
+}
+
+void bloodMain(vec2 q) {
+    float d = drop(q);
+    float aa = max(fwidth(d), 1e-4);
+    float shape = clamp(0.5 - d / aa, 0.0, 1.0);
+    float mask = mix(1.0, shape, morph);
+    if (mask <= 0.0)
+        discard;
+
+    vec4 c = texture(tex, uvOrigin + v_local * uvSpan);
+
+    // The blood runs down the cell: a wavy front from its top to its bottom
+    float wave = 0.07 * sin(v_local.x * 9.0 + uvOrigin.x * 57.0 + uvOrigin.y * 23.0);
+    float front = soak * 1.3 - 0.15 + wave;
+    float wet = smoothstep(v_local.y - 0.12, v_local.y + 0.12, front);
+
+    // Shading: darker towards the drop's edge, a glossy highlight once it is a drop, and a darker
+    // line on the front of the blood running down
+    vec3 b = bloodColor.rgb;
+    float edge = morph * smoothstep(-0.5, 0.0, d);
+    b *= 1.0 - 0.5 * edge;
+    b *= 1.0 - 0.35 * (1.0 - morph) * smoothstep(0.25, 0.0, abs(front - v_local.y)) * step(soak, 0.999);
+    float hl = morph * (1.0 - smoothstep(0.05, 0.25, length(q - vec2(-0.28, 0.4))));
+    b = mix(b, vec3(1.0), hl * 0.45);
+
+    c = mix(c, vec4(b, 1.0), wet);
+    fragColor = c * mask * alpha;
+}
 
 // Signed-ish distance to a petal pointing up: narrow base, round body, small notch at the tip
 float petal(vec2 q) {
@@ -194,6 +268,10 @@ float petal(vec2 q) {
 
 void main() {
     vec2 q = v_local * 2.0 - 1.0;
+    if (blood > 0.5) {
+        bloodMain(q);
+        return;
+    }
     float d = petal(q);
     float aa = max(fwidth(d), 1e-4);
     float shape = clamp(0.5 - d / aa, 0.0, 1.0);
@@ -219,9 +297,18 @@ void main() {
         return std::uniform_real_distribution<double>(a, b)(rng);
     }
 
+    eStyle style() {
+        const std::string s = g->style->value();
+        if (s == "petals" || s == "petal")
+            return STYLE_PETALS;
+        if (s == "blood")
+            return STYLE_BLOOD;
+        return STYLE_OFF;
+    }
+
     bool active() {
         static auto PANIMENABLED = CConfigValue<Config::INTEGER>("animations:enabled");
-        return *PANIMENABLED && g->enabled->value();
+        return *PANIMENABLED && style() != STYLE_OFF;
     }
 
     // Caelestia writes the scheme to ~/.local/state/caelestia/scheme.json; reread it when it changes
@@ -268,8 +355,10 @@ void main() {
         return len < 1e-6 ? Vector2D{1, 0} : w / len;
     }
 
-    // Half the diagonal of a petal quad at full growth, to bound it whatever its rotation
+    // Half the diagonal of a piece's quad at full growth, to bound it whatever its rotation
     double petalRadius(const SBurst& b) {
+        if (b.style == STYLE_BLOOD)
+            return b.cell * BLOOD_GROW * (1.0 + BLOOD_STRETCH) * 0.7072 + 2.0;
         return b.cell * GROW * 0.7072 + 2.0;
     }
 
@@ -290,19 +379,21 @@ void main() {
             return nullptr;
 
         auto b       = makeUnique<SBurst>();
+        b->style      = style();
+        const bool blood = b->style == STYLE_BLOOD;
         b->fb         = fb;
         b->tex        = fb->getTexture();
         b->snapSizePx = mon->m_transformedSize;
         b->reverse    = reverse;
-        b->duration   = std::max<int64_t>((reverse ? g->openDurationMs : g->durationMs)->value(), 100) / 1000.0;
+        b->duration   = std::max<int64_t>((reverse ? g->openDurationMs : blood ? g->bloodDurationMs : g->durationMs)->value(), 100) / 1000.0;
         // played backwards, petals blown against the wind arrive with it
         b->wind       = reverse ? windDir() * -1.0 : windDir();
         b->start = b->lastStep = Clock::now();
         b->rng.seed(std::random_device{}());
 
-        // Grid: about `size` px cells, grown on big windows to stay under max_petals
-        double       cell = std::max<double>(g->size->value(), 8.0);
-        const double maxN = std::max<int64_t>(g->maxPetals->value(), 4);
+        // Grid: about `size` px cells, grown on big windows to stay under max_pieces
+        double       cell = std::max<double>((blood ? g->bloodSize : g->size)->value(), 8.0);
+        const double maxN = std::max<int64_t>((blood ? g->bloodMaxDrops : g->maxPetals)->value(), 4);
         if ((wsize.x / cell) * (wsize.y / cell) > maxN)
             cell = std::sqrt(wsize.x * wsize.y / maxN);
         const int    cols = std::max(1, sc<int>(std::round(wsize.x / cell)));
@@ -315,16 +406,45 @@ void main() {
         const Vector2D dir    = b->wind;
         const Vector2D centre = wpos + wsize / 2.0;
         const double   extent = std::abs(dir.x) * wsize.x / 2.0 + std::abs(dir.y) * wsize.y / 2.0;
-        const double   spread = std::max<int64_t>((reverse ? g->openSpreadMs : g->spreadMs)->value(), 0) / 1000.0;
+        const double   spread = std::max<int64_t>((reverse ? g->openSpreadMs : blood ? g->bloodSpreadMs : g->spreadMs)->value(), 0) / 1000.0;
         const Vector2D perp   = {-dir.y, dir.x};
 
         auto&          rng = b->rng;
+
+        // Blood: each column runs down with its own lag (most trail behind, a few drips run
+        // ahead), so it comes down in streaks. Once the window is soaked it drains from the bottom.
+        std::vector<double> colLag(cols);
+        for (auto& lag : colLag)
+            lag = spread * 0.35 * (frand(rng, 0, 1) < 0.2 ? frand(rng, 0.0, 0.3) : frand(rng, 0.45, 1.0));
+        const double soakSpan   = spread * 0.6;                  // top to bottom
+        const double drainStart = soakSpan + spread * 0.35 + SOAK_S; // every cell is soaked by then
+
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
                 SPetal p;
                 p.home = p.pos = wpos + Vector2D{(c + 0.5) * cw, (r + 0.5) * ch};
                 p.uv           = Vector2D{(p.home.x - mon->m_position.x) * mon->m_scale / b->snapSizePx.x,
                                           (p.home.y - mon->m_position.y) * mon->m_scale / b->snapSizePx.y};
+
+                if (blood) {
+                    const double down = (r + 0.5) / rows; // 0 top .. 1 bottom
+                    p.soakAt          = down * soakSpan + colLag[c];
+                    p.release = std::max(p.soakAt + SOAK_S + 0.04, drainStart + (1.0 - down) * spread * 0.5 + colLag[c] * 0.4 + frand(rng, 0.0, 0.06));
+                    // a splash: thrown every way (up a lot), out from the window's centre, then
+                    // the air slows it and gravity takes over
+                    const Vector2D off = p.home - centre;
+                    const double   len = std::sqrt(off.x * off.x + off.y * off.y);
+                    const Vector2D out = len > 1e-6 ? off / len : Vector2D{0, 0};
+                    const double   ang = frand(rng, 0, 2 * PI);
+                    const double   up  = frand(rng, 0, 1) < 0.45 ? frand(rng, 250, 650) : 0.0;
+                    p.vel  = Vector2D{std::cos(ang), std::sin(ang)} * frand(rng, 60, 380) + out * frand(rng, 40, 220) + Vector2D{0.0, -up};
+                    p.gust = frand(rng, 0.75, 1.2);
+                    // mostly small droplets, a few big ones
+                    p.drop = frand(rng, 0, 1) < 0.15 ? frand(rng, 0.8, 1.0) : frand(rng, 0.3, 0.65);
+                    p.spin = p.tumbleRate = p.flutterPhase = p.flutterFreq = p.flutterAmp = 0;
+                    b->petals.push_back(p);
+                    continue;
+                }
 
                 // downwind side leaves first
                 const Vector2D off  = p.home - centre;
@@ -358,7 +478,8 @@ void main() {
                     step(*b, f / TRACK_FPS, 1.0 / TRACK_FPS);
                 for (size_t i = 0; i < b->petals.size(); i++) {
                     const auto& p = b->petals[i];
-                    b->track[f * b->petals.size() + i] = {p.pos, sc<float>(p.rot), sc<float>(p.tumble), sc<float>(p.alpha), sc<float>(p.scale)};
+                    b->track[f * b->petals.size() + i] = {p.pos,           sc<float>(p.rot),  sc<float>(p.tumble), sc<float>(p.alpha),
+                                                          sc<float>(p.scale), sc<float>(p.soak), sc<float>(p.stretch)};
                 }
             }
             b->speed = std::clamp<double>(g->openSpeed->value(), 0.1, 10.0);
@@ -383,8 +504,49 @@ void main() {
             p.tumble       = fr.tumble;
             p.alpha        = fr.alpha;
             p.scale        = fr.scale;
+            p.soak         = fr.soak;
+            p.stretch      = fr.stretch;
         }
         return true;
+    }
+
+    // Blood: soak the cells as the blood runs down, then drop them
+    bool stepBlood(SBurst& b, double t, double dt) {
+        const double gravity = g->bloodGravity->value();
+        const double drag    = std::exp(-1.8 * dt);
+        bool         alive   = false;
+
+        for (auto& p : b.petals) {
+            const double age = t - p.release;
+            if (age < 0) {
+                p.pos  = p.home;
+                p.soak = std::clamp((t - p.soakAt) / SOAK_S, 0.0, 1.0);
+                alive  = true;
+                continue;
+            }
+            if (age > b.duration) {
+                p.alpha = 0;
+                continue;
+            }
+            alive  = true;
+            p.soak = 1;
+
+            p.vel = p.vel * drag;
+            p.vel.y += gravity * p.gust * dt;
+            p.pos = p.pos + p.vel * dt;
+
+            // the drop leans and stretches along its fall
+            const double speed = std::sqrt(p.vel.x * p.vel.x + p.vel.y * p.vel.y);
+            p.rot              = speed > 1e-3 ? std::atan2(-p.vel.x, p.vel.y) : 0.0;
+            p.stretch          = 1.0 + BLOOD_STRETCH * std::clamp(speed / 1800.0, 0.0, 1.0);
+
+            const double life     = age / b.duration;
+            const double fadeFrom = b.reverse ? 0.85 : 0.55;
+            p.alpha               = 1.0 - std::clamp((life - fadeFrom) / (1.0 - fadeFrom), 0.0, 1.0);
+            p.alpha *= p.alpha;
+            p.scale = 1.0 - 0.4 * life;
+        }
+        return alive;
     }
 
     bool step(SBurst& b, Clock::time_point now) {
@@ -400,6 +562,8 @@ void main() {
 
     // Advance the simulation to close time t; returns false once every petal is gone
     bool step(SBurst& b, double t, double dt) {
+        if (b.style == STYLE_BLOOD)
+            return stepBlood(b, t, dt);
         const Vector2D dir      = b.wind;
         const Vector2D perp     = {-dir.y, dir.x};
         const double   strength = g->windStrength->value();
@@ -476,7 +640,7 @@ void main() {
 
         g->shader = makeShared<CShader>();
         if (!g->shader->createProgram(VERT, FRAG, true)) {
-            HyprlandAPI::addNotification(g->handle, "[petals] shader failed to compile", CHyprColor{1.0, 0.2, 0.2, 1.0}, 5000);
+            HyprlandAPI::addNotification(g->handle, "[windowfx] shader failed to compile", CHyprColor{1.0, 0.2, 0.2, 1.0}, 5000);
             return false;
         }
 
@@ -490,17 +654,21 @@ void main() {
         g->locTint      = glGetUniformLocation(prog, "tint");
         g->locTintAmt   = glGetUniformLocation(prog, "tintAmt");
         g->locBack      = glGetUniformLocation(prog, "back");
+        g->locBlood     = glGetUniformLocation(prog, "blood");
+        g->locSoak      = glGetUniformLocation(prog, "soak");
+        g->locBloodColor = glGetUniformLocation(prog, "bloodColor");
         return true;
     }
 
     struct SPetalDraw {
         CBox  boxPx; // with rot
         float uvOrigin[2], uvSpan[2];
-        float morph, alpha, back;
+        float morph, alpha, back, soak;
     };
 
     struct SBurstDraw {
         SP<Render::ITexture>    tex;
+        bool                    blood = false;
         std::vector<SPetalDraw> petals;
     };
 
@@ -524,6 +692,8 @@ void main() {
             glUniform1i(g->locTex, 0);
             glUniform4f(g->locTint, converted.r, converted.g, converted.b, 1.0F);
             glUniform1f(g->locTintAmt, std::clamp<float>(g->tint->value(), 0.F, 1.F));
+            const auto blood = g_pHyprRenderer->getConvertedColor(ctx, CHyprColor(sc<uint64_t>(g->bloodColor->value())));
+            glUniform4f(g->locBloodColor, blood.r, blood.g, blood.b, 1.0F);
 
             g_pHyprOpenGL->blend(true);
             g_pHyprOpenGL->blendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -532,6 +702,7 @@ void main() {
 
             for (const auto& burst : m_bursts) {
                 glBindTexture(GL_TEXTURE_2D, burst.tex->m_texID);
+                glUniform1f(g->locBlood, burst.blood ? 1.F : 0.F);
                 for (const auto& p : burst.petals) {
                     const auto proj = g_pHyprRenderer->projectBoxToTarget(ctx, p.boxPx);
                     glUniformMatrix3fv(g->locProj, 1, GL_TRUE, proj.getMatrix().data());
@@ -540,6 +711,7 @@ void main() {
                     glUniform1f(g->locMorph, p.morph);
                     glUniform1f(g->locAlpha, p.alpha);
                     glUniform1f(g->locBack, p.back);
+                    glUniform1f(g->locSoak, p.soak);
                     damage.forEachRect([&ctx](const auto& RECT) {
                         g_pHyprOpenGL->scissor(ctx, &RECT, ctx.m_data.transformDamage);
                         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -566,7 +738,7 @@ void main() {
             return {};
         }
         const char* passName() override {
-            return "CPetalsPassElement";
+            return "CWindowFxPassElement";
         }
         ePassElementType type() override {
             return EK_CUSTOM;
@@ -590,6 +762,7 @@ void main() {
         for (const auto& b : g->bursts) {
             SBurstDraw d;
             d.tex           = b->tex;
+            d.blood         = b->style == STYLE_BLOOD;
             const double r  = petalRadius(*b);
 
             for (const auto& p : b->petals) {
@@ -597,6 +770,33 @@ void main() {
                     continue;
                 if (CBox{p.pos.x - r, p.pos.y - r, 2 * r, 2 * r}.intersection(monBox).empty())
                     continue;
+
+                if (d.blood) {
+                    // a plain cell on its spot (soaking), a drop once it falls, stretched along its fall
+                    const Vector2D away = p.pos - p.home;
+                    const double   m    = std::clamp(std::sqrt(away.x * away.x + away.y * away.y) / (b->cell * 0.4), 0.0, 1.0);
+                    const double   mm   = m * m * (3 - 2 * m);
+                    const double   grow = 1.0 + (BLOOD_GROW * p.drop - 1.0) * mm; // shrinks to a droplet
+                    const double   side = b->cell * grow * p.scale;
+                    const double   sy   = side * p.stretch;
+                    const double   sx   = side / std::sqrt(p.stretch);
+
+                    SPetalDraw     pd;
+                    const Vector2D c = (p.pos - mon->m_position) * mon->m_scale;
+                    pd.boxPx         = CBox{c.x - sx * mon->m_scale / 2.0, c.y - sy * mon->m_scale / 2.0, sx * mon->m_scale, sy * mon->m_scale};
+                    pd.boxPx.rot     = p.rot;
+                    const double us  = b->uvCell.x * grow, vs = b->uvCell.y * grow;
+                    pd.uvOrigin[0]   = sc<float>(p.uv.x - us / 2.0);
+                    pd.uvOrigin[1]   = sc<float>(p.uv.y - vs / 2.0);
+                    pd.uvSpan[0]     = sc<float>(us);
+                    pd.uvSpan[1]     = sc<float>(vs);
+                    pd.morph         = sc<float>(mm);
+                    pd.alpha         = sc<float>(p.alpha);
+                    pd.back          = 0.F;
+                    pd.soak          = sc<float>(p.soak);
+                    d.petals.push_back(pd);
+                    continue;
+                }
 
                 // A petal is a plain cell on its spot and takes its shape (growing over its
                 // neighbours) as it moves away: packed petals overlapping would draw a darker heart
@@ -623,6 +823,7 @@ void main() {
                 pd.morph         = sc<float>(mm);
                 pd.alpha         = sc<float>(p.alpha);
                 pd.back          = flip < 0 ? 1.F : 0.F;
+                pd.soak          = 0.F;
                 d.petals.push_back(pd);
             }
             if (!d.petals.empty())
@@ -784,35 +985,42 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     const std::string HASH        = __hyprland_api_get_hash();
     const std::string CLIENT_HASH = __hyprland_api_get_client_hash();
     if (HASH != CLIENT_HASH) {
-        HyprlandAPI::addNotification(handle, "[petals] built for another Hyprland version, not loading", CHyprColor{1.0, 0.2, 0.2, 1.0}, 5000);
-        throw std::runtime_error("[petals] version mismatch");
+        HyprlandAPI::addNotification(handle, "[windowfx] built for another Hyprland version, not loading", CHyprColor{1.0, 0.2, 0.2, 1.0}, 5000);
+        throw std::runtime_error("[windowfx] version mismatch");
     }
 
     g         = makeUnique<SState>();
     g->handle = handle;
 
-    g->enabled      = makeShared<Config::Values::CIntValue>("plugin:petals:enabled", "Shatter closing windows into petals", 1);
-    g->size         = makeShared<Config::Values::CFloatValue>("plugin:petals:size", "Petal size in logical px", 44.F);
-    g->maxPetals    = makeShared<Config::Values::CIntValue>("plugin:petals:max_petals", "Maximum petals per window", 240);
-    g->durationMs   = makeShared<Config::Values::CIntValue>("plugin:petals:duration_ms", "Flight time of one petal, in ms", 1700);
-    g->spreadMs     = makeShared<Config::Values::CIntValue>("plugin:petals:spread_ms", "Delay between the first and last petal leaving, in ms", 380);
-    g->windX        = makeShared<Config::Values::CFloatValue>("plugin:petals:wind_x", "Wind direction, x", 1.F);
-    g->windY        = makeShared<Config::Values::CFloatValue>("plugin:petals:wind_y", "Wind direction, y (negative is up)", -0.45F);
-    g->windStrength = makeShared<Config::Values::CFloatValue>("plugin:petals:wind_strength", "Wind speed in logical px/s", 750.F);
-    g->tint         = makeShared<Config::Values::CFloatValue>("plugin:petals:tint", "How much the petals take the colour, 0..1", 0.3F);
-    g->color        = makeShared<Config::Values::CColorValue>("plugin:petals:color", "Petal colour, 0 follows the Caelestia scheme primary", 0);
-    g->open           = makeShared<Config::Values::CIntValue>("plugin:petals:open", "Assemble opening windows from petals", 1);
-    g->openDurationMs = makeShared<Config::Values::CIntValue>("plugin:petals:open_duration_ms", "Flight time of one petal when opening, in ms", 900);
-    g->openSpreadMs   = makeShared<Config::Values::CIntValue>("plugin:petals:open_spread_ms", "Delay between the first and last petal landing, in ms", 280);
-    g->openDelayMs    = makeShared<Config::Values::CIntValue>("plugin:petals:open_delay_ms", "Wait for the client's first frame, in ms", 60);
-    g->openRefreshMs  = makeShared<Config::Values::CIntValue>("plugin:petals:open_refresh_ms", "Retake the snapshot this often while opening, in ms (0 = never)", 80);
-    g->openSpeed      = makeShared<Config::Values::CFloatValue>("plugin:petals:open_speed", "Playback speed of the opening animation, 2 is twice as fast", 1.F);
-    for (const auto& v : {SP<Config::Values::IValue>(g->enabled), SP<Config::Values::IValue>(g->size), SP<Config::Values::IValue>(g->maxPetals),
-                          SP<Config::Values::IValue>(g->durationMs), SP<Config::Values::IValue>(g->spreadMs), SP<Config::Values::IValue>(g->windX),
-                          SP<Config::Values::IValue>(g->windY), SP<Config::Values::IValue>(g->windStrength), SP<Config::Values::IValue>(g->tint),
-                          SP<Config::Values::IValue>(g->color), SP<Config::Values::IValue>(g->open), SP<Config::Values::IValue>(g->openDurationMs),
-                          SP<Config::Values::IValue>(g->openSpreadMs), SP<Config::Values::IValue>(g->openDelayMs), SP<Config::Values::IValue>(g->openRefreshMs),
-                          SP<Config::Values::IValue>(g->openSpeed)})
+    using namespace Config::Values;
+    g->style          = makeShared<CStringValue>("plugin:windowfx:style", "petals, blood or off", "petals");
+    g->maxPetals      = makeShared<CIntValue>("plugin:windowfx:max_pieces", "Maximum pieces per window", 240);
+    g->open           = makeShared<CIntValue>("plugin:windowfx:open", "Animate opening windows too", 1);
+    g->openDurationMs = makeShared<CIntValue>("plugin:windowfx:open_duration_ms", "Flight time of one piece when opening, in ms", 900);
+    g->openSpreadMs   = makeShared<CIntValue>("plugin:windowfx:open_spread_ms", "Delay between the first and last piece landing, in ms", 280);
+    g->openDelayMs    = makeShared<CIntValue>("plugin:windowfx:open_delay_ms", "Wait for the client's first frame, in ms", 60);
+    g->openRefreshMs  = makeShared<CIntValue>("plugin:windowfx:open_refresh_ms", "Retake the snapshot this often while opening, in ms (0 = never)", 80);
+    g->openSpeed      = makeShared<CFloatValue>("plugin:windowfx:open_speed", "Playback speed of the opening animation, 2 is twice as fast", 1.F);
+    // petals
+    g->size         = makeShared<CFloatValue>("plugin:windowfx:size", "Petal size in logical px", 44.F);
+    g->durationMs   = makeShared<CIntValue>("plugin:windowfx:duration_ms", "Flight time of one petal, in ms", 1700);
+    g->spreadMs     = makeShared<CIntValue>("plugin:windowfx:spread_ms", "Delay between the first and last petal leaving, in ms", 380);
+    g->windX        = makeShared<CFloatValue>("plugin:windowfx:wind_x", "Wind direction, x", 1.F);
+    g->windY        = makeShared<CFloatValue>("plugin:windowfx:wind_y", "Wind direction, y (negative is up)", -0.45F);
+    g->windStrength = makeShared<CFloatValue>("plugin:windowfx:wind_strength", "Wind speed in logical px/s", 750.F);
+    g->tint         = makeShared<CFloatValue>("plugin:windowfx:tint", "How much the petals take the colour, 0..1", 0.3F);
+    g->color        = makeShared<CColorValue>("plugin:windowfx:color", "Petal colour, 0 follows the Caelestia scheme primary", 0);
+    // blood
+    g->bloodColor      = makeShared<CColorValue>("plugin:windowfx:blood_color", "Blood colour", 0xFF8A0012);
+    g->bloodSize       = makeShared<CFloatValue>("plugin:windowfx:blood_size", "Blood drop size in logical px", 18.F);
+    g->bloodMaxDrops   = makeShared<CIntValue>("plugin:windowfx:blood_max_drops", "Maximum blood drops per window", 1500);
+    g->bloodDurationMs = makeShared<CIntValue>("plugin:windowfx:blood_duration_ms", "Fall time of one blood drop, in ms", 1000);
+    g->bloodSpreadMs   = makeShared<CIntValue>("plugin:windowfx:blood_spread_ms", "Pace of the blood running down and draining off, in ms", 420);
+    g->bloodGravity    = makeShared<CFloatValue>("plugin:windowfx:blood_gravity", "Gravity on blood drops, logical px/s^2", 1900.F);
+    for (const SP<IValue>& v : std::initializer_list<SP<IValue>>{
+             g->style, g->maxPetals, g->open, g->openDurationMs, g->openSpreadMs, g->openDelayMs, g->openRefreshMs, g->openSpeed, g->size, g->durationMs,
+             g->spreadMs, g->windX, g->windY, g->windStrength, g->tint, g->color, g->bloodColor, g->bloodSize, g->bloodMaxDrops, g->bloodDurationMs, g->bloodSpreadMs,
+             g->bloodGravity})
         HyprlandAPI::addConfigValueV2(handle, v);
 
     // Searched by mangled name: the plain "create" matches far too many symbols
@@ -827,8 +1035,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
         break;
     }
     if (!g->createHook) {
-        HyprlandAPI::addNotification(handle, "[petals] could not hook CWindowFadeout::create (" + why + "), not loading", CHyprColor{1.0, 0.2, 0.2, 1.0}, 5000);
-        throw std::runtime_error("[petals] " + why);
+        HyprlandAPI::addNotification(handle, "[windowfx] could not hook CWindowFadeout::create (" + why + "), not loading", CHyprColor{1.0, 0.2, 0.2, 1.0}, 5000);
+        throw std::runtime_error("[windowfx] " + why);
     }
 
     // Optional: without it only closing windows get petals
@@ -868,7 +1076,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
             g_pHyprRenderer->damageBox(damage);
     });
 
-    return {"petals", "Closing windows shatter into petals blown by the wind", "Dralexgon", "1.0"};
+    return {"windowfx", "Closing / opening window animations: petals or blood", "Dralexgon", "1.1"};
 }
 
 APICALL EXPORT void PLUGIN_EXIT() {

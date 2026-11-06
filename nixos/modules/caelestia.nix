@@ -8,8 +8,8 @@ let
   hyprexpo = import ../../tools/hypr-expo { inherit pkgs; };
   # Liquid Glass / Acrylic / Mica window effects (flake input hyprliquid, tools/hypr-liquid).
   hyprliquid = import ../../tools/hypr-liquid { inherit pkgs; src = inputs.hyprliquid; };
-  # Closing windows shatter into petals blown by the wind (tools/hypr-petals).
-  petals = import ../../tools/hypr-petals { inherit pkgs; };
+  # Closing / opening window animations: petals blown by the wind or blood (tools/hypr-windowfx).
+  windowfx = import ../../tools/hypr-windowfx { inherit pkgs; };
   # Petals, blood drops or images thrown behind the mouse pointer (tools/hypr-cursorfx).
   cursorfx = import ../../tools/hypr-cursorfx { inherit pkgs; };
   # Preferred overview, but it often lags behind Hyprland. A failed build leaves lib/ empty instead of
@@ -34,7 +34,7 @@ in
   environment.etc."hypr/plugins/cursortrail.so".source = "${cursortrail}/lib/libcursortrail.so";
   environment.etc."hypr/plugins/hyprexpo.so".source = "${hyprexpo}/lib/libhyprexpo.so";
   environment.etc."hypr/plugins/hyprliquid.so".source = "${hyprliquid}/lib/libhyprliquid.so";
-  environment.etc."hypr/plugins/petals.so".source = "${petals}/lib/libpetals.so";
+  environment.etc."hypr/plugins/windowfx.so".source = "${windowfx}/lib/libwindowfx.so";
   environment.etc."hypr/plugins/cursorfx.so".source = "${cursorfx}/lib/libcursorfx.so";
   # A directory: libhyprtasking.so is only there when hyprtasking built
   environment.etc."hypr/plugins/hyprtasking".source = "${hyprtasking}/lib";

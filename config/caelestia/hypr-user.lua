@@ -118,20 +118,26 @@ hl.plugin.load("/etc/hypr/plugins/cursortrail.so")
 -- Red like the cursorfx blood (its blood_color), instead of the scheme colour
 pcall(hl.config, { plugin = { cursortrail = { color = 0xFF8A0012 } } })
 
--- Closing windows shatter into petals blown away by the wind, a Hyprland plugin (tools/hypr-petals,
--- installed by nixos/modules/caelestia.nix), and opening windows assemble from petals. It replaces
--- windowsOut / windowsIn for those windows and stays off in game mode. Tunable with hl.config({ plugin = { petals = { size = 44, max_petals = 240,
--- duration_ms = 1700, spread_ms = 380, wind_x = 1.0, wind_y = -0.45, wind_strength = 750, tint = 0.3, color = 0,
--- open = 1, open_duration_ms = 900, open_spread_ms = 280, open_delay_ms = 60, open_refresh_ms = 80 } } })
-hl.plugin.load("/etc/hypr/plugins/petals.so")
+-- Closing / opening window animations, a Hyprland plugin (tools/hypr-windowfx, installed by
+-- nixos/modules/caelestia.nix). It replaces windowsOut / windowsIn for those windows and stays off in game mode.
+--  petals: closing windows shatter into petals blown away by the wind, opening ones assemble from petals.
+--  blood:  blood runs down closing windows, then they splash away in droplets; opening windows rise
+--          from the drops and the blood runs off them.
+-- Switch live with hyprctl eval 'hl.config({ plugin = { windowfx = { style = "petals" } } })'   (petals | blood | off)
+-- Tunable with hl.config({ plugin = { windowfx = { max_pieces = 240, open = 1, open_duration_ms = 900,
+-- open_spread_ms = 280, open_delay_ms = 60, open_refresh_ms = 80, open_speed = 1.0,
+-- size = 44, duration_ms = 1700, spread_ms = 380, wind_x = 1.0, wind_y = -0.45, wind_strength = 750, tint = 0.3, color = 0,
+-- blood_color = 0xFF8A0012, blood_size = 18, blood_max_drops = 1500, blood_duration_ms = 1000, blood_spread_ms = 420, blood_gravity = 1900 } } })
+hl.plugin.load("/etc/hypr/plugins/windowfx.so")
 
--- The whole opening plays twice as fast: open_speed speeds up the recorded flight (paths, spin,
--- flutter, morph), and the hidden wait before it and the snapshot refresh are halved too (60 / 80 ms).
--- The plugin's keys do not exist on the first config pass (see the hyprexpo note below), and petals has
--- no hl.plugin.petals table to test, so pcall keeps the error from aborting the rest of this file
+-- Blood, and the whole opening plays twice as fast: open_speed speeds up the recorded animation, and
+-- the hidden wait before it and the snapshot refresh are halved too (60 / 80 ms).
+-- The plugin's keys do not exist on the first config pass (see the hyprexpo note below), and windowfx has
+-- no hl.plugin.windowfx table to test, so pcall keeps the error from aborting the rest of this file
 pcall(hl.config, {
     plugin = {
-        petals = {
+        windowfx = {
+            style = "blood",
             open_speed = 2.0,
             open_delay_ms = 30,
             open_refresh_ms = 40
@@ -144,7 +150,7 @@ pcall(hl.config, {
 -- hyprctl eval 'hl.config({ plugin = { cursorfx = { style = "blood" } } })'   (petals | blood | image | off)
 -- Tunable with hl.config({ plugin = { cursorfx = { style = "petals", image = "~/Pictures/bat.png", density = 5,
 -- size = 14, life_ms = 1400, max_particles = 400, color = 0, blood_color = 0xFF8A0012, splat_ms = 1600 } } })
--- (wrap it in pcall like petals above: the keys do not exist on the first config pass)
+-- (wrap it in pcall like windowfx above: the keys do not exist on the first config pass)
 hl.plugin.load("/etc/hypr/plugins/cursorfx.so")
 -- Blood drops shaken off the pointer (the keys do not exist on the first config pass, hence pcall)
 pcall(hl.config, { plugin = { cursorfx = { style = "blood" } } })
