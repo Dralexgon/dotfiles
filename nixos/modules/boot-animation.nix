@@ -14,7 +14,7 @@ let
   #   pixels polaroid red_loader rings rings_2 rog rog_2 seal seal_2 seal_3 sliced sphere spin
   #   spinner_alt splash square square_hud target target_2 tech_a tech_b unrap
   # (the list lives in nixpkgs: pkgs/by-name/ad/adi1090x-plymouth-themes/shas.nix)
-  theme = "red_loader";
+  theme = "glowing"; # old one : "red_loader";
 in
 {
   # This module is used to configure the boot animation.
