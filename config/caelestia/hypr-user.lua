@@ -130,7 +130,7 @@ pcall(hl.config, { plugin = { cursortrail = { color = 0xFF8A0012 } } })
 -- open_spread_ms = 280, open_delay_ms = 60, open_refresh_ms = 80, open_speed = 1.0,
 -- size = 44, duration_ms = 1700, spread_ms = 380, wind_x = 1.0, wind_y = -0.45, wind_strength = 750, tint = 0.3, color = 0,
 -- blood_color = 0xFF8A0012, blood_size = 0 (0 = cursorfx's size), blood_close_ms = 120, blood_open_ms = 450,
--- blood_drops = 40, blood_drips = 1.0, blood_gravity = 1600,
+-- blood_drops = 40, blood_drips = 1.0, blood_gravity = 1600, blood_splat = 1, blood_splat_ms = 1600,
 -- blood_legacy_size = 18, blood_legacy_max_drops = 1500, blood_legacy_duration_ms = 1000, blood_legacy_spread_ms = 420,
 -- blood_legacy_gravity = 1900 } } })
 hl.plugin.load("/etc/hypr/plugins/windowfx.so")

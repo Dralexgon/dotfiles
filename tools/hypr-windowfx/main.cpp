@@ -8,7 +8,8 @@
 //          blood droplets thrown every way (many upwards), slowed by the air, then falling with
 //          gravity; they stretch with speed and fade. Opening windows pop in from half their size
 //          (with a small overshoot), then a few drops drip off their bottom and side edges.
-//          The droplets are cursorfx's blood drops (same shape and size).
+//          The droplets are cursorfx's blood drops (same shape and size), and like them they
+//          splat a little below where they fell from, then the splats dry off.
 //  blood-legacy  blood runs down the window from the top in uneven drip streaks until it is soaked,
 //          then it drains from the bottom up: the cells splash off as teardrop droplets thrown
 //          every way (many upwards), slowed by the air, then falling with gravity; they stretch
@@ -60,6 +61,9 @@
 //  plugin:windowfx:blood_drips        drops dripping off an opened window, per 100 px of
 //                                     its bottom and side edges                          (1.0)
 //  plugin:windowfx:blood_gravity      logical px/s²                                      (1600)
+//  plugin:windowfx:blood_splat        1 = drops splat on an imaginary floor a little below
+//                                     where they fall from, like cursorfx's               (1)
+//  plugin:windowfx:blood_splat_ms     how long a splat stays                             (1600)
 // blood-legacy (blood_color applies; opening uses the open_* options, like petals):
 //  plugin:windowfx:blood_legacy_size         cell size in logical px (droplets are 30-100% of it) (18)
 //  plugin:windowfx:blood_legacy_max_drops    cap per window, cells grow on big windows          (1500)
@@ -160,6 +164,10 @@ namespace {
         double   age   = 0, life = 1; // life: s of flight once it falls
         double   shade = 1;
         double   alpha = 0, grow = 1, stretch = 1, rot = 0;
+        double   floorY = 0;     // splats when it falls past it
+        bool     splat  = false; // landed: a splat, it stays put and dries off
+        double   splatAge = 0, splatLife = 1;
+        float    seed = 0;       // splat shape
     };
 
     struct SBurst {
@@ -224,6 +232,7 @@ namespace {
         SP<Config::Values::CStringValue> style;
         SP<Config::Values::CIntValue>    maxPetals, durationMs, spreadMs, open, openDurationMs, openSpreadMs, openDelayMs, openRefreshMs, bloodCloseMs, bloodOpenMs, bloodDrops;
         SP<Config::Values::CFloatValue>  size, windX, windY, windStrength, tint, openSpeed, bloodSize, bloodDrips, bloodGravity;
+        SP<Config::Values::CIntValue>    bloodSplat, bloodSplatMs;
         SP<Config::Values::CIntValue>    legacyMaxDrops, legacyDurationMs, legacySpreadMs;
         SP<Config::Values::CFloatValue>  legacySize, legacyGravity;
         SP<Config::Values::CColorValue>  color, bloodColor;
@@ -234,7 +243,7 @@ namespace {
 
         SP<CShader>                     shader;
         GLint locProj = -1, locTex = -1, locUvOrigin = -1, locUvSpan = -1, locMorph = -1, locAlpha = -1, locTint = -1, locTintAmt = -1, locBack = -1,
-              locMode = -1, locShade = -1, locSoak = -1, locBloodColor = -1;
+              locMode = -1, locShade = -1, locSeed = -1, locSoak = -1, locBloodColor = -1;
 
         CHyprSignalListener             stageListener, preChecksListener, openListener, destroyListener;
     };
@@ -262,7 +271,8 @@ uniform float alpha;
 uniform vec4 tint;
 uniform float tintAmt;
 uniform float back;
-uniform float mode;       // 0 petal / window, 1 blood-legacy cell, 2 blood drop (plain colour)
+uniform float mode;       // 0 petal / window, 1 blood-legacy cell, 2 blood drop, 3 blood splat
+uniform float seed;       // splat shape
 uniform float shade;      // blood drop colour variation
 uniform float soak;       // blood-legacy: 0..1, how far the blood ran down this cell
 uniform vec4 bloodColor;  // premultiplied, opaque
@@ -274,6 +284,35 @@ float dropShape(vec2 q) {
     float y = clamp(q.y, -1.0, 1.0);
     float w = sqrt(max(1.0 - y * y, 0.0)) * smoothstep(-1.1, 0.55, y) * 0.95;
     return max(abs(q.x) - w, abs(q.y) - 1.0);
+}
+
+// Irregular splat with a few droplets around it (as cursorfx's)
+float splatShape(vec2 q) {
+    float a = atan(q.y, q.x);
+    float r = 0.58 + 0.08 * sin(3.0 * a + seed) + 0.06 * sin(5.0 * a + seed * 2.3) + 0.035 * sin(9.0 * a + seed * 4.1);
+    float d = length(q) - r;
+    for (int i = 0; i < 5; i++) {
+        float fi = float(i);
+        float ang = seed * 1.7 + fi * 1.27 + 0.6 * sin(seed + fi * 3.1);
+        float dist = 0.72 + 0.14 * fract(sin(seed * 12.9 + fi * 78.2) * 437.5);
+        float rad = 0.03 + 0.07 * fract(sin(seed * 39.3 + fi * 11.7) * 917.3);
+        d = min(d, length(q - dist * vec2(cos(ang), sin(ang))) - rad);
+    }
+    return d;
+}
+
+void splatMain(vec2 q) {
+    float d = splatShape(q);
+    float aa = max(fwidth(d), 1e-4);
+    float mask = clamp(0.5 - d / aa, 0.0, 1.0);
+    if (mask <= 0.0)
+        discard;
+    // pooled: darker ring where it dries, a dull sheen in the middle
+    vec3 rgb = bloodColor.rgb * shade;
+    rgb *= mix(1.0, 0.62, smoothstep(-0.16, 0.0, d));
+    float h = smoothstep(0.35, 0.0, length(q - vec2(-0.18, -0.2)));
+    rgb = mix(rgb, vec3(1.0), h * 0.18);
+    fragColor = vec4(rgb, 1.0) * mask * alpha;
 }
 
 void dropMain(vec2 q) {
@@ -335,6 +374,10 @@ float petal(vec2 q) {
 
 void main() {
     vec2 q = v_local * 2.0 - 1.0;
+    if (mode > 2.5) {
+        splatMain(q);
+        return;
+    }
     if (mode > 1.5) {
         dropMain(q);
         return;
@@ -467,6 +510,8 @@ void main() {
             d.life           = frand(rng, 0.8, 1.3);
             d.shade          = frand(rng, 0.78, 1.05);
             d.grow           = 0.5;
+            d.floorY         = c.y + frand(rng, 40, 300);
+            d.seed           = sc<float>(frand(rng, 0, 100));
             b.drops.push_back(d);
         }
     }
@@ -497,6 +542,8 @@ void main() {
             d.life  = frand(rng, 0.7, 1.2);
             d.shade = frand(rng, 0.78, 1.05);
             d.grow  = 0.3;
+            d.floorY = d.anchor.y + frand(rng, 35, 240);
+            d.seed   = sc<float>(frand(rng, 0, 100));
             b.drops.push_back(d);
         }
     }
@@ -690,8 +737,20 @@ void main() {
         }
 
         const double gravity = g->bloodGravity->value();
+        const bool   splats  = g->bloodSplat->value() != 0;
         for (auto& d : b.drops) {
             d.age += dt;
+            if (d.splat) {
+                d.splatAge += dt;
+                const double f = d.splatAge / d.splatLife;
+                if (f >= 1) {
+                    d.alpha = 0;
+                    continue;
+                }
+                d.alpha = 1.0 - std::pow(std::max(0.0, (f - 0.55) / 0.45), 1.5); // dries off late
+                alive   = true;
+                continue;
+            }
             if (d.age < d.delay) {
                 d.alpha = 0;
                 alive   = true;
@@ -709,7 +768,8 @@ void main() {
                 continue;
             }
             const double fly = a - d.hang;
-            if (fly > d.life) {
+            // splatting drops fly until they land (4 s safety net), the others fade in the air
+            if (fly > (splats ? 4.0 : d.life)) {
                 d.alpha = 0;
                 continue;
             }
@@ -724,8 +784,22 @@ void main() {
             d.rot              = speed > 1 ? std::atan2(-d.vel.x, d.vel.y) : 0.0;
             d.stretch          = std::max(1.0, 1.0 + speed / 700.0);
             d.grow             = std::min(1.0, d.grow + dt / 0.06);
-            const double f     = fly / d.life;
-            d.alpha            = 1.0 - std::pow(std::max(0.0, (f - 0.6) / 0.4), 1.5);
+            if (splats) {
+                d.alpha = 1;
+                if (d.pos.y >= d.floorY && d.vel.y > 0) {
+                    d.splat     = true;
+                    d.pos.y     = d.floorY;
+                    d.vel       = {};
+                    d.size *= frand(b.rng, 1.3, 2.1);
+                    d.rot       = frand(b.rng, -0.25, 0.25); // seen at a slant, slightly tilted
+                    d.stretch   = 1;
+                    d.grow      = 1;
+                    d.splatLife = std::max<int64_t>(g->bloodSplatMs->value(), 50) / 1000.0;
+                }
+                continue;
+            }
+            const double f = fly / d.life;
+            d.alpha        = 1.0 - std::pow(std::max(0.0, (f - 0.6) / 0.4), 1.5);
         }
         return alive;
     }
@@ -777,6 +851,8 @@ void main() {
 
     // Half extent of the square holding a drop whatever its rotation, logical px
     double dropRadius(const SDrop& d) {
+        if (d.splat)
+            return d.size * 0.7 + 2.0; // its tilted box
         return d.size * 0.5 * d.grow * d.stretch * 1.05 + 2.0;
     }
 
@@ -901,6 +977,7 @@ void main() {
         g->locMode      = glGetUniformLocation(prog, "mode");
         g->locSoak      = glGetUniformLocation(prog, "soak");
         g->locShade     = glGetUniformLocation(prog, "shade");
+        g->locSeed      = glGetUniformLocation(prog, "seed");
         g->locBloodColor = glGetUniformLocation(prog, "bloodColor");
         return true;
     }
@@ -910,6 +987,7 @@ void main() {
         float uvOrigin[2] = {0, 0}, uvSpan[2] = {0, 0};
         float morph = 0, alpha = 1, back = 0, shade = 1, soak = 0;
         float mode = 0; // as the shader's
+        float seed = 0;
     };
 
     struct SBurstDraw {
@@ -958,6 +1036,7 @@ void main() {
                     glUniform1f(g->locMode, p.mode);
                     glUniform1f(g->locSoak, p.soak);
                     glUniform1f(g->locShade, p.shade);
+                    glUniform1f(g->locSeed, p.seed);
                     damage.forEachRect([&ctx](const auto& RECT) {
                         g_pHyprOpenGL->scissor(ctx, &RECT, ctx.m_data.transformDamage);
                         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -1024,8 +1103,26 @@ void main() {
                         d.petals.push_back(pd);
                     }
                 }
+                // splats lie under the drops still falling
                 for (const auto& dr : b->drops) {
-                    if (dr.alpha <= 0)
+                    if (!dr.splat || dr.alpha <= 0)
+                        continue;
+                    const double rr = dropRadius(dr);
+                    if (CBox{dr.pos.x - rr, dr.pos.y - rr, 2 * rr, 2 * rr}.intersection(monBox).empty())
+                        continue;
+                    const double   sx = dr.size * mon->m_scale, sy = dr.size * 0.8 * mon->m_scale;
+                    const Vector2D c = (dr.pos - mon->m_position) * mon->m_scale;
+                    SPetalDraw     pd;
+                    pd.boxPx     = CBox{c.x - sx / 2.0, c.y - sy / 2.0, sx, sy};
+                    pd.boxPx.rot = dr.rot;
+                    pd.alpha     = sc<float>(dr.alpha);
+                    pd.shade     = sc<float>(dr.shade);
+                    pd.seed      = dr.seed;
+                    pd.mode      = 3.F;
+                    d.petals.push_back(pd);
+                }
+                for (const auto& dr : b->drops) {
+                    if (dr.splat || dr.alpha <= 0)
                         continue;
                     const double rr = dropRadius(dr);
                     if (CBox{dr.pos.x - rr, dr.pos.y - rr, 2 * rr, 2 * rr}.intersection(monBox).empty())
@@ -1297,6 +1394,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g->bloodDrops      = makeShared<CIntValue>("plugin:windowfx:blood_drops", "Drops bursting out of a closing window", 40);
     g->bloodDrips      = makeShared<CFloatValue>("plugin:windowfx:blood_drips", "Drops dripping off an opened window, per 100 px of edge", 1.F);
     g->bloodGravity    = makeShared<CFloatValue>("plugin:windowfx:blood_gravity", "Gravity on blood drops, logical px/s^2", 1600.F);
+    g->bloodSplat      = makeShared<CIntValue>("plugin:windowfx:blood_splat", "1 = blood drops splat a little below where they fall from", 1);
+    g->bloodSplatMs    = makeShared<CIntValue>("plugin:windowfx:blood_splat_ms", "How long a blood splat stays, in ms", 1600);
     // blood-legacy
     g->legacySize       = makeShared<CFloatValue>("plugin:windowfx:blood_legacy_size", "blood-legacy cell size in logical px", 18.F);
     g->legacyMaxDrops   = makeShared<CIntValue>("plugin:windowfx:blood_legacy_max_drops", "blood-legacy maximum drops per window", 1500);
@@ -1306,7 +1405,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     for (const SP<IValue>& v : std::initializer_list<SP<IValue>>{
              g->style, g->maxPetals, g->open, g->openDurationMs, g->openSpreadMs, g->openDelayMs, g->openRefreshMs, g->openSpeed, g->size, g->durationMs,
              g->spreadMs, g->windX, g->windY, g->windStrength, g->tint, g->color, g->bloodColor, g->bloodSize, g->bloodCloseMs, g->bloodOpenMs, g->bloodDrops,
-             g->bloodDrips, g->bloodGravity, g->legacySize, g->legacyMaxDrops, g->legacyDurationMs, g->legacySpreadMs, g->legacyGravity})
+             g->bloodDrips, g->bloodGravity, g->bloodSplat, g->bloodSplatMs, g->legacySize, g->legacyMaxDrops, g->legacyDurationMs, g->legacySpreadMs, g->legacyGravity})
         HyprlandAPI::addConfigValueV2(handle, v);
 
     // Searched by mangled name: the plain "create" matches far too many symbols
