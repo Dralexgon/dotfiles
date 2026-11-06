@@ -4,11 +4,16 @@
 // Styles (plugin:windowfx:style):
 //  petals  the window shatters into petals in the Caelestia scheme colour, blown away by the
 //          wind; opening windows assemble from petals brought by the wind.
-//  blood   blood runs down the window from the top in uneven drip streaks until it is soaked,
+//  blood   closing windows shrink very fast to nothing at their centre, where they burst into
+//          blood droplets thrown every way (many upwards), slowed by the air, then falling with
+//          gravity; they stretch with speed and fade. Opening windows pop in from half their size
+//          (with a small overshoot), then a few drops drip off their bottom and side edges.
+//          The droplets are cursorfx's blood drops (same shape and size).
+//  blood-legacy  blood runs down the window from the top in uneven drip streaks until it is soaked,
 //          then it drains from the bottom up: the cells splash off as teardrop droplets thrown
 //          every way (many upwards), slowed by the air, then falling with gravity; they stretch
-//          with speed and fade. Opening windows rise from the drops, and
-//          the blood runs off them upwards to uncover the window.
+//          with speed and fade. Opening windows rise from the drops, and the blood runs off them
+//          upwards to uncover the window.
 //  off     stock windowsIn / windowsOut animations.
 //
 // How it works:
@@ -28,7 +33,7 @@
 //    of everything at the end of each frame.
 //
 // Config (all optional, e.g. hl.config({ plugin = { windowfx = { style = "blood" } } })):
-//  plugin:windowfx:style          petals | blood | off                                   (petals)
+//  plugin:windowfx:style          petals | blood | blood-legacy | off                    (petals)
 //  plugin:windowfx:max_pieces     petals cap per window, petals grow on big windows      (240)
 //  plugin:windowfx:open           1 = animate opening windows too                        (1)
 //  plugin:windowfx:open_duration_ms  flight time of one piece when opening               (900)
@@ -45,13 +50,22 @@
 //  plugin:windowfx:wind_strength  wind speed in logical px/s                             (750)
 //  plugin:windowfx:tint           how much petals take the colour, 0..1                  (0.3)
 //  plugin:windowfx:color          0xAARRGGBB, 0 = follow the Caelestia scheme            (0)
-// blood:
+// blood (open_delay_ms / open_refresh_ms apply, the other open_* options are for petals):
 //  plugin:windowfx:blood_color        0xAARRGGBB                                         (0xFF8A0012)
-//  plugin:windowfx:blood_size         cell size in logical px (droplets are 30-100% of it) (18)
-//  plugin:windowfx:blood_max_drops    cap per window, cells grow on big windows          (1500)
-//  plugin:windowfx:blood_duration_ms  fall time of one drop                              (1000)
-//  plugin:windowfx:blood_spread_ms    pace of the blood running down and draining off    (420)
-//  plugin:windowfx:blood_gravity      logical px/s²                                      (1900)
+//  plugin:windowfx:blood_size         drop size in logical px, 0 = cursorfx's size (or 14) (0)
+//  plugin:windowfx:blood_close_ms     shrink time of a closing window                    (120)
+//  plugin:windowfx:blood_open_ms      pop-in time of an opening window                   (450)
+//  plugin:windowfx:blood_drops        drops bursting out of a closing window (scaled a bit
+//                                     with its size)                                     (40)
+//  plugin:windowfx:blood_drips        drops dripping off an opened window, per 100 px of
+//                                     its bottom and side edges                          (1.0)
+//  plugin:windowfx:blood_gravity      logical px/s²                                      (1600)
+// blood-legacy (blood_color applies; opening uses the open_* options, like petals):
+//  plugin:windowfx:blood_legacy_size         cell size in logical px (droplets are 30-100% of it) (18)
+//  plugin:windowfx:blood_legacy_max_drops    cap per window, cells grow on big windows          (1500)
+//  plugin:windowfx:blood_legacy_duration_ms  fall time of one drop                              (1000)
+//  plugin:windowfx:blood_legacy_spread_ms    pace of the blood running down and draining off    (420)
+//  plugin:windowfx:blood_legacy_gravity      logical px/s²                                      (1900)
 //
 // Like cursortrail, nothing happens while animations are off (Caelestia's game mode).
 // Assumes unrotated monitors (the snapshot is sampled in untransformed monitor pixels).
@@ -98,6 +112,8 @@ namespace {
     constexpr double MAX_DT    = 1.0 / 20.0;
     constexpr double PI        = 3.14159265358979323846;
     constexpr double TRACK_FPS = 120.0; // precomputed open animations
+    constexpr double POP_FROM  = 0.5;  // opening blood windows grow from half their size
+    // blood-legacy
     constexpr double BLOOD_GROW    = 1.2;  // drops are fatter than their cell
     constexpr double BLOOD_STRETCH = 0.9;  // extra length of a drop at full speed
     constexpr double SOAK_S        = 0.2;  // blood running down one cell
@@ -106,9 +122,10 @@ namespace {
         STYLE_OFF,
         STYLE_PETALS,
         STYLE_BLOOD,
+        STYLE_BLOOD_LEGACY,
     };
 
-    // A piece of the window: a petal, or a blood drop
+    // A piece of the window: a petal, or a blood-legacy drop
     struct SPetal {
         Vector2D home;    // cell centre, global logical
         Vector2D pos;     // current centre, global logical
@@ -120,7 +137,7 @@ namespace {
         double   flutterPhase, flutterFreq, flutterAmp;
         double   gust;    // per-petal wind (or gravity) multiplier
         double   alpha = 1, scale = 1;
-        // blood
+        // blood-legacy
         double   soakAt  = 0; // s after the burst starts, when the blood reaches this cell
         double   soak    = 0; // 0..1, how far the blood ran down this cell
         double   stretch = 1; // drop length / width
@@ -130,6 +147,19 @@ namespace {
     struct SFrame {
         Vector2D pos;
         float    rot, tumble, alpha, scale, soak, stretch;
+    };
+
+    // A blood drop, plain blood colour (not a piece of the window)
+    struct SDrop {
+        Vector2D pos, vel;   // global logical, px/s
+        Vector2D anchor;     // drips: where it clings to the border before falling
+        double   size;       // logical px, full length at rest
+        double   delay = 0;  // s before it shows up
+        double   hang  = 0;  // s it clings to the border, swelling, before it falls
+        double   drag  = 0;  // air drag, 1/s
+        double   age   = 0, life = 1; // life: s of flight once it falls
+        double   shade = 1;
+        double   alpha = 0, grow = 1, stretch = 1, rot = 0;
     };
 
     struct SBurst {
@@ -155,11 +185,24 @@ namespace {
         PHLWINDOWREF             window; // hidden until the petals have assembled it
         SP<CEventLoopTimer>      refresh; // retakes the snapshot while the petals fly in
 
-        ~SBurst() {
+        // blood: the window drawn as one quad zooming, then drops
+        CBox                     winBox;           // global logical, with the border
+        Vector2D                 uvOrigin, uvSpan; // the window in the snapshot
+        double                   zoomS = 0.1;      // s, shrink (closing) or pop-in (opening)
+        double                   zoom = 1, zoomAlpha = 1; // the quad now, zoom 0 = gone
+        bool                     dropped = false;  // drops spawned
+        std::vector<SDrop>       drops;
+
+        void stopRefresh() {
             if (refresh) {
                 refresh->cancel();
                 g_pEventLoopManager->removeTimer(refresh);
+                refresh.reset();
             }
+        }
+
+        ~SBurst() {
+            stopRefresh();
         }
     };
 
@@ -179,8 +222,10 @@ namespace {
         CBox                            lastDrawn; // global logical
 
         SP<Config::Values::CStringValue> style;
-        SP<Config::Values::CIntValue>    maxPetals, bloodMaxDrops, durationMs, spreadMs, open, openDurationMs, openSpreadMs, openDelayMs, openRefreshMs, bloodDurationMs, bloodSpreadMs;
-        SP<Config::Values::CFloatValue>  size, windX, windY, windStrength, tint, openSpeed, bloodSize, bloodGravity;
+        SP<Config::Values::CIntValue>    maxPetals, durationMs, spreadMs, open, openDurationMs, openSpreadMs, openDelayMs, openRefreshMs, bloodCloseMs, bloodOpenMs, bloodDrops;
+        SP<Config::Values::CFloatValue>  size, windX, windY, windStrength, tint, openSpeed, bloodSize, bloodDrips, bloodGravity;
+        SP<Config::Values::CIntValue>    legacyMaxDrops, legacyDurationMs, legacySpreadMs;
+        SP<Config::Values::CFloatValue>  legacySize, legacyGravity;
         SP<Config::Values::CColorValue>  color, bloodColor;
 
         CHyprColor                      schemeColor{0xF5 / 255.0, 0xC2 / 255.0, 0xE7 / 255.0, 1.0};
@@ -189,7 +234,7 @@ namespace {
 
         SP<CShader>                     shader;
         GLint locProj = -1, locTex = -1, locUvOrigin = -1, locUvSpan = -1, locMorph = -1, locAlpha = -1, locTint = -1, locTintAmt = -1, locBack = -1,
-              locBlood = -1, locSoak = -1, locBloodColor = -1;
+              locMode = -1, locShade = -1, locSoak = -1, locBloodColor = -1;
 
         CHyprSignalListener             stageListener, preChecksListener, openListener, destroyListener;
     };
@@ -217,20 +262,42 @@ uniform float alpha;
 uniform vec4 tint;
 uniform float tintAmt;
 uniform float back;
-uniform float blood;      // 1 = blood style
-uniform float soak;       // 0..1, how far the blood ran down this cell
+uniform float mode;       // 0 petal / window, 1 blood-legacy cell, 2 blood drop (plain colour)
+uniform float shade;      // blood drop colour variation
+uniform float soak;       // blood-legacy: 0..1, how far the blood ran down this cell
 uniform vec4 bloodColor;  // premultiplied, opaque
 in vec2 v_local;
 layout(location = 0) out vec4 fragColor;
 
-// Falling drop (y down): pointed top, round bottom
-float drop(vec2 q) {
+// Falling drop, head towards +y, thin tail towards -y (as cursorfx's)
+float dropShape(vec2 q) {
+    float y = clamp(q.y, -1.0, 1.0);
+    float w = sqrt(max(1.0 - y * y, 0.0)) * smoothstep(-1.1, 0.55, y) * 0.95;
+    return max(abs(q.x) - w, abs(q.y) - 1.0);
+}
+
+void dropMain(vec2 q) {
+    float d = dropShape(q);
+    float aa = max(fwidth(d), 1e-4);
+    float mask = clamp(0.5 - d / aa, 0.0, 1.0);
+    if (mask <= 0.0)
+        discard;
+    // round, glossy: darker edges, small highlight near the head
+    vec3 rgb = bloodColor.rgb * shade;
+    rgb *= mix(0.55, 1.08, clamp(-d / 0.45, 0.0, 1.0));
+    float h = smoothstep(0.22, 0.0, length(q - vec2(-0.32, 0.45)));
+    rgb = mix(rgb, vec3(1.0), h * 0.6);
+    fragColor = vec4(rgb, 1.0) * mask * alpha;
+}
+
+// blood-legacy falling drop (y down): pointed top, round bottom
+float legacyDrop(vec2 q) {
     float w = mix(0.05, 1.0, smoothstep(-1.0, 0.25, q.y));
     return length(vec2(q.x / w, q.y - 0.05)) - 0.93;
 }
 
-void bloodMain(vec2 q) {
-    float d = drop(q);
+void legacyMain(vec2 q) {
+    float d = legacyDrop(q);
     float aa = max(fwidth(d), 1e-4);
     float shape = clamp(0.5 - d / aa, 0.0, 1.0);
     float mask = mix(1.0, shape, morph);
@@ -268,8 +335,12 @@ float petal(vec2 q) {
 
 void main() {
     vec2 q = v_local * 2.0 - 1.0;
-    if (blood > 0.5) {
-        bloodMain(q);
+    if (mode > 1.5) {
+        dropMain(q);
+        return;
+    }
+    if (mode > 0.5) {
+        legacyMain(q);
         return;
     }
     float d = petal(q);
@@ -303,6 +374,8 @@ void main() {
             return STYLE_PETALS;
         if (s == "blood")
             return STYLE_BLOOD;
+        if (s == "blood-legacy" || s == "blood_legacy")
+            return STYLE_BLOOD_LEGACY;
         return STYLE_OFF;
     }
 
@@ -357,12 +430,76 @@ void main() {
 
     // Half the diagonal of a piece's quad at full growth, to bound it whatever its rotation
     double petalRadius(const SBurst& b) {
-        if (b.style == STYLE_BLOOD)
+        if (b.style == STYLE_BLOOD_LEGACY)
             return b.cell * BLOOD_GROW * (1.0 + BLOOD_STRETCH) * 0.7072 + 2.0;
         return b.cell * GROW * 0.7072 + 2.0;
     }
 
     bool step(SBurst& b, double t, double dt);
+    void unhide(const PHLWINDOWREF& ref);
+
+    // cursorfx's drop size, so window drops match the ones behind the pointer
+    double dropBaseSize() {
+        if (const double own = g->bloodSize->value(); own > 0)
+            return own;
+        static const std::string NAME = "plugin:cursorfx:size";
+        const auto               opt  = Config::mgr()->getConfigValue(NAME);
+        if (opt.dataptr && opt.type && std::type_index(*opt.type) == typeid(Config::FLOAT))
+            return std::clamp<double>(*CConfigValue<Config::FLOAT>(NAME), 2.0, 200.0);
+        return 14.0;
+    }
+
+    // Closing: the drops burst out of the point the window shrank to
+    void spawnSplash(SBurst& b) {
+        auto&          rng = b.rng;
+        const Vector2D c   = {b.winBox.x + b.winBox.w / 2.0, b.winBox.y + b.winBox.h / 2.0};
+        const double   k   = std::clamp(std::sqrt(b.winBox.w * b.winBox.h) / 700.0, 0.6, 1.6);
+        const int      n   = sc<int>(std::round(std::max<int64_t>(g->bloodDrops->value(), 0) * k));
+        const double   sz  = dropBaseSize();
+        for (int i = 0; i < n; i++) {
+            SDrop          d;
+            d.pos            = c + Vector2D{frand(rng, -3, 3), frand(rng, -3, 3)};
+            const double ang = frand(rng, 0, 2 * PI);
+            const double sp  = frand(rng, 0, 1) < 0.25 ? frand(rng, 650, 1150) : frand(rng, 150, 650);
+            d.vel            = Vector2D{std::cos(ang), std::sin(ang)} * sp + Vector2D{0.0, -frand(rng, 80, 420)};
+            d.size           = sz * frand(rng, 0.55, 1.1);
+            d.drag           = 1.4;
+            d.life           = frand(rng, 0.8, 1.3);
+            d.shade          = frand(rng, 0.78, 1.05);
+            d.grow           = 0.5;
+            b.drops.push_back(d);
+        }
+    }
+
+    // Opening: drops gather on the bottom and side edges of the window and drip off
+    void spawnDrips(SBurst& b) {
+        auto&        rng  = b.rng;
+        const CBox&  w    = b.winBox;
+        const double edge = w.w + 2 * w.h;
+        const int    n    = sc<int>(std::round(edge / 100.0 * std::max<double>(g->bloodDrips->value(), 0.0)));
+        const double sz   = dropBaseSize();
+        for (int i = 0; i < n; i++) {
+            SDrop        d;
+            const double at = frand(rng, 0, edge);
+            if (at < w.w)
+                d.anchor = {w.x + at, w.y + w.h};
+            else {
+                // sides, more towards the bottom where the blood would pool
+                const double y = w.y + w.h * (1.0 - std::pow(frand(rng, 0, 1), 1.6));
+                d.anchor       = {at < w.w + w.h ? w.x : w.x + w.w, y};
+            }
+            d.pos   = d.anchor;
+            d.vel   = {frand(rng, -12, 12), frand(rng, 0, 60)};
+            d.size  = sz * frand(rng, 0.55, 1.1);
+            d.delay = frand(rng, 0.0, 0.5);
+            d.hang  = frand(rng, 0.1, 0.4);
+            d.drag  = 0.4;
+            d.life  = frand(rng, 0.7, 1.2);
+            d.shade = frand(rng, 0.78, 1.05);
+            d.grow  = 0.3;
+            b.drops.push_back(d);
+        }
+    }
 
     // reverse: an opening window, simulated now and played backwards later
     SBurst* startBurst(PHLWINDOW window, SP<Render::IFramebuffer> fb, bool reverse) {
@@ -380,20 +517,32 @@ void main() {
 
         auto b       = makeUnique<SBurst>();
         b->style      = style();
-        const bool blood = b->style == STYLE_BLOOD;
+        const bool blood  = b->style == STYLE_BLOOD;
+        const bool legacy = b->style == STYLE_BLOOD_LEGACY;
         b->fb         = fb;
         b->tex        = fb->getTexture();
         b->snapSizePx = mon->m_transformedSize;
         b->reverse    = reverse;
-        b->duration   = std::max<int64_t>((reverse ? g->openDurationMs : blood ? g->bloodDurationMs : g->durationMs)->value(), 100) / 1000.0;
+        b->duration   = std::max<int64_t>((reverse ? g->openDurationMs : legacy ? g->legacyDurationMs : g->durationMs)->value(), 100) / 1000.0;
         // played backwards, petals blown against the wind arrive with it
         b->wind       = reverse ? windDir() * -1.0 : windDir();
         b->start = b->lastStep = Clock::now();
         b->rng.seed(std::random_device{}());
 
+        if (blood) {
+            b->winBox    = CBox{wpos, wsize};
+            b->uvOrigin  = Vector2D{(wpos.x - mon->m_position.x) * mon->m_scale / b->snapSizePx.x, (wpos.y - mon->m_position.y) * mon->m_scale / b->snapSizePx.y};
+            b->uvSpan    = Vector2D{wsize.x * mon->m_scale / b->snapSizePx.x, wsize.y * mon->m_scale / b->snapSizePx.y};
+            b->zoomS     = std::max<int64_t>((reverse ? g->bloodOpenMs : g->bloodCloseMs)->value(), 1) / 1000.0;
+            b->zoom      = reverse ? POP_FROM : 1.0;
+            b->zoomAlpha = reverse ? 0.0 : 1.0;
+            g->bursts.emplace_back(std::move(b));
+            return g->bursts.back().get();
+        }
+
         // Grid: about `size` px cells, grown on big windows to stay under max_pieces
-        double       cell = std::max<double>((blood ? g->bloodSize : g->size)->value(), 8.0);
-        const double maxN = std::max<int64_t>((blood ? g->bloodMaxDrops : g->maxPetals)->value(), 4);
+        double       cell = std::max<double>((legacy ? g->legacySize : g->size)->value(), 8.0);
+        const double maxN = std::max<int64_t>((legacy ? g->legacyMaxDrops : g->maxPetals)->value(), 4);
         if ((wsize.x / cell) * (wsize.y / cell) > maxN)
             cell = std::sqrt(wsize.x * wsize.y / maxN);
         const int    cols = std::max(1, sc<int>(std::round(wsize.x / cell)));
@@ -406,17 +555,17 @@ void main() {
         const Vector2D dir    = b->wind;
         const Vector2D centre = wpos + wsize / 2.0;
         const double   extent = std::abs(dir.x) * wsize.x / 2.0 + std::abs(dir.y) * wsize.y / 2.0;
-        const double   spread = std::max<int64_t>((reverse ? g->openSpreadMs : blood ? g->bloodSpreadMs : g->spreadMs)->value(), 0) / 1000.0;
+        const double   spread = std::max<int64_t>((reverse ? g->openSpreadMs : legacy ? g->legacySpreadMs : g->spreadMs)->value(), 0) / 1000.0;
         const Vector2D perp   = {-dir.y, dir.x};
 
         auto&          rng = b->rng;
 
-        // Blood: each column runs down with its own lag (most trail behind, a few drips run
+        // blood-legacy: each column runs down with its own lag (most trail behind, a few drips run
         // ahead), so it comes down in streaks. Once the window is soaked it drains from the bottom.
         std::vector<double> colLag(cols);
         for (auto& lag : colLag)
             lag = spread * 0.35 * (frand(rng, 0, 1) < 0.2 ? frand(rng, 0.0, 0.3) : frand(rng, 0.45, 1.0));
-        const double soakSpan   = spread * 0.6;                  // top to bottom
+        const double soakSpan   = spread * 0.6;                      // top to bottom
         const double drainStart = soakSpan + spread * 0.35 + SOAK_S; // every cell is soaked by then
 
         for (int r = 0; r < rows; r++) {
@@ -426,7 +575,7 @@ void main() {
                 p.uv           = Vector2D{(p.home.x - mon->m_position.x) * mon->m_scale / b->snapSizePx.x,
                                           (p.home.y - mon->m_position.y) * mon->m_scale / b->snapSizePx.y};
 
-                if (blood) {
+                if (legacy) {
                     const double down = (r + 0.5) / rows; // 0 top .. 1 bottom
                     p.soakAt          = down * soakSpan + colLag[c];
                     p.release = std::max(p.soakAt + SOAK_S + 0.04, drainStart + (1.0 - down) * spread * 0.5 + colLag[c] * 0.4 + frand(rng, 0.0, 0.06));
@@ -510,9 +659,80 @@ void main() {
         return true;
     }
 
-    // Blood: soak the cells as the blood runs down, then drop them
+    double easeOutBack(double x) {
+        constexpr double C1 = 1.70158, C3 = C1 + 1.0;
+        return 1.0 + C3 * std::pow(x - 1.0, 3) + C1 * std::pow(x - 1.0, 2);
+    }
+
+    // Blood: zoom the window quad, then let the drops fly. Real time, opening windows too.
     bool stepBlood(SBurst& b, double t, double dt) {
+        const double x     = std::clamp(t / b.zoomS, 0.0, 1.0);
+        bool         alive = x < 1.0;
+        if (!b.reverse) {
+            // shrinks to nothing, faster and faster
+            b.zoom      = 1.0 - x * x * x;
+            b.zoomAlpha = 1.0;
+        } else {
+            // pops in like windowsIn "popin 50%" with an easeOutBack curve
+            b.zoom      = POP_FROM + (1.0 - POP_FROM) * easeOutBack(x);
+            b.zoomAlpha = std::clamp(x / 0.35, 0.0, 1.0);
+        }
+        if (x >= 1.0)
+            b.zoom = 0; // done: the real window shows (the quad would be a stale copy on top of it)
+        if (x >= 1.0 && !b.dropped) {
+            b.dropped = true;
+            if (b.reverse) {
+                b.stopRefresh();
+                unhide(b.window); // the real window takes over
+                spawnDrips(b);
+            } else
+                spawnSplash(b);
+        }
+
         const double gravity = g->bloodGravity->value();
+        for (auto& d : b.drops) {
+            d.age += dt;
+            if (d.age < d.delay) {
+                d.alpha = 0;
+                alive   = true;
+                continue;
+            }
+            const double a = d.age - d.delay;
+            if (a < d.hang) {
+                // clings to the border and swells, hanging below it
+                d.grow    = 0.3 + 0.7 * (a / d.hang);
+                d.alpha   = std::min(1.0, a / 0.06);
+                d.rot     = 0;
+                d.stretch = 1;
+                d.pos     = d.anchor + Vector2D{0.0, d.size * d.grow * 0.5};
+                alive     = true;
+                continue;
+            }
+            const double fly = a - d.hang;
+            if (fly > d.life) {
+                d.alpha = 0;
+                continue;
+            }
+            alive = true;
+
+            d.vel = d.vel * std::exp(-d.drag * dt);
+            d.vel.y += gravity * dt;
+            d.pos = d.pos + d.vel * dt;
+
+            // the drop leans and stretches along its flight
+            const double speed = std::sqrt(d.vel.x * d.vel.x + d.vel.y * d.vel.y);
+            d.rot              = speed > 1 ? std::atan2(-d.vel.x, d.vel.y) : 0.0;
+            d.stretch          = std::max(1.0, 1.0 + speed / 700.0);
+            d.grow             = std::min(1.0, d.grow + dt / 0.06);
+            const double f     = fly / d.life;
+            d.alpha            = 1.0 - std::pow(std::max(0.0, (f - 0.6) / 0.4), 1.5);
+        }
+        return alive;
+    }
+
+    // blood-legacy: soak the cells as the blood runs down, then drop them
+    bool stepBloodLegacy(SBurst& b, double t, double dt) {
+        const double gravity = g->legacyGravity->value();
         const double drag    = std::exp(-1.8 * dt);
         bool         alive   = false;
 
@@ -549,8 +769,19 @@ void main() {
         return alive;
     }
 
+    // The window quad of a blood burst, global logical
+    CBox zoomBox(const SBurst& b) {
+        const double w = b.winBox.w * b.zoom, h = b.winBox.h * b.zoom;
+        return CBox{b.winBox.x + (b.winBox.w - w) / 2.0, b.winBox.y + (b.winBox.h - h) / 2.0, w, h};
+    }
+
+    // Half extent of the square holding a drop whatever its rotation, logical px
+    double dropRadius(const SDrop& d) {
+        return d.size * 0.5 * d.grow * d.stretch * 1.05 + 2.0;
+    }
+
     bool step(SBurst& b, Clock::time_point now) {
-        if (b.reverse)
+        if (b.reverse && b.style != STYLE_BLOOD)
             return playBack(b, now);
         const double dt = std::clamp(std::chrono::duration<double>(now - b.lastStep).count(), 0.0, MAX_DT);
         const double t  = std::chrono::duration<double>(now - b.start).count();
@@ -564,6 +795,8 @@ void main() {
     bool step(SBurst& b, double t, double dt) {
         if (b.style == STYLE_BLOOD)
             return stepBlood(b, t, dt);
+        if (b.style == STYLE_BLOOD_LEGACY)
+            return stepBloodLegacy(b, t, dt);
         const Vector2D dir      = b.wind;
         const Vector2D perp     = {-dir.y, dir.x};
         const double   strength = g->windStrength->value();
@@ -604,9 +837,30 @@ void main() {
         return alive;
     }
 
+    CBox boxUnion(const CBox& a, const CBox& b) {
+        if (a.empty())
+            return b;
+        if (b.empty())
+            return a;
+        const double x1 = std::min(a.x, b.x), y1 = std::min(a.y, b.y);
+        const double x2 = std::max(a.x + a.w, b.x + b.w), y2 = std::max(a.y + a.h, b.y + b.h);
+        return CBox{x1, y1, x2 - x1, y2 - y1};
+    }
+
     CBox burstsBox() {
         CBox box;
         for (const auto& b : g->bursts) {
+            if (b->style == STYLE_BLOOD) {
+                if (b->zoom > 0 && b->zoomAlpha > 0)
+                    box = boxUnion(box, zoomBox(*b).expand(2));
+                for (const auto& d : b->drops) {
+                    if (d.alpha <= 0)
+                        continue;
+                    const double r = dropRadius(d);
+                    box            = boxUnion(box, CBox{d.pos.x - r, d.pos.y - r, 2 * r, 2 * r});
+                }
+                continue;
+            }
             const double r = petalRadius(*b);
             for (const auto& p : b->petals) {
                 if (p.alpha <= 0)
@@ -622,16 +876,6 @@ void main() {
             }
         }
         return box;
-    }
-
-    CBox boxUnion(const CBox& a, const CBox& b) {
-        if (a.empty())
-            return b;
-        if (b.empty())
-            return a;
-        const double x1 = std::min(a.x, b.x), y1 = std::min(a.y, b.y);
-        const double x2 = std::max(a.x + a.w, b.x + b.w), y2 = std::max(a.y + a.h, b.y + b.h);
-        return CBox{x1, y1, x2 - x1, y2 - y1};
     }
 
     bool ensureShader() {
@@ -654,21 +898,22 @@ void main() {
         g->locTint      = glGetUniformLocation(prog, "tint");
         g->locTintAmt   = glGetUniformLocation(prog, "tintAmt");
         g->locBack      = glGetUniformLocation(prog, "back");
-        g->locBlood     = glGetUniformLocation(prog, "blood");
+        g->locMode      = glGetUniformLocation(prog, "mode");
         g->locSoak      = glGetUniformLocation(prog, "soak");
+        g->locShade     = glGetUniformLocation(prog, "shade");
         g->locBloodColor = glGetUniformLocation(prog, "bloodColor");
         return true;
     }
 
     struct SPetalDraw {
         CBox  boxPx; // with rot
-        float uvOrigin[2], uvSpan[2];
-        float morph, alpha, back, soak;
+        float uvOrigin[2] = {0, 0}, uvSpan[2] = {0, 0};
+        float morph = 0, alpha = 1, back = 0, shade = 1, soak = 0;
+        float mode = 0; // as the shader's
     };
 
     struct SBurstDraw {
         SP<Render::ITexture>    tex;
-        bool                    blood = false;
         std::vector<SPetalDraw> petals;
     };
 
@@ -702,7 +947,6 @@ void main() {
 
             for (const auto& burst : m_bursts) {
                 glBindTexture(GL_TEXTURE_2D, burst.tex->m_texID);
-                glUniform1f(g->locBlood, burst.blood ? 1.F : 0.F);
                 for (const auto& p : burst.petals) {
                     const auto proj = g_pHyprRenderer->projectBoxToTarget(ctx, p.boxPx);
                     glUniformMatrix3fv(g->locProj, 1, GL_TRUE, proj.getMatrix().data());
@@ -711,7 +955,9 @@ void main() {
                     glUniform1f(g->locMorph, p.morph);
                     glUniform1f(g->locAlpha, p.alpha);
                     glUniform1f(g->locBack, p.back);
+                    glUniform1f(g->locMode, p.mode);
                     glUniform1f(g->locSoak, p.soak);
+                    glUniform1f(g->locShade, p.shade);
                     damage.forEachRect([&ctx](const auto& RECT) {
                         g_pHyprOpenGL->scissor(ctx, &RECT, ctx.m_data.transformDamage);
                         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -762,8 +1008,43 @@ void main() {
         for (const auto& b : g->bursts) {
             SBurstDraw d;
             d.tex           = b->tex;
-            d.blood         = b->style == STYLE_BLOOD;
             const double r  = petalRadius(*b);
+
+            if (b->style == STYLE_BLOOD) {
+                if (b->zoom > 0 && b->zoomAlpha > 0) {
+                    const CBox box = zoomBox(*b);
+                    if (!box.intersection(monBox).empty()) {
+                        SPetalDraw pd; // the whole window, plain
+                        pd.boxPx       = CBox{(box.pos() - mon->m_position) * mon->m_scale, box.size() * mon->m_scale};
+                        pd.uvOrigin[0] = sc<float>(b->uvOrigin.x);
+                        pd.uvOrigin[1] = sc<float>(b->uvOrigin.y);
+                        pd.uvSpan[0]   = sc<float>(b->uvSpan.x);
+                        pd.uvSpan[1]   = sc<float>(b->uvSpan.y);
+                        pd.alpha       = sc<float>(b->zoomAlpha);
+                        d.petals.push_back(pd);
+                    }
+                }
+                for (const auto& dr : b->drops) {
+                    if (dr.alpha <= 0)
+                        continue;
+                    const double rr = dropRadius(dr);
+                    if (CBox{dr.pos.x - rr, dr.pos.y - rr, 2 * rr, 2 * rr}.intersection(monBox).empty())
+                        continue;
+                    const double   half = dr.size * 0.5 * dr.grow;
+                    const double   sx = half * 0.62 * 2 * mon->m_scale, sy = half * dr.stretch * 2 * mon->m_scale;
+                    const Vector2D c = (dr.pos - mon->m_position) * mon->m_scale;
+                    SPetalDraw     pd;
+                    pd.boxPx     = CBox{c.x - sx / 2.0, c.y - sy / 2.0, sx, sy};
+                    pd.boxPx.rot = dr.rot;
+                    pd.alpha     = sc<float>(dr.alpha);
+                    pd.shade     = sc<float>(dr.shade);
+                    pd.mode      = 2.F;
+                    d.petals.push_back(pd);
+                }
+                if (!d.petals.empty())
+                    draws.push_back(std::move(d));
+                continue;
+            }
 
             for (const auto& p : b->petals) {
                 if (p.alpha <= 0)
@@ -771,7 +1052,7 @@ void main() {
                 if (CBox{p.pos.x - r, p.pos.y - r, 2 * r, 2 * r}.intersection(monBox).empty())
                     continue;
 
-                if (d.blood) {
+                if (b->style == STYLE_BLOOD_LEGACY) {
                     // a plain cell on its spot (soaking), a drop once it falls, stretched along its fall
                     const Vector2D away = p.pos - p.home;
                     const double   m    = std::clamp(std::sqrt(away.x * away.x + away.y * away.y) / (b->cell * 0.4), 0.0, 1.0);
@@ -792,8 +1073,8 @@ void main() {
                     pd.uvSpan[1]     = sc<float>(vs);
                     pd.morph         = sc<float>(mm);
                     pd.alpha         = sc<float>(p.alpha);
-                    pd.back          = 0.F;
                     pd.soak          = sc<float>(p.soak);
+                    pd.mode          = 1.F;
                     d.petals.push_back(pd);
                     continue;
                 }
@@ -823,7 +1104,6 @@ void main() {
                 pd.morph         = sc<float>(mm);
                 pd.alpha         = sc<float>(p.alpha);
                 pd.back          = flip < 0 ? 1.F : 0.F;
-                pd.soak          = 0.F;
                 d.petals.push_back(pd);
             }
             if (!d.petals.empty())
@@ -840,7 +1120,6 @@ void main() {
     using origCreate = SP<Desktop::CWindowFadeout> (*)(PHLWINDOW, SP<Render::IFramebuffer>, float, SP<Render::IFramebuffer>);
 
     bool isHidden(const PHLWINDOW& w);
-    void unhide(const PHLWINDOWREF& ref);
 
     SP<Desktop::CWindowFadeout> hkCreate(PHLWINDOW window, SP<Render::IFramebuffer> snapshot, float sourceAlpha, SP<Render::IFramebuffer> workspaceSnapshot) {
         // closed while still assembling: its snapshot is empty (it was hidden), just drop the petals
@@ -993,7 +1272,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g->handle = handle;
 
     using namespace Config::Values;
-    g->style          = makeShared<CStringValue>("plugin:windowfx:style", "petals, blood or off", "petals");
+    g->style          = makeShared<CStringValue>("plugin:windowfx:style", "petals, blood, blood-legacy or off", "petals");
     g->maxPetals      = makeShared<CIntValue>("plugin:windowfx:max_pieces", "Maximum pieces per window", 240);
     g->open           = makeShared<CIntValue>("plugin:windowfx:open", "Animate opening windows too", 1);
     g->openDurationMs = makeShared<CIntValue>("plugin:windowfx:open_duration_ms", "Flight time of one piece when opening, in ms", 900);
@@ -1012,15 +1291,22 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g->color        = makeShared<CColorValue>("plugin:windowfx:color", "Petal colour, 0 follows the Caelestia scheme primary", 0);
     // blood
     g->bloodColor      = makeShared<CColorValue>("plugin:windowfx:blood_color", "Blood colour", 0xFF8A0012);
-    g->bloodSize       = makeShared<CFloatValue>("plugin:windowfx:blood_size", "Blood drop size in logical px", 18.F);
-    g->bloodMaxDrops   = makeShared<CIntValue>("plugin:windowfx:blood_max_drops", "Maximum blood drops per window", 1500);
-    g->bloodDurationMs = makeShared<CIntValue>("plugin:windowfx:blood_duration_ms", "Fall time of one blood drop, in ms", 1000);
-    g->bloodSpreadMs   = makeShared<CIntValue>("plugin:windowfx:blood_spread_ms", "Pace of the blood running down and draining off, in ms", 420);
-    g->bloodGravity    = makeShared<CFloatValue>("plugin:windowfx:blood_gravity", "Gravity on blood drops, logical px/s^2", 1900.F);
+    g->bloodSize       = makeShared<CFloatValue>("plugin:windowfx:blood_size", "Blood drop size in logical px, 0 follows cursorfx", 0.F);
+    g->bloodCloseMs    = makeShared<CIntValue>("plugin:windowfx:blood_close_ms", "Shrink time of a closing window, in ms", 120);
+    g->bloodOpenMs     = makeShared<CIntValue>("plugin:windowfx:blood_open_ms", "Pop-in time of an opening window, in ms", 450);
+    g->bloodDrops      = makeShared<CIntValue>("plugin:windowfx:blood_drops", "Drops bursting out of a closing window", 40);
+    g->bloodDrips      = makeShared<CFloatValue>("plugin:windowfx:blood_drips", "Drops dripping off an opened window, per 100 px of edge", 1.F);
+    g->bloodGravity    = makeShared<CFloatValue>("plugin:windowfx:blood_gravity", "Gravity on blood drops, logical px/s^2", 1600.F);
+    // blood-legacy
+    g->legacySize       = makeShared<CFloatValue>("plugin:windowfx:blood_legacy_size", "blood-legacy cell size in logical px", 18.F);
+    g->legacyMaxDrops   = makeShared<CIntValue>("plugin:windowfx:blood_legacy_max_drops", "blood-legacy maximum drops per window", 1500);
+    g->legacyDurationMs = makeShared<CIntValue>("plugin:windowfx:blood_legacy_duration_ms", "blood-legacy fall time of one drop, in ms", 1000);
+    g->legacySpreadMs   = makeShared<CIntValue>("plugin:windowfx:blood_legacy_spread_ms", "blood-legacy pace of the blood running down and draining off, in ms", 420);
+    g->legacyGravity    = makeShared<CFloatValue>("plugin:windowfx:blood_legacy_gravity", "blood-legacy gravity on drops, logical px/s^2", 1900.F);
     for (const SP<IValue>& v : std::initializer_list<SP<IValue>>{
              g->style, g->maxPetals, g->open, g->openDurationMs, g->openSpreadMs, g->openDelayMs, g->openRefreshMs, g->openSpeed, g->size, g->durationMs,
-             g->spreadMs, g->windX, g->windY, g->windStrength, g->tint, g->color, g->bloodColor, g->bloodSize, g->bloodMaxDrops, g->bloodDurationMs, g->bloodSpreadMs,
-             g->bloodGravity})
+             g->spreadMs, g->windX, g->windY, g->windStrength, g->tint, g->color, g->bloodColor, g->bloodSize, g->bloodCloseMs, g->bloodOpenMs, g->bloodDrops,
+             g->bloodDrips, g->bloodGravity, g->legacySize, g->legacyMaxDrops, g->legacyDurationMs, g->legacySpreadMs, g->legacyGravity})
         HyprlandAPI::addConfigValueV2(handle, v);
 
     // Searched by mangled name: the plain "create" matches far too many symbols
@@ -1076,7 +1362,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
             g_pHyprRenderer->damageBox(damage);
     });
 
-    return {"windowfx", "Closing / opening window animations: petals or blood", "Dralexgon", "1.1"};
+    return {"windowfx", "Closing / opening window animations: petals, blood or blood-legacy", "Dralexgon", "1.1"};
 }
 
 APICALL EXPORT void PLUGIN_EXIT() {

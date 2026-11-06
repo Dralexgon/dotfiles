@@ -121,17 +121,22 @@ pcall(hl.config, { plugin = { cursortrail = { color = 0xFF8A0012 } } })
 -- Closing / opening window animations, a Hyprland plugin (tools/hypr-windowfx, installed by
 -- nixos/modules/caelestia.nix). It replaces windowsOut / windowsIn for those windows and stays off in game mode.
 --  petals: closing windows shatter into petals blown away by the wind, opening ones assemble from petals.
---  blood:  blood runs down closing windows, then they splash away in droplets; opening windows rise
---          from the drops and the blood runs off them.
--- Switch live with hyprctl eval 'hl.config({ plugin = { windowfx = { style = "petals" } } })'   (petals | blood | off)
+--  blood:  closing windows shrink to nothing at their centre and burst into blood droplets (cursorfx's
+--          drops); opening windows pop in from 50% (like windowsIn), then drops drip off their edges.
+--  blood-legacy: blood runs down closing windows, then they splash away in droplets; opening windows
+--          rise from the drops and the blood runs off them.
+-- Switch live with hyprctl eval 'hl.config({ plugin = { windowfx = { style = "petals" } } })'   (petals | blood | blood-legacy | off)
 -- Tunable with hl.config({ plugin = { windowfx = { max_pieces = 240, open = 1, open_duration_ms = 900,
 -- open_spread_ms = 280, open_delay_ms = 60, open_refresh_ms = 80, open_speed = 1.0,
 -- size = 44, duration_ms = 1700, spread_ms = 380, wind_x = 1.0, wind_y = -0.45, wind_strength = 750, tint = 0.3, color = 0,
--- blood_color = 0xFF8A0012, blood_size = 18, blood_max_drops = 1500, blood_duration_ms = 1000, blood_spread_ms = 420, blood_gravity = 1900 } } })
+-- blood_color = 0xFF8A0012, blood_size = 0 (0 = cursorfx's size), blood_close_ms = 120, blood_open_ms = 450,
+-- blood_drops = 40, blood_drips = 1.0, blood_gravity = 1600,
+-- blood_legacy_size = 18, blood_legacy_max_drops = 1500, blood_legacy_duration_ms = 1000, blood_legacy_spread_ms = 420,
+-- blood_legacy_gravity = 1900 } } })
 hl.plugin.load("/etc/hypr/plugins/windowfx.so")
 
--- Blood, and the whole opening plays twice as fast: open_speed speeds up the recorded animation, and
--- the hidden wait before it and the snapshot refresh are halved too (60 / 80 ms).
+-- Blood. open_speed only speeds up the petals' opening; the hidden wait before an opening window shows
+-- and its snapshot refresh are halved for both styles (60 / 80 ms).
 -- The plugin's keys do not exist on the first config pass (see the hyprexpo note below), and windowfx has
 -- no hl.plugin.windowfx table to test, so pcall keeps the error from aborting the rest of this file
 pcall(hl.config, {
