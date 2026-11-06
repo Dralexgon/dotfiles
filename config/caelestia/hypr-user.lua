@@ -115,6 +115,8 @@ hl.window_rule({
 -- Follows the Caelestia scheme and hides in game mode. Tunable with
 -- hl.config({ plugin = { cursortrail = { width = 8, life_ms = 220, color = 0 } } })
 hl.plugin.load("/etc/hypr/plugins/cursortrail.so")
+-- Red like the cursorfx blood (its blood_color), instead of the scheme colour
+pcall(hl.config, { plugin = { cursortrail = { color = 0xFF8A0012 } } })
 
 -- Closing windows shatter into petals blown away by the wind, a Hyprland plugin (tools/hypr-petals,
 -- installed by nixos/modules/caelestia.nix), and opening windows assemble from petals. It replaces
