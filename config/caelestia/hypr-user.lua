@@ -123,6 +123,20 @@ hl.plugin.load("/etc/hypr/plugins/cursortrail.so")
 -- open = 1, open_duration_ms = 900, open_spread_ms = 280, open_delay_ms = 60, open_refresh_ms = 80 } } })
 hl.plugin.load("/etc/hypr/plugins/petals.so")
 
+-- The whole opening plays twice as fast: open_speed speeds up the recorded flight (paths, spin,
+-- flutter, morph), and the hidden wait before it and the snapshot refresh are halved too (60 / 80 ms).
+-- The plugin's keys do not exist on the first config pass (see the hyprexpo note below), and petals has
+-- no hl.plugin.petals table to test, so pcall keeps the error from aborting the rest of this file
+pcall(hl.config, {
+    plugin = {
+        petals = {
+            open_speed = 2.0,
+            open_delay_ms = 30,
+            open_refresh_ms = 40
+        }
+    }
+})
+
 -- Liquid Glass / Acrylic / Mica window effects, a Hyprland plugin (tools/hypr-liquid, installed by
 -- nixos/modules/caelestia.nix). Options: https://github.com/zaregototsukai/hyprliquid#configuration
 hl.plugin.load("/etc/hypr/plugins/hyprliquid.so")

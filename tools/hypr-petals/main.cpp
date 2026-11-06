@@ -33,6 +33,7 @@
 //  plugin:petals:open_spread_ms    delay between the first and the last petal landing  (280)
 //  plugin:petals:open_delay_ms     wait for the client's first frame                   (60)
 //  plugin:petals:open_refresh_ms   retake the snapshot this often while opening, 0 = never (80)
+//  plugin:petals:open_speed        playback speed of the whole opening, 2 = twice as fast  (1.0)
 //
 // Like cursortrail, nothing happens while animations are off (Caelestia's game mode).
 // Assumes unrotated monitors (the snapshot is sampled in untransformed monitor pixels).
@@ -112,7 +113,8 @@ namespace {
 
         // opening: the close simulation, recorded and played backwards
         bool                     reverse = false;
-        double                   total   = 0; // s
+        double                   total   = 0; // s, of the recorded simulation
+        double                   speed   = 1; // playback rate of the track
         int                      frames  = 0;
         std::vector<SFrame>      track;  // frames * petals
         PHLWINDOWREF             window; // hidden until the petals have assembled it
@@ -142,7 +144,7 @@ namespace {
         CBox                            lastDrawn; // global logical
 
         SP<Config::Values::CIntValue>   enabled, maxPetals, durationMs, spreadMs, open, openDurationMs, openSpreadMs, openDelayMs, openRefreshMs;
-        SP<Config::Values::CFloatValue> size, windX, windY, windStrength, tint;
+        SP<Config::Values::CFloatValue> size, windX, windY, windStrength, tint, openSpeed;
         SP<Config::Values::CColorValue> color;
 
         CHyprColor                      schemeColor{0xF5 / 255.0, 0xC2 / 255.0, 0xE7 / 255.0, 1.0};
@@ -359,6 +361,7 @@ void main() {
                     b->track[f * b->petals.size() + i] = {p.pos, sc<float>(p.rot), sc<float>(p.tumble), sc<float>(p.alpha), sc<float>(p.scale)};
                 }
             }
+            b->speed = std::clamp<double>(g->openSpeed->value(), 0.1, 10.0);
             b->start = Clock::now(); // the simulation above took some time
         }
 
@@ -368,7 +371,7 @@ void main() {
 
     // Opening windows: show the recorded close simulation, backwards. False once assembled.
     bool playBack(SBurst& b, Clock::time_point now) {
-        const double t = std::chrono::duration<double>(now - b.start).count();
+        const double t = std::chrono::duration<double>(now - b.start).count() * b.speed;
         if (t >= b.total)
             return false;
         const int f = std::clamp(sc<int>((b.total - t) * TRACK_FPS), 0, b.frames - 1);
@@ -803,11 +806,13 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g->openSpreadMs   = makeShared<Config::Values::CIntValue>("plugin:petals:open_spread_ms", "Delay between the first and last petal landing, in ms", 280);
     g->openDelayMs    = makeShared<Config::Values::CIntValue>("plugin:petals:open_delay_ms", "Wait for the client's first frame, in ms", 60);
     g->openRefreshMs  = makeShared<Config::Values::CIntValue>("plugin:petals:open_refresh_ms", "Retake the snapshot this often while opening, in ms (0 = never)", 80);
+    g->openSpeed      = makeShared<Config::Values::CFloatValue>("plugin:petals:open_speed", "Playback speed of the opening animation, 2 is twice as fast", 1.F);
     for (const auto& v : {SP<Config::Values::IValue>(g->enabled), SP<Config::Values::IValue>(g->size), SP<Config::Values::IValue>(g->maxPetals),
                           SP<Config::Values::IValue>(g->durationMs), SP<Config::Values::IValue>(g->spreadMs), SP<Config::Values::IValue>(g->windX),
                           SP<Config::Values::IValue>(g->windY), SP<Config::Values::IValue>(g->windStrength), SP<Config::Values::IValue>(g->tint),
                           SP<Config::Values::IValue>(g->color), SP<Config::Values::IValue>(g->open), SP<Config::Values::IValue>(g->openDurationMs),
-                          SP<Config::Values::IValue>(g->openSpreadMs), SP<Config::Values::IValue>(g->openDelayMs), SP<Config::Values::IValue>(g->openRefreshMs)})
+                          SP<Config::Values::IValue>(g->openSpreadMs), SP<Config::Values::IValue>(g->openDelayMs), SP<Config::Values::IValue>(g->openRefreshMs),
+                          SP<Config::Values::IValue>(g->openSpeed)})
         HyprlandAPI::addConfigValueV2(handle, v);
 
     // Searched by mangled name: the plain "create" matches far too many symbols
