@@ -120,7 +120,15 @@ fi
 
 # The Razer keyboard follows the scheme by itself (razerfx daemon)
 
-# Nautilus loads gtk.css only at startup, so restart it to apply the new colors
+# Nautilus reads gtk.css only at startup (no live reload, even on a theme or colour-scheme toggle),
+# so restart it when the colours changed; restart-nautilus.py puts its windows back where they were.
+# The stamp skips the second hook run of a rice switch, which brings the same colours.
+css_stamp="$HOME/.local/state/caelestia/gtk-css-sum"
+css_sum=$(cat ~/.config/gtk-4.0/gtk.css ~/.config/gtk-4.0/thunar.css 2>/dev/null | cksum)
+if [ "$css_sum" != "$(cat "$css_stamp" 2>/dev/null)" ]; then
+    echo "$css_sum" >"$css_stamp"
+    python3 ~/.config/caelestia/restart-nautilus.py
+fi
 
 # Quickshell (launcher) and other Qt apps: qtengine reloads its config by itself, but its icon
 # loader (KIconLoader) keeps the old theme until it gets this signal. No shell restart needed.
