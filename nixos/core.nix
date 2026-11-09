@@ -9,6 +9,30 @@ let
   pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.stdenv.hostPlatform.system; config.allowUnfree = true; };
   # use it as pkgs-stable.example
   useGrub = false; # Set to false if you don't want to use my grub theme or prefer systemd-boot
+
+  # Packages that aren't in nixpkgs, named so that they are plain lines of
+  # environment.systemPackages (and can be toggled with nixcfg). A let name
+  # wins over `with pkgs;`.
+  zen-browser = inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default;
+
+  # TUI to toggle modules and packages (also in the app launcher)
+  nixcfg = import ../tools/nixcfg { inherit pkgs; };
+
+  # Nova (voice AI companion, ~/dev/ai/nova) in the app launcher.
+  # Same as SUPER + A: toggles her if she runs, starts her otherwise.
+  nova = pkgs.makeDesktopItem {
+    name = "nova";
+    desktopName = "Nova";
+    genericName = "Voice AI companion";
+    comment = "Talk with Nova";
+    exec = "${pkgs.writeShellScript "nova-launch" ''
+      ${pkgs.curl}/bin/curl -sf -X POST http://127.0.0.1:8765/api/toggle \
+        || exec "$HOME/dev/ai/nova/run.sh"
+    ''}";
+    icon = "audio-input-microphone";
+    categories = [ "Utility" ];
+    keywords = [ "nova" "ai" "voice" "assistant" "claude" ];
+  };
 in
 
 {
@@ -97,7 +121,7 @@ in
   environment.systemPackages = with pkgs; [
     # Web browsers
     firefox
-    inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
+    zen-browser
     # tor-browser
     # brave
     # chromium
@@ -113,23 +137,10 @@ in
     # Set font to JetBrains Mono Nerd Font Mono if you want to use nerd fonts
 
     # TUI to toggle modules and packages (also in the app launcher)
-    (import ../tools/nixcfg { inherit pkgs; })
+    nixcfg
 
-    # Nova (voice AI companion, ~/dev/ai/nova) in the app launcher.
-    # Same as SUPER + A: toggles her if she runs, starts her otherwise.
-    (pkgs.makeDesktopItem {
-      name = "nova";
-      desktopName = "Nova";
-      genericName = "Voice AI companion";
-      comment = "Talk with Nova";
-      exec = "${pkgs.writeShellScript "nova-launch" ''
-        ${pkgs.curl}/bin/curl -sf -X POST http://127.0.0.1:8765/api/toggle \
-          || exec "$HOME/dev/ai/nova/run.sh"
-      ''}";
-      icon = "audio-input-microphone";
-      categories = [ "Utility" ];
-      keywords = [ "nova" "ai" "voice" "assistant" "claude" ];
-    })
+    # Nova (voice AI companion, ~/dev/ai/nova) in the app launcher
+    nova
 
     # Simple useful tools
     git
