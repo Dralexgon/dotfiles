@@ -33,15 +33,19 @@ hl.config({
     }
 })
 
--- change keyboard by using SUPER + space, rolling between : en, en_international, fr
+-- Keyboard layouts: en, en_international, fr. SUPER + SHIFT + Space rolls between them (bind below).
+-- Not the xkb option grp:win_space_toggle: xkb fires it on top of the Hyprland binds, it took
+-- SUPER + Space from Nova, and binds made by xkb are invisible to `hyprctl binds` (and keybinds-viewer)
 hl.config({
     input = {
         sensitivity = -0.1, -- -0.3, -- -0.1,
         kb_layout = "us,us,fr",
         kb_variant = ",intl,",
-        kb_options = "grp:win_space_toggle"
+        kb_options = ""
     }
 })
+
+hl.bind("SUPER + SHIFT + Space", hl.dsp.exec_cmd("hyprctl switchxkblayout all next"), { description = "Next keyboard layout" })
 
 hl.config({
     env = {"QS_ICON_THEME,Yaru-magenta-dark"}
@@ -77,6 +81,16 @@ hl.window_rule({
     fullscreen_state = 0
 })
 
+-- keybinds-viewer (SUPER + /, tools/keybinds-viewer) floats centered like nixcfg, a bit bigger for the keyboard
+hl.window_rule({
+    match = {
+        class = "^(dev\\.dralexgon\\.KeybindsViewer)$"
+    },
+    float = true,
+    size = "(monitor_w*0.8) (monitor_h*0.85)",
+    center = true
+})
+
 -- File pickers opened through the portal (browsers, Electron apps, flatpaks...) float at a fixed size.
 -- Caelestia only sizes some dialog titles: "File Upload" (Zen) floats at the size it asks for, which can be bigger than the screen
 hl.window_rule({
@@ -96,10 +110,23 @@ hl.bind("SUPER + I", function()
         end
     end
     hl.dispatch(hl.dsp.exec_cmd("kitty --class nixcfg --title nixcfg nixcfg"))
-end)
+end, { description = "nixcfg" })
+
+-- Nova (voice AI companion, ~/dev/ai/nova): a Quickshell overlay driven by her own backend
+-- SUPER + A opens Nova, then switches her between full screen and the mini orb (top right)
+hl.bind("SUPER + A", hl.dsp.exec_cmd("sh -c 'curl -sf -X POST http://127.0.0.1:8765/api/toggle || exec ~/dev/ai/nova/run.sh'"), { description = "Nova (open / toggle)" })
+
+-- SUPER + Space talks to Nova from anywhere, like Space in her window: hold it and she sends when
+-- you let go, or tap it and she listens until the next press (the logic is in Nova.ptt())
+hl.bind("SUPER + Space", hl.dsp.exec_cmd("curl -s -X POST http://127.0.0.1:8765/api/talk-down"), { description = "Talk to Nova (tap or hold)" })
+hl.bind("SUPER + Space", hl.dsp.exec_cmd("curl -s -X POST http://127.0.0.1:8765/api/talk-up"), { release = true })
 
 -- SUPER + SHIFT + Return opens kitty with the plain kitty.conf colours (SUPER + Return uses the Caelestia scheme)
-hl.bind("SUPER + SHIFT + Return", hl.dsp.exec_cmd("kitty"))
+hl.bind("SUPER + SHIFT + Return", hl.dsp.exec_cmd("kitty"), { description = "Kitty (plain colours)" })
+
+-- SUPER + / shows the keyboard with all these shortcuts (tools/keybinds-viewer). The descriptions given
+-- to hl.bind are the names it shows; Caelestia's own binds are named from their kb* variables
+hl.bind("SUPER + Slash", hl.dsp.exec_cmd("keybinds-viewer"), { description = "Keyboard shortcuts" })
 
 hl.window_rule({
     name = "no-kitty-fullscreen",
@@ -115,8 +142,7 @@ hl.window_rule({
 -- Follows the Caelestia scheme and hides in game mode. Tunable with
 -- hl.config({ plugin = { cursortrail = { width = 8, life_ms = 220, color = 0 } } })
 hl.plugin.load("/etc/hypr/plugins/cursortrail.so")
--- Red like the cursorfx blood (its blood_color), instead of the scheme colour
-pcall(hl.config, { plugin = { cursortrail = { color = 0xFF8A0012 } } })
+-- Its colour is set by the rice (see "Rices" below)
 
 -- Closing / opening window animations, a Hyprland plugin (tools/hypr-windowfx, installed by
 -- nixos/modules/caelestia.nix). It replaces windowsOut / windowsIn for those windows and stays off in game mode.
@@ -142,7 +168,6 @@ hl.plugin.load("/etc/hypr/plugins/windowfx.so")
 pcall(hl.config, {
     plugin = {
         windowfx = {
-            style = "blood",
             open_speed = 2.0,
             open_delay_ms = 30,
             open_refresh_ms = 40
@@ -157,8 +182,82 @@ pcall(hl.config, {
 -- size = 14, life_ms = 1400, max_particles = 400, color = 0, blood_color = 0xFF8A0012, splat_ms = 1600 } } })
 -- (wrap it in pcall like windowfx above: the keys do not exist on the first config pass)
 hl.plugin.load("/etc/hypr/plugins/cursorfx.so")
--- Blood drops shaken off the pointer (the keys do not exist on the first config pass, hence pcall)
-pcall(hl.config, { plugin = { cursorfx = { style = "blood" } } })
+-- Its style is set by the rice (see "Rices" below)
+
+-- Rices: one Caelestia scheme + the windowfx / cursorfx / cursortrail looks that go with it.
+-- SUPER + SHIFT + R cycles adaptive -> petals -> vampire; `rice <name>` (user-config.fish) picks one.
+-- The choice is kept in ~/.local/state/caelestia/rice, so a config reload or a new session keeps it
+-- (Caelestia remembers the scheme by itself, only the plugins are reapplied then).
+local RICE_STATE = (os.getenv("HOME") or "") .. "/.local/state/caelestia/rice"
+local RICE_ORDER = { "adaptive", "petals", "vampire" }
+local RICES = {
+    -- colours from the wallpaper, everything follows the scheme (color = 0)
+    adaptive = {
+        scheme = "caelestia scheme set -n dynamic",
+        windowfx = "petals",
+        cursorfx = "petals",
+        trail = 0
+    },
+    -- pink and soft: config/caelestia/schemes/petals
+    petals = {
+        scheme = "caelestia scheme set -n petals -f soft -m dark",
+        windowfx = "petals",
+        cursorfx = "petals",
+        trail = 0
+    },
+    -- bright red and bloody: config/caelestia/schemes/vampire, trail red like the cursorfx blood
+    vampire = {
+        scheme = "caelestia scheme set -n vampire -f hard -m dark",
+        windowfx = "blood",
+        cursorfx = "blood",
+        trail = 0xFF8A0012
+    }
+}
+
+local function read_rice()
+    local file = io.open(RICE_STATE, "r")
+    local name = file and file:read("l")
+    if file then
+        file:close()
+    end
+    return RICES[name] and name or "vampire"
+end
+
+-- pcall: the plugins' keys do not exist on the first config pass
+local function apply_rice_plugins(name)
+    local rice = RICES[name]
+    pcall(hl.config, { plugin = { windowfx = { style = rice.windowfx } } })
+    pcall(hl.config, { plugin = { cursorfx = { style = rice.cursorfx } } })
+    pcall(hl.config, { plugin = { cursortrail = { color = rice.trail } } })
+end
+
+-- Global, so `hyprctl eval 'set_rice("petals")'` can call it ("next" cycles)
+function set_rice(name)
+    if name == "next" then
+        local current = read_rice()
+        for i, n in ipairs(RICE_ORDER) do
+            if n == current then
+                name = RICE_ORDER[i % #RICE_ORDER + 1]
+            end
+        end
+    end
+    local rice = RICES[name]
+    if not rice then
+        error("unknown rice " .. tostring(name) .. " (adaptive | petals | vampire | next)")
+    end
+    local file = io.open(RICE_STATE, "w")
+    if file then
+        file:write(name, "\n")
+        file:close()
+    end
+    apply_rice_plugins(name)
+    hl.dispatch(hl.dsp.exec_cmd(rice.scheme .. " && notify-send -a caelestia -t 2000 'Rice' '" .. name .. "'"))
+end
+
+apply_rice_plugins(read_rice())
+hl.bind("SUPER + SHIFT + R", function()
+    set_rice("next")
+end, { description = "Next rice" })
 
 -- Liquid Glass / Acrylic / Mica window effects, a Hyprland plugin (tools/hypr-liquid, installed by
 -- nixos/modules/caelestia.nix). Options: https://github.com/zaregototsukai/hyprliquid#configuration
@@ -198,7 +297,7 @@ hl.bind("SUPER + Tab", function()
     elseif hl.plugin.hyprexpo then
         hl.plugin.hyprexpo.expo("toggle") -- click a workspace (or SUPER + Tab again) to go there
     end
-end)
+end, { description = "Workspace overview" })
 
 -- Plugins load after the config runs, then Hyprland runs it again: on the first pass the plugin's
 -- config keys and functions do not exist yet (and an unknown key aborts the rest of this file)
