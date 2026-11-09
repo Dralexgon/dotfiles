@@ -1,38 +1,42 @@
-"""Read and edit the module imports of a host's configuration.nix.
+"""Read and edit the module imports of a Nix file.
 
-A host turns a module on or off the way you would by hand: by commenting
-its line in `imports` out.
+A module is turned on or off the way you would by hand: by commenting its
+line in `imports` out. Hosts import top-level modules and group cores:
 
+    # nixos/hosts/<host>/configuration.nix
     imports = [
       ./hardware-configuration.nix
       ./../../core.nix
 
       ./../../modules/gnome.nix             <- enabled
       # ./../../modules/jetbrains.nix       <- disabled
-
-      # ./../../modules/epita/core.nix      <- group off...
-      # ./../../modules/epita/c.nix         <- ...c is still chosen
-      # # ./../../modules/epita/java.nix    <- ...java is not
+      ./../../modules/epita/core.nix        <- the epita group
     ];
 
-A folder with a core.nix is a group, and its submodules are commented one
-level deeper than their core: turning the group off comments the whole
-block out, like an editor would, so each submodule keeps its own choice for
-when the group is turned back on.
+and a group's core.nix (a folder with a core.nix is a group) imports its
+submodules, for every host that turns the group on:
 
-The host's own packages are a plain environment.systemPackages list in the
-same file, edited with modfile.
+    # nixos/modules/epita/core.nix
+    imports = [
+      ./c.nix
+      # ./java.nix
+    ];
+
+The host's own packages are a plain environment.systemPackages list in its
+configuration.nix, edited with modfile.
 """
 
+import os
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 
-# A module import: "# " repeated (commenting depth), a path ending in
-# modules/<name>.nix, and an optional trailing comment.
+# An import line: "#"s (commented out), a relative path to a .nix file, and
+# an optional trailing comment.
 IMPORT = re.compile(
     r"^(?P<indent>\s*)(?P<hashes>(?:#\s*)*)"
-    r"(?P<path>(?:\./)?(?:\.\./)+modules/(?P<name>[\w/-]+)\.nix)"
+    r"(?P<path>\.{1,2}/[\w./-]*\.nix)"
     r"(?P<comment>\s+#.*)?\s*$"
 )
 IMPORTS = re.compile(r"^\s*imports\s*=\s*\[\s*$")
@@ -47,8 +51,8 @@ PACKAGES_BLOCK = """
 @dataclass
 class Import:
     line: int  # 0-based
-    name: str
-    depth: int  # how many times the line is commented out
+    name: str  # module name: path under nixos/modules without .nix
+    enabled: bool
     indent: str
     path: str
     comment: str
@@ -64,99 +68,97 @@ def imports_block(lines: list[str]) -> tuple[int, int] | None:
     return None
 
 
-def parse(text: str) -> list[Import]:
+def module_name(path: str, here: Path, modules_dir: Path) -> str | None:
+    """The module a path in a file of folder `here` points to, if any."""
+    target = Path(os.path.normpath(here / path))
+    try:
+        return target.relative_to(modules_dir).with_suffix("").as_posix()
+    except ValueError:
+        return None
+
+
+def parse(text: str, here: Path, modules_dir: Path) -> list[Import]:
+    """The module imports of a file in folder `here` (others are ignored)."""
     lines = text.splitlines()
     block = imports_block(lines)
     if not block:
         return []
     found = []
     for n in range(block[0] + 1, block[1]):
-        if m := IMPORT.match(lines[n]):
-            found.append(Import(n, m["name"], m["hashes"].count("#"), m["indent"],
+        if (m := IMPORT.match(lines[n])) and (
+                name := module_name(m["path"], here, modules_dir)):
+            found.append(Import(n, name, not m["hashes"], m["indent"],
                                 m["path"], m["comment"] or ""))
     return found
 
 
-def enabled(text: str, core_of: Callable[[str], str | None]) -> list[str]:
-    """The modules chosen on this host, in file order.
-
-    A submodule is chosen when it is commented as deep as its core (so the
-    choice is kept while the group is off).
-    """
-    found = parse(text)
-    depths = {i.name: i.depth for i in found}
-    chosen = []
-    for i in found:
-        core = core_of(i.name)
-        limit = 0 if core is None else depths.get(core, 1)
-        if i.depth <= limit and i.name not in chosen:
-            chosen.append(i.name)
-    return chosen
+def enabled(text: str, here: Path, modules_dir: Path) -> list[str]:
+    """The modules imported (not commented out), in file order."""
+    return [i.name for i in parse(text, here, modules_dir) if i.enabled]
 
 
-def module_line(indent: str, depth: int, path: str, comment: str = "") -> str:
-    return f"{indent}{'# ' * depth}{path}{comment}"
+def line_for(indent: str, on: bool, path: str, comment: str = "") -> str:
+    return f"{indent}{'' if on else '# '}{path}{comment}"
 
 
-def update(text: str, chosen: list[str], core_of: Callable[[str], str | None],
+def update(text: str, here: Path, modules_dir: Path, chosen: list[str],
            exists: Callable[[str], bool], sort_key: Callable[[str], tuple]) -> str:
-    """Comment and uncomment import lines so that `chosen` are enabled.
+    """Comment and uncomment import lines so that exactly `chosen` are on.
 
-    Existing lines keep their place, path and comment; a module without a
-    line gets one, next to its group or at the end of the list. Commented
-    lines of modules whose file is gone are dropped.
+    Existing lines keep their place, path and comment; a chosen module
+    without a line gets one, next to the modules of its folder or at the end
+    of the list. Commented lines of modules whose file is gone are dropped.
     """
+    if not text.endswith("\n"):
+        text += "\n"
     lines = text.splitlines()
     block = imports_block(lines)
     if not block:
-        raise ValueError("no `imports = [` list found")
+        text = add_imports_block(text)
+        lines = text.splitlines()
+        block = imports_block(lines)
+        if not block:
+            raise ValueError("no `imports = [` list, and no place to add one")
 
-    def depth(name: str) -> int:
-        core = core_of(name)
-        own = 0 if name in chosen else 1
-        if core is None:
-            return own
-        return (0 if core in chosen else 1) + own
-
-    found = parse(text)
+    found = parse(text, here, modules_dir)
     have = {i.name for i in found}
     drop = set()
     for i in found:
-        if i.name not in chosen and not exists(i.name):
+        on = i.name in chosen
+        if not on and not exists(i.name):
             drop.add(i.line)
-        elif i.depth != depth(i.name):
-            lines[i.line] = module_line(i.indent, depth(i.name), i.path, i.comment)
+        elif on != i.enabled:
+            # Remove every "#" level, or comment the line once.
+            lines[i.line] = line_for(i.indent, on, i.path, i.comment)
 
-    # Modules that need a line: the chosen ones, and the core of a group
-    # with chosen submodules (commented out when the group is off).
-    needed = [n for n in chosen if n not in have]
-    needed += [core_of(n) for n in chosen
-               if core_of(n) and core_of(n) not in have and core_of(n) not in needed]
     indent = found[0].indent if found else re.match(r"\s*", lines[block[0]]).group() + "  "
-    prefix = path_prefix(found)
     inserts: dict[int, list[str]] = {}
-    for name in sorted(needed, key=sort_key):
-        new = module_line(indent, depth(name), f"{prefix}{name}.nix")
-        # After the last line of the same group, or at the end of the list.
+    for name in sorted((n for n in chosen if n not in have), key=sort_key):
+        path = os.path.relpath(modules_dir / f"{name}.nix", here)
+        path = path if path.startswith("../") else f"./{path}"
+        if found and found[0].path.startswith("./../"):
+            path = f"./{path}"  # the "./../../modules/" style of host files
         folder = name.rpartition("/")[0]
-        same = [i.line for i in found if folder and i.name.rpartition("/")[0] == folder]
+        same = [i.line for i in found if i.name.rpartition("/")[0] == folder]
         at = max(same) + 1 if same else block[1]
-        inserts.setdefault(at, []).append(new)
+        inserts.setdefault(at, []).append(line_for(indent, True, path))
 
     out = []
     for n, line in enumerate(lines):
         out.extend(inserts.get(n, []))
         if n not in drop:
             out.append(line)
-    out.extend(inserts.get(len(lines), []))
     return "\n".join(out) + "\n"
 
 
-def path_prefix(found: list[Import]) -> str:
-    """How this file writes paths to nixos/modules ("./../../modules/")."""
-    if found:
-        return found[0].path[: -len(f"{found[0].name}.nix")]
-    return "./../../modules/"
+def add_imports_block(text: str) -> str:
+    """Add an empty imports list at the top of the module's attribute set."""
+    lines = text.splitlines()
+    for n, line in enumerate(lines):
+        if line.strip() == "{" or (line.strip().endswith(": {") and n == 0):
+            lines[n + 1:n + 1] = ["  imports = [", "  ];", ""]
+            break
+    return "\n".join(lines) + "\n"
 
 
 def add_packages_block(text: str) -> str:

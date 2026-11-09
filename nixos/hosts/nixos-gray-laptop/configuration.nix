@@ -21,24 +21,12 @@
     ./../../modules/caelestia.nix
 
     ./../../modules/epita/core.nix
-    # ./../../modules/epita/android.nix
-    ./../../modules/epita/c.nix
-    # ./../../modules/epita/cpp.nix
-    ./../../modules/epita/criterion.nix
-    ./../../modules/epita/docker.nix
-    # ./../../modules/epita/image.nix
-    # ./../../modules/epita/java.nix
-    # ./../../modules/epita/js.nix
-    ./../../modules/epita/latex.nix
-    # ./../../modules/epita/net.nix
 
     # ./../../modules/file-transfer.nix
     # ./../../modules/flatpak.nix
     # ./../../modules/game-creation.nix
 
     ./../../modules/gaming/core.nix
-    ./../../modules/gaming/albion.nix
-    ./../../modules/gaming/minecraft.nix
 
     ./../../modules/gnome.nix
     ./../../modules/hyprland.nix

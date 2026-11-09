@@ -339,10 +339,17 @@ backup_and_link() {
 # warning (see ask_risky_modules).
 RISKY_MODULES=("passwordless-rebuild.nix")
 
+# Modules a host can import: top-level ones and the core.nix of each group
+# (a group's core.nix imports its own submodules).
 list_modules() {
 	(
 		cd -- "$MODULES_DIR"
-		find . -type f -name '*.nix' -printf '%P\n'
+		find . -type f -name '*.nix' -printf '%P\n' | while IFS= read -r module; do
+			if [[ "$module" == */* && "$module" != */core.nix && -f "${module%/*}/core.nix" ]]; then
+				continue
+			fi
+			printf '%s\n' "$module"
+		done
 	) | sort | grep -vxF -f <(printf '%s\n' "${RISKY_MODULES[@]}")
 }
 
@@ -364,25 +371,15 @@ default_modules() {
 }
 
 # The import lines of the selected modules, one per module, commented out
-# when disabled (as nixcfg writes them). A submodule of a group (a folder with
-# a core.nix) is commented one level deeper than its core, so it is only
-# imported when its group is on.
+# when disabled (as nixcfg writes them).
 module_imports() {
-	local i j name core depth
-	local -A checked=()
+	local i
 	for i in "${!MODULE_OPTIONS[@]}"; do
-		checked["${MODULE_OPTIONS[$i]}"]="${MODULE_CHECKED[$i]}"
-	done
-	for i in "${!MODULE_OPTIONS[@]}"; do
-		name="${MODULE_OPTIONS[$i]}"
-		depth=$(( checked[$name] ? 0 : 1 ))
-		core="${name%/*}/core"
-		if [[ "$name" == */* && "$name" != "$core" && -f "$MODULES_DIR/$core.nix" ]]; then
-			depth=$(( depth + (${checked[$core]:-0} ? 0 : 1) ))
+		if (( MODULE_CHECKED[i] )); then
+			printf '    ./../../modules/%s.nix\n' "${MODULE_OPTIONS[$i]}"
+		else
+			printf '    # ./../../modules/%s.nix\n' "${MODULE_OPTIONS[$i]}"
 		fi
-		printf '    '
-		for (( j = 0; j < depth; j++ )); do printf '# '; done
-		printf './../../modules/%s.nix\n' "$name"
 	done
 }
 

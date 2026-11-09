@@ -3,8 +3,8 @@ NixOS hosts in ~/dotfiles.
 
 Everything stays Nix code and is toggled by commenting lines out, the way
 you would by hand: modules in the `imports` of each host's configuration.nix
-(see hostfile.py), packages in environment.systemPackages lists (see
-modfile.py). Every module change is checked with Nix and reverted if it
+and submodules in the `imports` of their group's core.nix (see hostfile.py),
+packages in environment.systemPackages lists (see modfile.py). Every module change is checked with Nix and reverted if it
 breaks the config.
 """
 
@@ -207,18 +207,44 @@ def host_path(host: str) -> Path:
     return HOSTS_DIR / host / "configuration.nix"
 
 
+def imported(path: Path) -> list[str]:
+    try:
+        return hostfile.enabled(path.read_text(), path.parent, MODULES_DIR)
+    except OSError:
+        return []
+
+
+def group_subs(core: str) -> list[str]:
+    """The submodules a group's core.nix imports (for every host)."""
+    return [n for n in imported(module_path(core)) if group_core(n) == core]
+
+
 def load_state(host: str) -> dict:
-    """{"modules": [...]}: the modules chosen in the host's imports."""
-    return {"modules": hostfile.enabled(host_path(host).read_text(), group_core)}
+    """{"modules": [...]}: the modules the host imports, and the submodules
+    chosen in every group's core.nix (active only when the host imports
+    that core)."""
+    modules = imported(host_path(host))
+    for core in filter(is_group, list_modules()):
+        modules += [n for n in group_subs(core) if n not in modules]
+    return {"modules": modules}
+
+
+def updated_imports(path: Path, chosen: list[str]) -> str:
+    return hostfile.update(path.read_text(), path.parent, MODULES_DIR, chosen,
+                           lambda name: module_path(name).exists(), display_key)
 
 
 def save_state(host: str, state: dict) -> None:
+    """Write the host's own imports (submodules live in their core.nix)."""
     path = host_path(host)
-    text = path.read_text()
-    new = hostfile.update(text, state["modules"], group_core,
-                          lambda name: module_path(name).exists(), display_key)
-    if new != text:
+    new = updated_imports(path, [n for n in state["modules"] if not group_core(n)])
+    if new != path.read_text():
         path.write_text(new)
+
+
+def core_text(core: str, subs: list[str]) -> str:
+    """The core.nix of a group, importing exactly `subs`."""
+    return updated_imports(module_path(core), subs)
 
 
 def host_entries(host: str) -> list[modfile.Entry]:
@@ -953,11 +979,21 @@ class NixCfg(App):
     @on(SelectionList.SelectionToggled, "#modules")
     def module_toggled(self, event: SelectionList.SelectionToggled) -> None:
         name = event.selection.value
-        if name in self.state["modules"]:
-            self.state["modules"].remove(name)
-        else:
+        self.set_module(name, name not in self.state["modules"])
+
+    def set_module(self, name: str, on: bool) -> None:
+        """Turn a module on or off: in the host's imports, or for a
+        submodule in its core.nix (shared by every host)."""
+        if on and name not in self.state["modules"]:
             self.state["modules"].append(name)
-        self.save()
+        elif not on and name in self.state["modules"]:
+            self.state["modules"].remove(name)
+        core = group_core(name)
+        if core:
+            subs = [n for n in self.state["modules"] if group_core(n) == core]
+            self.write_module(core, core_text(core, subs), None, show=False)
+        else:
+            self.save()
         self.refresh_all()
 
     def action_module_right(self) -> None:
@@ -998,8 +1034,7 @@ class NixCfg(App):
             path.write_text(MODULE_TEMPLATE)
             # Flakes only see files tracked by git.
             subprocess.run(["git", "-C", str(DOTFILES), "add", str(path)])
-            self.state["modules"].append(name)
-            self.save()
+            self.set_module(name, True)
             if group_core(name):
                 self.expanded.add(group_core(name))
             self.refresh_all()
@@ -1050,7 +1085,9 @@ class NixCfg(App):
         if hosts:
             question += f"\nIt will be disabled on: {', '.join(hosts)}."
         if any(group_core(n) == name for n in list_modules()):
-            question += "\nIts submodules stay, but are no longer grouped."
+            question += "\nIts submodule files stay, but no host imports them anymore."
+        elif group_core(name):
+            question += f"\nIt is removed from {group_core(name)}.nix."
         if importers:
             question += f"\n[$warning]Warning:[/] mentioned in {', '.join(importers)}."
 
@@ -1059,13 +1096,17 @@ class NixCfg(App):
                 return
             # Read every host before the file goes (its groups depend on it),
             # then save: saving drops the import lines of missing files.
+            core = group_core(name)
+            gone = {name, *(n for n in list_modules() if group_core(n) == name)}
             states = {h: self.state if h == self.host else load_state(h)
                       for h in list_hosts()}
             path.unlink(missing_ok=True)
             for host, state in states.items():
-                if name in state["modules"]:
-                    state["modules"].remove(name)
+                state["modules"] = [n for n in state["modules"] if n not in gone]
                 save_state(host, state)
+            if core:  # drop its import line from the core
+                core_path = module_path(core)
+                core_path.write_text(core_text(core, group_subs(core)))
             if path.parent != MODULES_DIR and not any(path.parent.iterdir()):
                 path.parent.rmdir()
             subprocess.run(["git", "-C", str(DOTFILES), "rm", "-q", "--cached",
@@ -1086,13 +1127,17 @@ class NixCfg(App):
         text = module_path(self.module).read_text()
         self.write_module(self.module, modfile.toggle(text, entry), entry.line)
 
-    def write_module(self, name: str, text: str, line: int | None) -> None:
+    def write_module(self, name: str, text: str, line: int | None,
+                     show: bool = True) -> None:
         """Save a module change, then check it with Nix in the background."""
         path = module_path(name)
         self.good.setdefault(path, path.read_text())
         path.write_text(text)
         self.check_status = "[dim]checking…[/]"
-        self.show_module(name, line)
+        if show:
+            self.show_module(name, line)
+        elif self.module:
+            self.show_module(self.module)
         self.refresh_all_packages()
         self.check(name, text)
 
@@ -1109,6 +1154,8 @@ class NixCfg(App):
         if error:
             path.write_text(self.good.pop(path))
             self.check_status = "[$error]reverted[/]"
+            self.state = load_state(self.host)  # a reverted core.nix
+            self.refresh_modules()
             self.notify(f"{escape(error)}\n\nThe change to {path.name} was reverted.",
                         title="Nix check failed", severity="error", timeout=10)
         else:

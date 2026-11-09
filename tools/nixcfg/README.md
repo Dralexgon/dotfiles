@@ -13,7 +13,7 @@ found), with two tabs: **Modules** and **Packages**.
 ## How it works
 
 nixcfg never rewrites Nix code: like you would by hand, it comments and
-uncomments lines. Each host lists **every** module in the `imports` of its
+uncomments lines. Each host lists its modules in the `imports` of its
 `configuration.nix`, and a disabled one is commented out:
 
 ```nix
@@ -23,11 +23,7 @@ imports = [
 
   # Modules: comment a line out to disable it (or use `nixcfg`)
   ./../../modules/caelestia.nix
-
-  # ./../../modules/epita/core.nix
-  # ./../../modules/epita/c.nix
-  # # ./../../modules/epita/java.nix
-
+  ./../../modules/epita/core.nix
   ./../../modules/gnome.nix
   # ./../../modules/jetbrains.nix
 ];
@@ -40,24 +36,32 @@ environment.systemPackages = with pkgs; [
 ```
 
 - Every `.nix` file in `nixos/modules/` is a module, subfolders included
-  (`gnome.nix` → `gnome`, `epita/c.nix` → `epita/c`). Modules don't import
-  each other: each one is turned on and off here. A module with no line is
-  off; nixcfg adds its line when you turn it on.
+  (`gnome.nix` → `gnome`, `epita/c.nix` → `epita/c`). A module with no
+  line is off; nixcfg adds its line when you turn it on.
 - The host's own packages are a normal `environment.systemPackages` list,
   edited like the ones in modules (see [Editing modules safely](#editing-modules-safely)).
 
-**Groups**: a folder with a `core.nix` (like `epita/` or `gaming/`) is a group. Its core
-(`epita/core`, shown as `epita`) is the switch for the whole group, and each
-submodule (`epita/c`, `epita/docker`…) is toggled on its own. A submodule is
-commented **one level deeper than its core**: turning a group off comments
-the whole block out, like an editor would, so in the example above `c` is
-still chosen (`# `) and `java` is not (`# # `). Turning `epita` back on
-uncomments one level and brings `c` back.
+**Groups**: a folder with a `core.nix` (like `epita/` or `gaming/`) is a
+group. Hosts import its core (`epita/core`, shown as `epita`), and the core
+imports its submodules, the same way:
+
+```nix
+# nixos/modules/epita/core.nix
+imports = [
+  ./c.nix
+  ./criterion.nix
+  # ./java.nix
+];
+```
+
+So the submodule choices are **shared by every host** that turns the group
+on. Toggling a submodule in nixcfg edits the core's `imports` (and is
+checked with Nix, like a package change); toggling the group edits the host.
 
 Lines keep their place, so you can reorder them, add comments after them or
-edit the file by hand; [`hostfile.py`](hostfile.py) only changes the `# `
-prefix of a line, adds a missing line, or drops the commented line of a
-module whose file was deleted.
+edit the files by hand; [`hostfile.py`](hostfile.py) only comments or
+uncomments a line, adds a missing line next to the ones of its folder, or
+drops the commented line of a module whose file was deleted.
 
 ## Modules tab
 
@@ -82,7 +86,7 @@ Three columns, like a file manager:
 
 | Key | Where | Action |
 |---|---|---|
-| `Space` / `Enter` | Modules | Turn the module on or off for this host |
+| `Space` / `Enter` | Modules | Turn the module on or off for this host (a submodule: in its group's `core.nix`, for every host) |
 | `→` / `←` | Modules | Open / close a group, or enter / leave the packages column |
 | `n` | Modules | New module: creates `nixos/modules/<name>.nix` (`<name>` can be `folder/name`) from a template, enables it and opens it in `$EDITOR` |
 | `D` | Modules | Delete the module and disable it on every host |

@@ -1,6 +1,11 @@
 { pkgs, ... }:
 
 {
+  imports = [
+    ./albion.nix
+    ./minecraft.nix
+  ];
+
   # hardware.graphics.enable = true;
 
   programs.steam = {
