@@ -356,11 +356,34 @@ ask_risky_modules() {
 	fi
 }
 
-# Modules enabled in the default host's state.json, used as preselection.
-# (state.json lists one module per line, so no JSON parser is needed.)
+# Modules enabled (not commented out) in the default host's imports, used as
+# preselection.
 default_modules() {
-	sed -n '/"modules"/,/\]/p' "$HOSTS_DIR/default/state.json" \
-		| sed -nE 's#^[[:space:]]*"([^"]+)",?$#\1.nix#p'
+	sed -nE 's#^[[:space:]]*(\./)?(\.\./)+modules/([^[:space:]#]+\.nix).*$#\3#p' \
+		"$HOSTS_DIR/default/configuration.nix"
+}
+
+# The import lines of the selected modules, one per module, commented out
+# when disabled (as nixcfg writes them). A submodule of a group (a folder with
+# a core.nix) is commented one level deeper than its core, so it is only
+# imported when its group is on.
+module_imports() {
+	local i j name core depth
+	local -A checked=()
+	for i in "${!MODULE_OPTIONS[@]}"; do
+		checked["${MODULE_OPTIONS[$i]}"]="${MODULE_CHECKED[$i]}"
+	done
+	for i in "${!MODULE_OPTIONS[@]}"; do
+		name="${MODULE_OPTIONS[$i]}"
+		depth=$(( checked[$name] ? 0 : 1 ))
+		core="${name%/*}/core"
+		if [[ "$name" == */* && "$name" != "$core" && -f "$MODULES_DIR/$core.nix" ]]; then
+			depth=$(( depth + (${checked[$core]:-0} ? 0 : 1) ))
+		fi
+		printf '    '
+		for (( j = 0; j < depth; j++ )); do printf '# '; done
+		printf './../../modules/%s.nix\n' "$name"
+	done
 }
 
 select_modules() {
@@ -393,9 +416,6 @@ write_host_config() {
 	local config_file="$1"
 	local hostname="$2"
 	local username="$3"
-	local state_file i
-	local -a enabled=()
-	state_file="$(dirname -- "$config_file")/state.json"
 
 	cat > "$config_file" <<EOF
 { config, pkgs, lib, inputs, ... }:
@@ -410,8 +430,12 @@ write_host_config() {
     # You probably shouldn't remove it
     ./../../core.nix
 
-    # Enabled modules and extra packages (edit with \`nix run ~/dotfiles#nixcfg\`)
-    (import ./../../state.nix ./state.json)
+    # Modules: comment a line out to disable it (or use \`nixcfg\`)
+$(module_imports)
+  ];
+
+  # Packages for this host only
+  environment.systemPackages = with pkgs; [
   ];
 
   users.users."$username" = {
@@ -420,23 +444,6 @@ write_host_config() {
   };
 }
 EOF
-
-	# One module per line, as nixcfg writes it.
-	for i in "${!MODULE_OPTIONS[@]}"; do
-		if (( MODULE_CHECKED[i] )); then
-			enabled+=("${MODULE_OPTIONS[$i]}")
-		fi
-	done
-	{
-		if (( ${#enabled[@]} )); then
-			printf '{\n  "modules": [\n'
-			printf '    "%s"\n' "${enabled[@]}" | sed '$!s/$/,/'
-			printf '  ],\n'
-		else
-			printf '{\n  "modules": [],\n'
-		fi
-		printf '  "packages": []\n}\n'
-	} > "$state_file"
 }
 
 setup_nixos() {
@@ -480,7 +487,7 @@ setup_nixos() {
 	hardware_file="$host_dir/hardware-configuration.nix"
 
 	write_host_config "$config_file" "$hostname" "$username"
-	printf 'Wrote %s and state.json\n' "$config_file"
+	printf 'Wrote %s\n' "$config_file"
 
 	if [[ -n "$HARDWARE_CONFIG" ]]; then
 		cp -- "$HARDWARE_CONFIG" "$hardware_file"

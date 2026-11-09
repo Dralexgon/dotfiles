@@ -12,49 +12,52 @@ found), with two tabs: **Modules** and **Packages**.
 
 ## How it works
 
-nixcfg never edits Nix code. Each host has a `state.json` next to its
-`configuration.nix`:
-
-```json
-{
-  "modules": [
-    "gnome",
-    "hyprland",
-    "epita/core"
-  ],
-  "packages": [
-    "gparted",
-    "kdePackages.kate"
-  ]
-}
-```
-
-- `modules`: paths relative to `nixos/modules/`, without `.nix`. Every `.nix`
-  file there is a module, subfolders included (`gnome.nix` → `gnome`,
-  `epita/c.nix` → `epita/c`). Modules don't import each other: each one is
-  turned on and off here.
-- `packages`: nixpkgs attribute paths, nested ones included.
-
-**Groups**: a folder with a `core.nix` (like `epita/` or `gaming/`) is a group. Its core
-(`epita/core`, shown as `epita`) is the switch for the whole group, and each
-submodule (`epita/c`, `epita/docker`…) is toggled on its own. A submodule is
-only imported when its group is on, so turning a group off keeps your
-submodule choices for when you turn it back on.
-
-[`nixos/state.nix`](../../nixos/state.nix) turns this file into a module that
-imports the listed modules and adds the packages to
-`environment.systemPackages`. Each host loads it with:
+nixcfg never rewrites Nix code: like you would by hand, it comments and
+uncomments lines. Each host lists **every** module in the `imports` of its
+`configuration.nix`, and a disabled one is commented out:
 
 ```nix
 imports = [
   ./hardware-configuration.nix
   ./../../core.nix
-  (import ./../../state.nix ./state.json)
+
+  # Modules: comment a line out to disable it (or use `nixcfg`)
+  ./../../modules/caelestia.nix
+
+  # ./../../modules/epita/core.nix
+  # ./../../modules/epita/c.nix
+  # # ./../../modules/epita/java.nix
+
+  ./../../modules/gnome.nix
+  # ./../../modules/jetbrains.nix
+];
+
+# Packages for this host only
+environment.systemPackages = with pkgs; [
+  gparted
+  # usbutils
 ];
 ```
 
-You can edit `state.json` by hand too: nixcfg writes it in the same format
-(2-space indent, one item per line), so diffs stay clean.
+- Every `.nix` file in `nixos/modules/` is a module, subfolders included
+  (`gnome.nix` → `gnome`, `epita/c.nix` → `epita/c`). Modules don't import
+  each other: each one is turned on and off here. A module with no line is
+  off; nixcfg adds its line when you turn it on.
+- The host's own packages are a normal `environment.systemPackages` list,
+  edited like the ones in modules (see [Editing modules safely](#editing-modules-safely)).
+
+**Groups**: a folder with a `core.nix` (like `epita/` or `gaming/`) is a group. Its core
+(`epita/core`, shown as `epita`) is the switch for the whole group, and each
+submodule (`epita/c`, `epita/docker`…) is toggled on its own. A submodule is
+commented **one level deeper than its core**: turning a group off comments
+the whole block out, like an editor would, so in the example above `c` is
+still chosen (`# `) and `java` is not (`# # `). Turning `epita` back on
+uncomments one level and brings `c` back.
+
+Lines keep their place, so you can reorder them, add comments after them or
+edit the file by hand; [`hostfile.py`](hostfile.py) only changes the `# `
+prefix of a line, adds a missing line, or drops the commented line of a
+module whose file was deleted.
 
 ## Modules tab
 
@@ -91,15 +94,15 @@ Three columns, like a file manager:
 ## Packages tab
 
 Every package in one list: the ones in each module (`gnome.nix`,
-`gaming.nix`…) and this host's own extra packages (`this host`, from
-`state.json`). `●` means it is installed on this host: its line is active and
-its module is enabled.
+`gaming.nix`…) and this host's own packages (`this host`, from its
+`configuration.nix`). `●` means it is installed on this host: its line is active and
+its module is enabled. This host's packages can be commented out too.
 
 | Key | Action |
 |---|---|
 | `/` | Filter by package or module name (`Enter` or `Esc` goes back to the list) |
-| `Enter` | Jump to the package's line in its module |
-| `a` | Add a package to this host (`state.json`) |
+| `Enter` | Jump to the package's line in its module, or comment / uncomment one of this host's packages |
+| `a` | Add a package to this host (`configuration.nix`) |
 | `x` / `Delete` | Remove one of this host's packages |
 
 ## Everywhere
@@ -116,7 +119,7 @@ its module is enabled.
 | `t` | Toggle between nixcfg's colors and the terminal's |
 | `q` | Quit (really stops nixcfg, unlike closing its window) |
 
-Every change is written right away (to `state.json` or to the module file):
+Every change is written right away (to the host's `configuration.nix` or to the module file):
 use `git diff` and `git restore` to review or undo.
 
 ## Editing modules safely
@@ -187,7 +190,7 @@ while an update or rebuild runs).
   confirmation warns you.
 - The **Modules** tab shows groups as a tree (`epita 4/10` = 4 of its 10
   submodules on), which other hosts enable each module, and marks
-  modules listed in `state.json` whose file doesn't exist as *missing file*.
+  modules imported by the host whose file doesn't exist as *missing file*.
 - The **`default`** host imports `/etc/nixos/hardware-configuration.nix`, so
   builds and rebuilds for it run with `--impure`.
 - nixcfg looks for the flake in `~/dotfiles`. Set `NIXCFG_DOTFILES` to use
@@ -209,6 +212,7 @@ back. `t` switches nixcfg to the terminal's own colors instead, for both.
 
 - `nixcfg.py`: the app ([Textual](https://textual.textualize.io/)).
 - `modfile.py`: reads and edits the package lists of module files.
+- `hostfile.py`: reads and edits the module imports of host files.
 - `tray.py`: the tray icon (D-Bus, with `dbus-fast`).
 - `default.nix`: packages it with Python, Textual and dbus-fast. It is exposed in
   `flake.nix` as `apps.x86_64-linux.nixcfg`.

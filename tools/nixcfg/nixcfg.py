@@ -1,10 +1,11 @@
 """nixcfg: a TUI to enable/disable/add/remove modules and packages of the
 NixOS hosts in ~/dotfiles.
 
-Hosts are plain data: nixos/hosts/<host>/state.json, which nixos/state.nix
-turns into imports and environment.systemPackages. Modules stay Nix code:
-their packages are toggled by commenting lines out (see modfile.py), and
-every change is checked with Nix and reverted if it breaks the config.
+Everything stays Nix code and is toggled by commenting lines out, the way
+you would by hand: modules in the `imports` of each host's configuration.nix
+(see hostfile.py), packages in environment.systemPackages lists (see
+modfile.py). Every module change is checked with Nix and reverted if it
+breaks the config.
 """
 
 import json
@@ -41,6 +42,7 @@ from textual.widgets.option_list import Option
 from textual.widgets.selection_list import Selection
 from textual.worker import get_current_worker
 
+import hostfile
 import modfile
 
 DOTFILES = Path(os.environ.get("NIXCFG_DOTFILES", Path.home() / "dotfiles"))
@@ -152,7 +154,7 @@ TERMINAL_PALETTE_RESET = "\033]104\033\\\033]110\033\\\033]111\033\\"
 
 
 def list_hosts() -> list[str]:
-    return sorted(p.parent.name for p in HOSTS_DIR.glob("*/state.json"))
+    return sorted(p.parent.name for p in HOSTS_DIR.glob("*/configuration.nix"))
 
 
 def list_modules() -> list[str]:
@@ -173,7 +175,7 @@ def module_entries(name: str) -> list[modfile.Entry]:
         return []
 
 
-# A folder with a core.nix is a group (same rule as nixos/state.nix): its core
+# A folder with a core.nix is a group (see hostfile.py): its core
 # switches the whole group, and each submodule is toggled on its own.
 def group_core(name: str) -> str | None:
     """The core of the group a submodule is in ("epita/c" -> "epita/core")."""
@@ -201,19 +203,27 @@ def display_key(name: str) -> tuple:
     return (name, False, "")
 
 
-def state_path(host: str) -> Path:
-    return HOSTS_DIR / host / "state.json"
+def host_path(host: str) -> Path:
+    return HOSTS_DIR / host / "configuration.nix"
 
 
 def load_state(host: str) -> dict:
-    state = json.loads(state_path(host).read_text())
-    state.setdefault("modules", [])
-    state.setdefault("packages", [])
-    return state
+    """{"modules": [...]}: the modules chosen in the host's imports."""
+    return {"modules": hostfile.enabled(host_path(host).read_text(), group_core)}
 
 
 def save_state(host: str, state: dict) -> None:
-    state_path(host).write_text(json.dumps(state, indent=2) + "\n")
+    path = host_path(host)
+    text = path.read_text()
+    new = hostfile.update(text, state["modules"], group_core,
+                          lambda name: module_path(name).exists(), display_key)
+    if new != text:
+        path.write_text(new)
+
+
+def host_entries(host: str) -> list[modfile.Entry]:
+    """The packages of the host's own environment.systemPackages list."""
+    return [e for e in modfile.entries(host_path(host).read_text()) if e.editable]
 
 
 def flake_args(host: str) -> list[str]:
@@ -842,7 +852,7 @@ class NixCfg(App):
         """The flat list of every package: this host's and every module's."""
         enabled = self.state["modules"]
         query = self.query_one("#filter", Input).value.strip().lower()
-        rows = [(p, "this host", True, f"h:{p}") for p in self.state["packages"]]
+        rows = [(e.name, "this host", e.enabled, f"h:{e.line}") for e in host_entries(self.host)]
         for module in self.module_names():
             active = is_active(module, enabled)
             for entry in module_entries(module):
@@ -1047,11 +1057,15 @@ class NixCfg(App):
         def delete(yes: bool) -> None:
             if not yes:
                 return
-            for host in hosts:
-                state = self.state if host == self.host else load_state(host)
-                state["modules"].remove(name)
-                save_state(host, state)
+            # Read every host before the file goes (its groups depend on it),
+            # then save: saving drops the import lines of missing files.
+            states = {h: self.state if h == self.host else load_state(h)
+                      for h in list_hosts()}
             path.unlink(missing_ok=True)
+            for host, state in states.items():
+                if name in state["modules"]:
+                    state["modules"].remove(name)
+                save_state(host, state)
             if path.parent != MODULES_DIR and not any(path.parent.iterdir()):
                 path.parent.rmdir()
             subprocess.run(["git", "-C", str(DOTFILES), "rm", "-q", "--cached",
@@ -1130,11 +1144,23 @@ class NixCfg(App):
         def add_to_host(attr: str | None) -> None:
             if not attr:
                 return
-            if attr in self.state["packages"]:
+            path = host_path(self.host)
+            text = path.read_text()
+            existing = next((e for e in host_entries(self.host) if e.name == attr), None)
+            if existing and existing.enabled:
                 self.notify(f"{attr} is already installed on this host.")
                 return
-            self.state["packages"].append(attr)
-            self.save()
+            if existing:  # commented out: uncomment it
+                path.write_text(modfile.toggle(text, existing))
+            else:
+                result = modfile.add(text, attr)
+                if result is None:  # no list yet, or one closed on an item line
+                    if any(b.close < 0 for b in modfile.parse(text)):
+                        self.notify(f"Can't add to the package list of {path.name}: "
+                                    "edit it by hand.", severity="warning")
+                        return
+                    result = modfile.add(hostfile.add_packages_block(text), attr)
+                path.write_text(result[0])
             self.refresh_all_packages()
             self.notify(f"Added {attr} to this host.")
 
@@ -1150,11 +1176,16 @@ class NixCfg(App):
             return
         option = self.query_one("#all-packages", OptionList).highlighted_option
         if option and option.id.startswith("h:"):
-            attr = option.id[2:]
-            self.state["packages"].remove(attr)
-            self.save()
-            self.refresh_all_packages()
-            self.notify(f"Removed {attr} from this host.")
+            entry = self.host_entry(option.id)
+            if entry:
+                path = host_path(self.host)
+                path.write_text(modfile.remove(path.read_text(), entry))
+                self.refresh_all_packages()
+                self.notify(f"Removed {entry.name} from this host.")
+
+    def host_entry(self, option_id: str) -> modfile.Entry | None:
+        line = int(option_id[2:])
+        return next((e for e in host_entries(self.host) if e.line == line), None)
 
     # Packages tab
 
@@ -1178,8 +1209,13 @@ class NixCfg(App):
 
     @on(OptionList.OptionSelected, "#all-packages")
     def package_selected(self, event: OptionList.OptionSelected) -> None:
-        """Jump to the module a package comes from."""
-        if not event.option_id.startswith("m:"):
+        """Jump to the module a package comes from, or toggle a host package."""
+        if event.option_id.startswith("h:"):
+            entry = self.host_entry(event.option_id)
+            if entry:
+                path = host_path(self.host)
+                path.write_text(modfile.toggle(path.read_text(), entry))
+                self.refresh_all_packages()
             return
         _, module, line = event.option_id.split(":")
         self.jumping = True
@@ -1304,7 +1340,7 @@ def attach_or_start() -> None:
 
 def main() -> None:
     if not list_hosts():
-        sys.exit(f"No nixos/hosts/*/state.json found in {DOTFILES} (set NIXCFG_DOTFILES).")
+        sys.exit(f"No nixos/hosts/*/configuration.nix found in {DOTFILES} (set NIXCFG_DOTFILES).")
     attach_or_start()
     NixCfg().run()
 
