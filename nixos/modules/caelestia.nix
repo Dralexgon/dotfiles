@@ -22,6 +22,19 @@ let
       cp -r ${../../config/caelestia/schemes}/. src/caelestia/data/schemes/
     '';
   });
+  # Petals lock screen (config/caelestia/lock), only active with the petals scheme: falling petals pushed
+  # by the mouse, a flower blooming behind the profile picture as you type (wilting on a wrong
+  # password), blossom password dots, and a petal burst on unlock. The new QML files are copied in,
+  # lock-petals.patch hooks them into Caelestia's lock. If upstream changes these files the patch
+  # fails and so does the build, rather than shipping a broken lock screen.
+  caelestia-shell = inputs.caelestia-shell.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [ ../../config/caelestia/lock/lock-petals.patch ];
+    postPatch = (old.postPatch or "") + ''
+      cp ${../../config/caelestia/lock/PetalShape.qml} modules/lock/PetalShape.qml
+      cp ${../../config/caelestia/lock/PetalField.qml} modules/lock/PetalField.qml
+      cp ${../../config/caelestia/lock/PetalBloom.qml} modules/lock/center/PetalBloom.qml
+    '';
+  });
   hyprtasking = pkgs.hyprlandPlugins.hyprtasking.overrideAttrs {
     buildPhase = ''
       runHook preBuild
@@ -47,7 +60,7 @@ in
   environment.etc."hypr/plugins/hyprtasking".source = "${hyprtasking}/lib";
 
   environment.systemPackages = with pkgs; [
-    inputs.caelestia-shell.packages.${pkgs.stdenv.hostPlatform.system}.default
+    caelestia-shell
     caelestia-cli
 
     # Not sure if all these dependencies are necessary or not

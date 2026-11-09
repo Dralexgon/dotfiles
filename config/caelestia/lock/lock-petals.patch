@@ -1,0 +1,73 @@
+diff -ru a/modules/lock/center/InputField.qml b/modules/lock/center/InputField.qml
+--- a/modules/lock/center/InputField.qml	2026-11-09 19:23:33.955730685 +0100
++++ b/modules/lock/center/InputField.qml	2026-11-09 19:23:44.275035585 +0100
+@@ -172,7 +172,7 @@
+             PropertyAction {
+                 target: charShape
+                 property: "shape"
+-                value: MaterialShape.Circle
++                value: Colours.scheme === "petals" ? MaterialShape.Flower : MaterialShape.Circle
+             }
+             ParallelAnimation {
+                 Anim {
+@@ -228,8 +228,8 @@
+ 
+             anchors.centerIn: parent
+             implicitSize: charList.implicitHeight * 1.5
+-            shape: root.shapeQueue[char.index % root.shapeQueue.length] ?? MaterialShape.Circle
+-            color: Colours.palette.m3onSurface
++            shape: Colours.scheme === "petals" ? [MaterialShape.Clover4Leaf, MaterialShape.Heart, MaterialShape.Clover8Leaf][char.index % 3] : (root.shapeQueue[char.index % root.shapeQueue.length] ?? MaterialShape.Circle)
++            color: Colours.scheme === "petals" ? Colours.palette.m3primary : Colours.palette.m3onSurface
+ 
+             opacity: root.showPassword ? 0 : 1
+ 
+diff -ru a/modules/lock/Center.qml b/modules/lock/Center.qml
+--- a/modules/lock/Center.qml	2026-11-09 19:23:33.955681954 +0100
++++ b/modules/lock/Center.qml	2026-11-09 19:23:44.274836251 +0100
+@@ -33,6 +33,16 @@
+     }
+ 
+     ProfilePic {
++        id: profilePic
++
++        // Petals rice: a flower that blooms behind the picture as you type
++        PetalBloom {
++            anchors.centerIn: parent
++            z: -1
++            lock: root.lock
++            size: profilePic.implicitWidth
++        }
++
+         Layout.alignment: Qt.AlignHCenter
+         Layout.topMargin: Tokens.spacing.extraExtraLarge * root.centerScale
+         Layout.bottomMargin: Tokens.spacing.extraLarge * root.centerScale
+diff -ru a/modules/lock/LockSurface.qml b/modules/lock/LockSurface.qml
+--- a/modules/lock/LockSurface.qml	2026-11-09 19:23:33.950170879 +0100
++++ b/modules/lock/LockSurface.qml	2026-11-09 19:23:44.274726134 +0100
+@@ -79,6 +79,10 @@
+                 }
+             }
+         }
++        // Petals rice: let the petals burst blow away first (0 otherwise)
++        PauseAnimation {
++            duration: petalField.burstDuration
++        }
+         PropertyAction {
+             target: root.lock
+             property: "locked"
+@@ -177,6 +181,15 @@
+         }
+     }
+ 
++    // Petals rice: falling petals over the blurred background, under the lock box
++    PetalField {
++        id: petalField
++
++        anchors.fill: parent
++        lock: root.lock
++        burstRect: Qt.rect(lockContent.x, lockContent.y, lockContent.width, lockContent.height)
++    }
++
+     Component {
+         id: screencopyBackground
+ 
