@@ -140,8 +140,9 @@ def remove(text: str, entry: Entry) -> str:
     return _replace_line(text, entry.line, None)
 
 
-def add(text: str, attr: str) -> tuple[str, int] | None:
-    """Add a package line at the end of the first list.
+def add(text: str, attr: str, comment: str = "") -> tuple[str, int] | None:
+    """Add a package line at the end of the first list, with an optional
+    description as a trailing comment ("kitty # Terminal").
 
     Returns the new text and the line of the package, or None when the
     module has no environment.systemPackages list.
@@ -151,5 +152,7 @@ def add(text: str, attr: str) -> tuple[str, int] | None:
         return None
     block = blocks[0]
     lines = text.splitlines(keepends=True)
-    lines.insert(block.close, f"{block.indent}{attr}\n")
+    comment = " ".join(comment.split()).lstrip("# ")
+    line = f"{attr} # {comment}" if comment else attr
+    lines.insert(block.close, f"{block.indent}{line}\n")
     return "".join(lines), block.close

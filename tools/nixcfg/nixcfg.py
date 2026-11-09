@@ -411,10 +411,11 @@ def number_ranges(numbers: list[int]) -> str:
 class TextPrompt(ModalScreen[str | None]):
     BINDINGS = [Binding("escape", "dismiss(None)", "Cancel")]
 
-    def __init__(self, title: str, placeholder: str = "") -> None:
+    def __init__(self, title: str, placeholder: str = "", allow_empty: bool = False) -> None:
         super().__init__()
         self.title_text = title
         self.placeholder = placeholder
+        self.allow_empty = allow_empty  # Enter on an empty field gives "", not None
 
     def compose(self) -> ComposeResult:
         with Vertical(classes="dialog"):
@@ -423,7 +424,8 @@ class TextPrompt(ModalScreen[str | None]):
 
     @on(Input.Submitted)
     def submit(self, event: Input.Submitted) -> None:
-        self.dismiss(event.value.strip() or None)
+        value = event.value.strip()
+        self.dismiss(value if value or self.allow_empty else None)
 
 
 class Confirm(ModalScreen[bool]):
@@ -1193,26 +1195,23 @@ class NixCfg(App):
         if self.focused_id() == "module-packages" and self.module:
             module = self.module
 
-            def add_to_module(attr: str | None) -> None:
-                if not attr:
-                    return
+            def add_to_module(attr: str, comment: str) -> None:
                 text = module_path(module).read_text()
                 if any(e.name == attr for e in modfile.entries(text)):
                     self.notify(f"{attr} is already in {module}.nix.")
                     return
-                result = modfile.add(text, attr)
+                result = modfile.add(text, attr, comment)
                 if result is None:
                     self.notify(f"{module}.nix has no environment.systemPackages list: "
                                 "press e to add one.", severity="warning")
                     return
                 self.write_module(module, *result)
 
-            self.push_screen(PackageSearch(f"{Path(module).name}.nix"), add_to_module)
+            self.push_screen(PackageSearch(f"{Path(module).name}.nix"),
+                             self.with_description(add_to_module))
             return
 
-        def add_to_host(attr: str | None) -> None:
-            if not attr:
-                return
+        def add_to_host(attr: str, comment: str) -> None:
             path = host_path(self.host)
             text = path.read_text()
             existing = next((e for e in host_entries(self.host) if e.name == attr), None)
@@ -1222,18 +1221,33 @@ class NixCfg(App):
             if existing:  # commented out: uncomment it
                 path.write_text(modfile.toggle(text, existing))
             else:
-                result = modfile.add(text, attr)
+                result = modfile.add(text, attr, comment)
                 if result is None:  # no list yet, or one closed on an item line
                     if any(b.close < 0 for b in modfile.parse(text)):
                         self.notify(f"Can't add to the package list of {path.name}: "
                                     "edit it by hand.", severity="warning")
                         return
-                    result = modfile.add(hostfile.add_packages_block(text), attr)
+                    result = modfile.add(hostfile.add_packages_block(text), attr, comment)
                 path.write_text(result[0])
             self.refresh_all_packages()
             self.notify(f"Added {attr} to this host.")
 
-        self.push_screen(PackageSearch("this host"), add_to_host)
+        self.push_screen(PackageSearch("this host"), self.with_description(add_to_host))
+
+    def with_description(self, add):
+        """Callback for PackageSearch: ask for an optional description of the
+        chosen package (written as a "# comment" after it), then add it."""
+
+        def chosen(attr: str | None) -> None:
+            if not attr:
+                return
+            self.push_screen(
+                TextPrompt(f"Description of {escape(attr)} (optional, Enter to skip)",
+                           "e.g. Terminal", allow_empty=True),
+                lambda comment: None if comment is None else add(attr, comment),
+            )
+
+        return chosen
 
     def action_remove_package(self) -> None:
         if self.focused_id() == "module-packages" and self.module:

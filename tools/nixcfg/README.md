@@ -95,7 +95,7 @@ Three columns, like a file manager:
 | `n` | Modules | New module: creates `nixos/modules/<name>.nix` (`<name>` can be `folder/name`) from a template, enables it and opens it in `$EDITOR` |
 | `D` | Modules | Delete the module and disable it on every host |
 | `Space` / `Enter` | Packages column | Comment or uncomment the package's line |
-| `a` | Packages column | Add a package line to the module (searches nixpkgs) |
+| `a` | Packages column | Add a package line to the module (searches nixpkgs, then asks for an optional description written as `# comment`) |
 | `x` / `Delete` | Packages column | Delete the package's line |
 | `e` | both columns | Open the module in `$EDITOR`, at the package's line if one is highlighted |
 
@@ -110,7 +110,7 @@ its module is enabled. This host's packages can be commented out too.
 |---|---|
 | `/` | Filter by package or module name (`Enter` or `Esc` goes back to the list) |
 | `Enter` | Jump to the package's line in its module, or comment / uncomment one of this host's packages |
-| `a` | Add a package to this host (`configuration.nix`) |
+| `a` | Add a package to this host (`configuration.nix`), with an optional description |
 | `x` / `Delete` | Remove one of this host's packages |
 
 ## Everywhere
