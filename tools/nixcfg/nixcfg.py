@@ -164,7 +164,14 @@ def list_modules() -> list[str]:
     )
 
 
+# nixos/core.nix, imported by every host: shown as an always-on module, so
+# its packages can be toggled like any module's.
+CORE = "core"
+
+
 def module_path(name: str) -> Path:
+    if name == CORE:
+        return DOTFILES / "nixos" / "core.nix"
     return MODULES_DIR / f"{name}.nix"
 
 
@@ -191,12 +198,17 @@ def is_group(name: str) -> bool:
 
 
 def is_active(name: str, enabled: list[str]) -> bool:
+    if name == CORE:
+        return True
     core = group_core(name)
     return name in enabled and (core is None or core in enabled)
 
 
 def display_key(name: str) -> tuple:
-    """Sort groups by folder name, with their submodules right after them."""
+    """Sort groups by folder name, with their submodules right after them
+    (and core.nix first)."""
+    if name == CORE:
+        return ("", False, "")
     folder, sep, base = name.rpartition("/")
     if sep and module_path(f"{folder}/core").exists():
         return (folder, base != "core", base)
@@ -775,7 +787,7 @@ class NixCfg(App):
         self.refresh_all_packages()
 
     def module_names(self) -> list[str]:
-        return sorted(set(list_modules()) | set(self.state["modules"]), key=display_key)
+        return sorted({CORE, *list_modules(), *self.state["modules"]}, key=display_key)
 
     def refresh_modules(self) -> None:
         others = {h: load_state(h)["modules"] for h in list_hosts() if h != self.host}
@@ -803,6 +815,10 @@ class NixCfg(App):
                 label = f"{escape(name.removesuffix('/core'))}  [dim]{on}/{len(subs)} {arrow}[/]"
             else:
                 label = escape(name)
+            if name == CORE:
+                label = f"{escape(name)}  [dim]nixos/core.nix · every host[/]"
+                selections.append(Selection(label, name, True))
+                continue
             if name not in on_disk:
                 label += "  [$error]missing file[/]"
             used_by = [h for h, mods in others.items() if is_active(name, mods)]
@@ -930,7 +946,9 @@ class NixCfg(App):
             return True
         modules_tab = self.query_one("#tabs", TabbedContent).active == "modules-tab"
         focus = self.focused_id()
-        if action in ("new_module", "delete_module"):
+        if action == "delete_module":
+            return modules_tab and focus == "modules" and self.highlighted_module() != CORE
+        if action == "new_module":
             return modules_tab and focus == "modules"
         if action == "edit":
             return modules_tab
@@ -979,6 +997,10 @@ class NixCfg(App):
     @on(SelectionList.SelectionToggled, "#modules")
     def module_toggled(self, event: SelectionList.SelectionToggled) -> None:
         name = event.selection.value
+        if name == CORE:
+            event.selection_list.select(name)  # can't be turned off
+            self.notify("core.nix is imported by every host: toggle its packages instead.")
+            return
         self.set_module(name, name not in self.state["modules"])
 
     def set_module(self, name: str, on: bool) -> None:

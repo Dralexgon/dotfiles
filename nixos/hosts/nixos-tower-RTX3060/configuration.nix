@@ -48,6 +48,7 @@
     ./../../modules/swap.nix
     # ./../../modules/theme-catpuccin.nix
     # ./../../modules/troobleshooting.nix
+    ./../../modules/useful-apps.nix
     # ./../../modules/vm.nix
     # ./../../modules/wayfire.nix
     ./../../modules/windows.nix

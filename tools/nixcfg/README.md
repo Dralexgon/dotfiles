@@ -75,7 +75,11 @@ Three columns, like a file manager:
  ○ jetbrains        │ ○ lutris                 │ 24     # lutris
 ```
 
-- **Modules** (left): `●` enabled on this host. A group (`epita 4/10 ▸`)
+- **Modules** (left): `●` enabled on this host. The first row, `core`, is
+  [`nixos/core.nix`](../../nixos/core.nix): every host imports it, so it
+  can't be turned off (or deleted), but its packages are toggled like any
+  module's, for every host. For per-host control, move a block of it into a
+  module (like `useful-apps.nix`). A group (`epita 4/10 ▸`)
   opens with `→` to show its submodules.
 - **Packages** of the highlighted module (middle): `→` enters this column,
   `←` goes back. `●` means the line is active, `○` that it is commented out.
