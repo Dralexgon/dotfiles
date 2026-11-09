@@ -1,6 +1,7 @@
 hl.monitor({
     output = "DP-1", -- your monitor name, use hyprctl monitors
-    mode = "3840x2160@164.99Hz",
+    -- mode = "3840x2160@164.99Hz",
+    mode = "3840x2160@60Hz",
     position = "0x0",
     scale = 1.5
 })
@@ -47,10 +48,6 @@ hl.config({
 
 hl.bind("SUPER + SHIFT + Space", hl.dsp.exec_cmd("hyprctl switchxkblayout all next"), { description = "Next keyboard layout" })
 
-hl.config({
-    env = {"QS_ICON_THEME,Yaru-magenta-dark"}
-})
-
 hl.window_rule({
     match = {
         class = "^(Albion-Online)$"
@@ -88,6 +85,16 @@ hl.window_rule({
     },
     float = true,
     size = "(monitor_w*0.8) (monitor_h*0.85)",
+    center = true
+})
+
+-- rice-picker ("Rices" in the app launcher, tools/rice-picker) floats centered
+hl.window_rule({
+    match = {
+        class = "^(dev\\.dralexgon\\.RicePicker)$"
+    },
+    float = true,
+    size = "980 380",
     center = true
 })
 
@@ -184,23 +191,28 @@ pcall(hl.config, {
 hl.plugin.load("/etc/hypr/plugins/cursorfx.so")
 -- Its style is set by the rice (see "Rices" below)
 
--- Rices: one Caelestia scheme + the windowfx / cursorfx / cursortrail looks that go with it.
--- SUPER + SHIFT + R cycles adaptive -> petals -> vampire; `rice <name>` (user-config.fish) picks one.
+-- Rices: one Caelestia scheme + the windowfx / cursorfx / cursortrail looks that go with it, and
+-- a wallpaper for the fixed schemes (adaptive keeps the current one, its colours come from it).
+-- SUPER + SHIFT + R cycles adaptive -> petals -> vampire; `rice <name>` (user-config.fish) or the
+-- "Rices" app (tools/rice-picker, keep its RICES list in sync) picks one.
 -- The choice is kept in ~/.local/state/caelestia/rice, so a config reload or a new session keeps it
 -- (Caelestia remembers the scheme by itself, only the plugins are reapplied then).
 local RICE_STATE = (os.getenv("HOME") or "") .. "/.local/state/caelestia/rice"
 local RICE_ORDER = { "adaptive", "petals", "vampire" }
+local WALLPAPERS = "$HOME/Pictures/Wallpapers/Safe/" -- not in the dotfiles; expanded by the shell
 local RICES = {
-    -- colours from the wallpaper, everything follows the scheme (color = 0)
+    -- colours from the wallpaper: only the trail, in the scheme colour (color = 0), and Hyprland's
+    -- own window animations (no petals, no blood)
     adaptive = {
         scheme = "caelestia scheme set -n dynamic",
-        windowfx = "petals",
-        cursorfx = "petals",
+        windowfx = "off",
+        cursorfx = "off",
         trail = 0
     },
     -- pink and soft: config/caelestia/schemes/petals
     petals = {
         scheme = "caelestia scheme set -n petals -f soft -m dark",
+        wallpaper = "Sakura_4k.png",
         windowfx = "petals",
         cursorfx = "petals",
         trail = 0
@@ -208,6 +220,7 @@ local RICES = {
     -- bright red and bloody: config/caelestia/schemes/vampire, trail red like the cursorfx blood
     vampire = {
         scheme = "caelestia scheme set -n vampire -f hard -m dark",
+        wallpaper = "Konachan.com - 228944 blood close collar fang krul_tepes long_hair owari_no_seraph pink_eyes pink_hair pointed_ears rinfiora vampire_upscayl_4x_upscayl-standard-4x.png",
         windowfx = "blood",
         cursorfx = "blood",
         trail = 0xFF8A0012
@@ -251,7 +264,12 @@ function set_rice(name)
         file:close()
     end
     apply_rice_plugins(name)
-    hl.dispatch(hl.dsp.exec_cmd(rice.scheme .. " && notify-send -a caelestia -t 2000 'Rice' '" .. name .. "'"))
+    local cmd = rice.scheme
+    if rice.wallpaper then
+        -- after the scheme, so it is no longer dynamic; -N: a bright wallpaper must not flip the mode to light
+        cmd = cmd .. ' && caelestia wallpaper -N -f "' .. WALLPAPERS .. rice.wallpaper .. '"'
+    end
+    hl.dispatch(hl.dsp.exec_cmd(cmd .. " && notify-send -a caelestia -t 2000 'Rice' '" .. name .. "'"))
 end
 
 apply_rice_plugins(read_rice())

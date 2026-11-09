@@ -115,6 +115,22 @@ in
     # TUI to toggle modules and packages (also in the app launcher)
     (import ../tools/nixcfg { inherit pkgs; })
 
+    # Nova (voice AI companion, ~/dev/ai/nova) in the app launcher.
+    # Same as SUPER + A: toggles her if she runs, starts her otherwise.
+    (pkgs.makeDesktopItem {
+      name = "nova";
+      desktopName = "Nova";
+      genericName = "Voice AI companion";
+      comment = "Talk with Nova";
+      exec = "${pkgs.writeShellScript "nova-launch" ''
+        ${pkgs.curl}/bin/curl -sf -X POST http://127.0.0.1:8765/api/toggle \
+          || exec "$HOME/dev/ai/nova/run.sh"
+      ''}";
+      icon = "audio-input-microphone";
+      categories = [ "Utility" ];
+      keywords = [ "nova" "ai" "voice" "assistant" "claude" ];
+    })
+
     # Simple useful tools
     git
     gh # GitHub CLI (gh auth login, gh auth setup-git)
@@ -202,7 +218,7 @@ in
 
   # OneDrive sync (abraunegg client). First login: run `onedrive` once.
   # Choose folders in ~/.config/onedrive/sync_list
-  services.onedrive.enable = true;
+  services.onedrive.enable = false;
 
   # Enable sound with pipewire.
   services.pulseaudio.enable = false; # hardware.pulseaudio.enable = false; # old versions

@@ -27,8 +27,13 @@ let
   # password), blossom password dots, and a petal burst on unlock. The new QML files are copied in,
   # lock-petals.patch hooks them into Caelestia's lock. If upstream changes these files the patch
   # fails and so does the build, rather than shipping a broken lock screen.
+  # launcher-icons-nocache.patch: launcher app icons skip the QML image cache, so an icon theme change
+  # (apply-scheme.sh) shows at once instead of after the cached icons expire.
   caelestia-shell = inputs.caelestia-shell.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (old: {
-    patches = (old.patches or [ ]) ++ [ ../../config/caelestia/lock/lock-petals.patch ];
+    patches = (old.patches or [ ]) ++ [
+      ../../config/caelestia/lock/lock-petals.patch
+      ../../config/caelestia/launcher/launcher-icons-nocache.patch
+    ];
     postPatch = (old.postPatch or "") + ''
       cp ${../../config/caelestia/lock/PetalShape.qml} modules/lock/PetalShape.qml
       cp ${../../config/caelestia/lock/PetalField.qml} modules/lock/PetalField.qml
@@ -95,6 +100,12 @@ in
     nerd-fonts.jetbrains-mono
     gpu-screen-recorder
     spicetify-cli
+
+    # SUPER + /: every Hyprland shortcut on a drawing of the keyboard (tools/keybinds-viewer)
+    (import ../../tools/keybinds-viewer { inherit pkgs; })
+
+    # "Rices" in the app launcher: pick adaptive / petals / vampire (tools/rice-picker)
+    (import ../../tools/rice-picker { inherit pkgs; })
 
     # Recolours Yaru folders to the exact scheme primary, called by apply-scheme.sh
     (writers.writePython3Bin "caelestia-recolor-folders" {

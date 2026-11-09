@@ -5,6 +5,9 @@ The current rices (Hyprland and Caelestia) are :
 - adaptive : the colors change depending on the wallpaper
 - vampire : bright red and bloody vibes
 - petals : pink and soft vibes
+- cyberpunk : a style similar to cyberpunk 2077
+
+Switch between adaptive, petals and vampire with SUPER + SHIFT + R (cycles), or `rice adaptive|petals|vampire|next` in fish, or the **Rices** app in the launcher (`tools/rice-picker`).
 
 The legacy rices were :
 - a Gnome purple Catppuccin rice with cool animations

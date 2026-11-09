@@ -100,9 +100,10 @@ path, theme = sys.argv[1], sys.argv[2]
 data = json.load(open(path))
 if isinstance(data.get("theme"), dict) and "iconTheme" in data["theme"]:
     data["theme"]["iconTheme"] = theme
-    tmp = path + ".tmp"
-    json.dump(data, open(tmp, "w"), indent=4)
-    os.replace(tmp, path)
+    text = json.dumps(data, indent=4)
+    # Written in place: qtengine watches this file and reloads it in running Qt apps
+    with open(path, "w") as f:
+        f.write(text)
 else:
     print("qtengine: theme.iconTheme key not found, skipped", file=sys.stderr)
 EOF
@@ -112,10 +113,9 @@ fi
 
 # Nautilus loads gtk.css only at startup, so restart it to apply the new colors
 
-# Quickshell (launcher) loads the icon theme only at startup, so restart it when
-# the theme or its colours changed. Detached, since this hook may be a child of the shell itself.
-if [ "$theme" != "$old_theme" ] || [ "$primary" != "$old_primary" ]; then
-    echo "icon theme changed ($old_theme #$old_primary -> $theme #$primary), restarting caelestia shell"
-    setsid -f sh -c 'sleep 1; caelestia shell -r' >/dev/null 2>&1 </dev/null
-fi
+# Quickshell (launcher) and other Qt apps: qtengine reloads its config by itself, but its icon
+# loader (KIconLoader) keeps the old theme until it gets this signal. No shell restart needed.
+# The pause lets qtengine reload the config first, so the loader picks up the new theme name.
+sleep 0.5
+busctl --user emit /KIconLoader org.kde.KIconLoader iconChanged i 0
 
