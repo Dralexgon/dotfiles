@@ -77,9 +77,9 @@ def dominant_colour(path):
     return colours[counts.argmax()] / 255
 
 
-def recolour(src, dst, base, target):
-    img = np.asarray(Image.open(src).convert("RGBA")).astype(float) / 255
-    h, s, v = rgb_to_hsv(img[..., :3])
+def recolour_rgb(rgb, base, target):
+    """New colours for an (N, 3) array of 0-1 colours."""
+    h, s, v = rgb_to_hsv(rgb)
     bh, bs, bv = colorsys.rgb_to_hsv(*base)
     th, ts, tv = colorsys.rgb_to_hsv(*target)
 
@@ -90,8 +90,39 @@ def recolour(src, dst, base, target):
 
     # Only tint coloured pixels, so white/grey glyphs keep their look
     w = np.clip((s - 0.08) / 0.15, 0, 1)[..., None]
-    img[..., :3] = img[..., :3] * (1 - w) + out * w
-    Image.fromarray(np.round(img * 255).astype(np.uint8)).save(dst)
+    return rgb * (1 - w) + out * w
+
+
+def pack(rgb):
+    rgb = rgb.astype(np.uint32)
+    return (rgb[..., 0] << 16) | (rgb[..., 1] << 8) | rgb[..., 2]
+
+
+def recolour_all(jobs, base, target):
+    """Recolours every (src, dst) PNG.
+
+    The new colour depends only on the RGB of a pixel, and the folder icons
+    share a few thousand colours over millions of pixels, so each distinct
+    colour is computed once and the images are mapped through a lookup table.
+    """
+    imgs = [np.asarray(Image.open(src).convert("RGBA")) for src, _ in jobs]
+    packed = [pack(img[..., :3]) for img in imgs]
+
+    seen = np.zeros(1 << 24, bool)
+    for p in packed:
+        seen[p] = True
+    colours = np.flatnonzero(seen).astype(np.uint32)
+    rgb = np.stack([colours >> 16, (colours >> 8) & 255, colours & 255], -1)
+    new = np.round(recolour_rgb(rgb / 255, base, target) * 255).astype(np.uint8)
+
+    lut = np.empty((1 << 24, 3), np.uint8)  # only the rows of used colours are touched
+    lut[colours] = new
+    for (_, dst), img, p in zip(jobs, imgs, packed):
+        out = np.empty_like(img)
+        out[..., :3] = lut[p]
+        out[..., 3] = img[..., 3]
+        # compress_level 1: much faster to write, the files are a little bigger
+        Image.fromarray(out).save(dst, compress_level=1)
 
 
 def main():
@@ -104,13 +135,14 @@ def main():
     shutil.rmtree(tmp, ignore_errors=True)
     os.makedirs(tmp)
 
+    jobs = []
     for root, _, files in os.walk(base_dir):
         rel = os.path.relpath(root, base_dir)
         for f in files:
             if FOLDER_ICON.match(f):
                 os.makedirs(os.path.join(tmp, rel), exist_ok=True)
-                recolour(os.path.join(root, f), os.path.join(tmp, rel, f),
-                         base, target)
+                jobs.append((os.path.join(root, f), os.path.join(tmp, rel, f)))
+    recolour_all(jobs, base, target)
 
     with open(os.path.join(base_dir, "index.theme")) as fh:
         index = fh.read()

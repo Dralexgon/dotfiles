@@ -56,20 +56,29 @@ EOF
 echo "base=$theme mode=$mode primary=$primary"
 [ -z "${theme:-}" ] && { echo "Python step failed"; exit 1; }
 
-# Copy the closest Yaru variant with its folders recoloured to the exact primary
+# Copy the closest Yaru variant with its folders recoloured to the exact primary.
+# The stamp records what the copy was last built from: a rice switch runs this hook twice
+# (scheme, then wallpaper) with the same colours, and the second run has nothing to rebuild.
 if [ "$mode" = "dark" ]; then caelestia_theme=Caelestia-dark; else caelestia_theme=Caelestia; fi
-if caelestia-recolor-folders "$theme" "$primary" "$HOME/.local/share/icons/$caelestia_theme"; then
+caelestia_dir="$HOME/.local/share/icons/$caelestia_theme"
+stamp="$HOME/.local/state/caelestia/icon-primary"
+old_stamp=$(cat "$stamp" 2>/dev/null)
+new_stamp="$theme $primary $caelestia_theme"
+rebuilt=0
+if [ "$new_stamp" = "$old_stamp" ] && [ -f "$caelestia_dir/index.theme" ]; then
+    echo "icons already built for $new_stamp, skipped"
     theme=$caelestia_theme
+elif caelestia-recolor-folders "$theme" "$primary" "$caelestia_dir"; then
+    echo "$new_stamp" >"$stamp"
+    theme=$caelestia_theme
+    rebuilt=1
 else
     echo "folder recolour failed, using $theme"
 fi
 
 old_theme=$(gsettings get org.gnome.desktop.interface icon-theme | tr -d "'")
-stamp="$HOME/.local/state/caelestia/icon-primary"
-old_primary=$(cat "$stamp" 2>/dev/null)
-echo "$primary" >"$stamp"
 # Same name with new colours: switch away and back so GTK apps reload the icons
-if [ "$theme" = "$old_theme" ] && [ "$primary" != "$old_primary" ]; then
+if [ "$theme" = "$old_theme" ] && [ "$rebuilt" = 1 ]; then
     gsettings set org.gnome.desktop.interface icon-theme hicolor
 fi
 gsettings set org.gnome.desktop.interface icon-theme "$theme"
