@@ -1317,14 +1317,18 @@ class NixCfg(App):
         self.push_screen(Choose("Host to edit", list_hosts()), switch)
 
     def action_git_diff(self) -> None:
-        diff = ["git", "-C", str(DOTFILES), "diff", "HEAD", "--", "nixos", "flake.lock"]
-        if subprocess.call([*diff, "--quiet"]) == 0:
+        diff = ["git", "-C", str(DOTFILES), "diff", "HEAD"]
+        paths = ["--", "nixos", "flake.lock"]
+        # --quiet must come before "--", or git takes it as a path and prints
+        # the whole diff over the TUI.
+        if subprocess.call([*diff, "--quiet", *paths]) == 0:
             self.notify("No changes since the last commit.")
             return
         # Git defaults to LESS=FRX, and F quits at once when the diff fits on
         # one screen, so the TUI would redraw over it before it can be read.
+        # c clears the screen first, or the diff is drawn over the TUI.
         with self.suspend():
-            subprocess.call(diff, env={**os.environ, "LESS": "R"})
+            subprocess.call([*diff, *paths], env={**os.environ, "LESS": "Rc"})
 
     def action_update(self) -> None:
         # With nh, updating this machine also switches to the updated config.
