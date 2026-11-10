@@ -5,7 +5,6 @@
     # Change depending on your prefered version
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-26.05";
-    nixpkgs-stable-opencode.url = "github:nixos/nixpkgs/0954f7ee2f6bb3dc7d4e3d0d8bcb8fd4bde4cfc5";
 
 
     nixpkgs23.url = "github:nixos/nixpkgs/nixos-23.11";
@@ -79,18 +78,28 @@
   };
 
 
-  outputs = { self, nixpkgs, nvf, lanzaboote, ... }@inputs:
+  outputs = { self, nixpkgs, nvf, ... }@inputs:
   let
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
     nixcfg = import ./tools/nixcfg { inherit pkgs; };
     razerfx = import ./tools/razerfx { inherit pkgs; };
+
+    # Given to every module as arguments, next to pkgs, config, lib...
+    specialArgs = {
+      inherit inputs;
+      username = "alex";
+      # Evaluated once here, instead of once per module that imports them.
+      # Use them as pkgs-stable.example
+      pkgs-stable = import inputs.nixpkgs-stable { inherit system; config.allowUnfree = true; };
+      pkgs23 = import inputs.nixpkgs23 { inherit system; config.allowUnfree = true; }; # texliveFull
+    };
   in
   {
     nixosConfigurations."nixos" = self.nixosConfigurations."default";
 
     nixosConfigurations."default" = nixpkgs.lib.nixosSystem {
-      specialArgs = {inherit inputs;};
+      inherit specialArgs;
       modules = [
         ./nixos/hosts/default/configuration.nix
       ];
@@ -98,37 +107,16 @@
 
     nixosConfigurations."nixos-tower-RTX3060" = nixpkgs.lib.nixosSystem {
       # Main pc POWERFUL RTXXXX !!!
-      specialArgs = {inherit inputs;};
+      inherit specialArgs;
       modules = [
         ./nixos/hosts/nixos-tower-RTX3060/configuration.nix
-        nvf.nixosModules.default
-
         # inputs.boot-animation.nixosModules.default
-        lanzaboote.nixosModules.lanzaboote
-        ({ pkgs, lib, ... }: {
-
-          environment.systemPackages = [
-            # For debugging and troubleshooting Secure Boot.
-            pkgs.sbctl
-          ];
-
-          # Lanzaboote currently replaces the systemd-boot module.
-          # This setting is usually set to true in configuration.nix
-          # generated at installation time. So we force it to false
-          # for now.
-          boot.loader.systemd-boot.enable = lib.mkForce false;
-
-          boot.lanzaboote = {
-            enable = true;
-            pkiBundle = "/var/lib/sbctl";
-          };
-        })
       ];
     };
 
     nixosConfigurations."nixos-gray-laptop" = nixpkgs.lib.nixosSystem {
       # Work laptop, nixos-gray-laptop: 50 nuance...
-      specialArgs = {inherit inputs;};
+      inherit specialArgs;
       modules = [
         ./nixos/hosts/nixos-gray-laptop/configuration.nix
 

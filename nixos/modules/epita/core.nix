@@ -12,6 +12,7 @@
     # ./js.nix
     ./latex.nix
     # ./net.nix
+    # ./jetbrains.nix
   ];
 
   programs.ssh.package = pkgs.openssh_gssapi; # add GSSAPI support

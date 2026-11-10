@@ -1,10 +1,5 @@
-{ pkgs, inputs, ... }:
+{ pkgs, pkgs-stable, ... }:
 
-let
-  # older way: nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
-  pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.stdenv.hostPlatform.system; config.allowUnfree = true; };
-  # use it as pkgs-stable.example
-in
 {
   programs.dconf.enable = true;
 
@@ -27,7 +22,7 @@ in
 
     # Generate color schemes from images
     python3
-    pkgs-stable.pywal
+    pkgs-stable.pywal # unstable pywal16 fails to build (makeWrapper --prefix bug)
 
     eww # This can be used to create a custom bar. I will try to do my own menu with it
 

@@ -1,4 +1,4 @@
-{ config, pkgs, lib, inputs, ... }:
+{ pkgs, lib, username, ... }:
 
 let
   razerfx = import ../../tools/razerfx { inherit pkgs; };
@@ -41,12 +41,12 @@ in
 
   hardware.openrazer = {
     enable = true;
-    users = ["alex"];
+    users = [ username ];
   };
 
   # openrazer: also lets razerfx read key presses (openrazer's udev rule
   # gives the Razer /dev/input devices to this group)
-  users.users."alex" = { extraGroups = [ "openrazer" ]; };
+  users.users.${username}.extraGroups = [ "openrazer" ];
 
   # The razerfx screen mirror captures the screen on the GPU with
   # gpu-screen-recorder. This gives its KMS helper the capability to do it

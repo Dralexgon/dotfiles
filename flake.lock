@@ -318,22 +318,6 @@
         "type": "github"
       }
     },
-    "nixpkgs-stable-opencode": {
-      "locked": {
-        "lastModified": 1785318670,
-        "narHash": "sha256-dN6Ou5x/+23FZLEpYP3IffO+NyJFzUlGumt1uu3MMaY=",
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "0954f7ee2f6bb3dc7d4e3d0d8bcb8fd4bde4cfc5",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "0954f7ee2f6bb3dc7d4e3d0d8bcb8fd4bde4cfc5",
-        "type": "github"
-      }
-    },
     "nixpkgs23": {
       "locked": {
         "lastModified": 1720535198,
@@ -466,7 +450,6 @@
         "lanzaboote": "lanzaboote",
         "nixpkgs": "nixpkgs",
         "nixpkgs-stable": "nixpkgs-stable",
-        "nixpkgs-stable-opencode": "nixpkgs-stable-opencode",
         "nixpkgs23": "nixpkgs23",
         "nvf": "nvf",
         "quickshell": "quickshell_3",

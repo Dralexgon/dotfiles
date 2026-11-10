@@ -1,13 +1,9 @@
-{ inputs, pkgs, ... }:
+{ pkgs, ... }:
 
-let
-  pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.stdenv.hostPlatform.system; config.allowUnfree = true; };
-in
 {
   environment.systemPackages = with pkgs; [
     rofi # App launcher
     waybar # Status bar at the top of the screen
-    kitty # Hyprland console
     hyprlock # Lock screen
     hyprpaper # Wallpaper manager
     yazi # File explorer (terminal)
@@ -22,10 +18,6 @@ in
     grim # Screenshot
     slurp # Screenshot area selector
     hyprshot # Screenshot
-
-    # Ricing
-    python3
-    pkgs-stable.pywal # unstable pywal16 fails to build (makeWrapper --prefix bug)
 
     #ZaneyOS conf
     eza

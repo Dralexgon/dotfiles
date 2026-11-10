@@ -31,8 +31,8 @@
     ./../../modules/gnome.nix
     ./../../modules/hyprland.nix
     ./../../modules/hyprland-utils.nix
-    # ./../../modules/jetbrains.nix
     # ./../../modules/kde-plasma.nix
+    ./../../modules/latest-kernel.nix
     ./../../modules/life-manager.nix
     ./../../modules/llm.nix
     ./../../modules/neovim.nix
@@ -44,10 +44,10 @@
     ./../../modules/ricing.nix
     ./../../modules/ricing-tools.nix
     ./../../modules/secure-boot.nix
-    # ./../../modules/ssh.nix
+    ./../../modules/ssh.nix
     ./../../modules/swap.nix
     # ./../../modules/theme-catpuccin.nix
-    # ./../../modules/troobleshooting.nix
+    # ./../../modules/troubleshooting.nix
     ./../../modules/useful-apps.nix
     # ./../../modules/vm.nix
     # ./../../modules/wayfire.nix
@@ -73,4 +73,8 @@
     pciutils
     gparted
   ];
+
+  # NixOS release this host was installed with: keep it, even after upgrades
+  # (read `man configuration.nix` before changing it).
+  system.stateVersion = "24.11";
 }

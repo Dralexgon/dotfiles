@@ -1,4 +1,4 @@
-{ ... }:
+{ username, ... }:
 
 # Starts my life-manager website (~/dev/apps/life-manager) at boot, in dev mode (live reload)
 # on http://localhost:5173. Logs: journalctl -u life-manager -f
@@ -13,9 +13,9 @@
     path = [ "/run/wrappers" "/run/current-system/sw" ];
 
     serviceConfig = {
-      User = "alex";
-      WorkingDirectory = "/home/alex/dev/apps/life-manager";
-      ExecStart = "/home/alex/dev/apps/life-manager/run.sh dev";
+      User = username;
+      WorkingDirectory = "/home/${username}/dev/apps/life-manager";
+      ExecStart = "/home/${username}/dev/apps/life-manager/run.sh dev";
       Restart = "on-failure";
       RestartSec = 10;
     };

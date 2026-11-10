@@ -2,12 +2,9 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ pkgs, inputs, ... }:
+{ pkgs, pkgs-stable, inputs, username, ... }:
 
 let
-  # older way: nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
-  pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.stdenv.hostPlatform.system; config.allowUnfree = true; };
-  # use it as pkgs-stable.example
   useGrub = false; # Set to false if you don't want to use my grub theme or prefer systemd-boot
 
   # Packages that aren't in nixpkgs, named so that they are plain lines of
@@ -112,7 +109,7 @@ in
       # Libraries expected to be in /usr/lib
       # curl.dev
       clang-tools
-      criterion # doesn't work here, use modules/epita/criterion.nix instead
+      # criterion (testsuites for C programs) is in criterion.nix
     ];
   };
 
@@ -130,7 +127,6 @@ in
     vim
     pkgs-stable.vscode
     vscodium
-    # or activate modules/jetbrains.nix in configuration.nix
 
     # Terminal <3 meow
     kitty # In kitty.conf set linux_display_server to x11 to have the same look as gnome-terminal
@@ -166,10 +162,10 @@ in
   ];
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
-  users.users.alex = {
+  users.users.${username} = {
     isNormalUser = true;
-    description = "alex";
-    extraGroups = [ "networkmanager" "wheel" "docker" ];
+    description = username;
+    extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       #thunderbird
     ];
@@ -198,14 +194,13 @@ in
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "en_US.UTF-8";
     LC_IDENTIFICATION = "en_US.UTF-8";
-    LC_MEASUREMENT = "en_US.UTF-8";
+    LC_MEASUREMENT = "fr_FR.UTF-8";
     LC_MONETARY = "en_US.UTF-8";
     LC_NAME = "en_US.UTF-8";
     LC_NUMERIC = "en_US.UTF-8";
     LC_PAPER = "en_US.UTF-8";
     LC_TELEPHONE = "en_US.UTF-8";
     LC_TIME = "fr_FR.UTF-8";
-    LC_ALL = "en_US.UTF-8";
   };
 
   # Enable touchpad support (enabled default in most desktopManager).
@@ -233,23 +228,11 @@ in
     wireplumber.enable = true;
   };
 
-  # Allow unfree packages
+  # Allow unfree packages (for nix-shell / nix run outside this flake: NIXPKGS_ALLOW_UNFREE=1 ... --impure)
   nixpkgs.config.allowUnfree = true;
-
-  # Allow unfree packages v2 (not sure if it works)
-  environment.variables = {
-    NIXPKGS_ALLOW_UNFREE = "1";
-    NIXPKGS_ALLOW_INSECURE = "1";
-  };
 
   # Enable experimental features like flakes
   nix.settings.experimental-features = ["nix-command" "flakes"];
 
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "24.11"; # Did you read the comment?
+  # system.stateVersion is set in each host configuration.nix
 }

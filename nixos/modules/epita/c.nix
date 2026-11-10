@@ -5,16 +5,9 @@
     gcc # GNU C compiler
     gnumake # GNU make
     clang-tools # Clang format, clang-tidy, etc...
-
-    criterion # Library to create testsuites for C programs
+    # criterion (testsuites for C programs) is in criterion.nix
 
     # GNU autotools
-    automake
-    autoconf
-    autoconf-archive
-    libtool
-
-    # GNU autotools v2
     automake
     autogen
     autoconf

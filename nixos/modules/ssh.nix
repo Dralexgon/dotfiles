@@ -15,8 +15,10 @@
     };
   };
 
+  # Bans IPs after repeated failed SSH logins (password login is allowed above)
+  services.fail2ban.enable = true;
+
   environment.systemPackages = with pkgs; [
-    fail2ban
     cloudflared # very useful to make ssh domain
   ];
 }

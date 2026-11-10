@@ -3,7 +3,7 @@
 {
   swapDevices = [{
     device = "/swapfile";
-    size = 16 * 1024; # 8GB
+    size = 16 * 1024; # 16GB
   }];
   zramSwap.enable = true; # Optimize swap
 }

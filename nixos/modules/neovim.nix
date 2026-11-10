@@ -14,11 +14,6 @@
     wl-clipboard
     ripgrep
     nodejs # For copilot nvim
-    nil # Nix lsp (language server protocol) for errors and warnings in .nix files
-  ];
-
-  fonts.packages = with pkgs; [
-    jetbrains-mono
-    # font-awesome
+    # nil (Nix lsp) and the jetbrains-mono font are in core.nix
   ];
 }

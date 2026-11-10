@@ -1,9 +1,5 @@
-{ inputs, pkgs, ... }:
+{ pkgs, pkgs-stable, username, ... }:
 
-let
-  # older way: nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
-  pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.stdenv.hostPlatform.system; config.allowUnfree = true; };
-in
 {
   services.ollama = {
     enable = true;
@@ -11,7 +7,7 @@ in
   };
 
   virtualisation.docker.enable = true;
-  users.users.alex.extraGroups = [ "docker" ];
+  users.users.${username}.extraGroups = [ "docker" ];
 
   environment.systemPackages = with pkgs; [
     # upstream node_modules hash is stale in nixpkgs, remove once fixed
@@ -21,7 +17,6 @@ in
       };
     }))
     pkgs-stable.open-webui
-    docker
     docker-compose
     (pkgs.stable-diffusion-cpp.override { vulkanSupport = true; })
 
