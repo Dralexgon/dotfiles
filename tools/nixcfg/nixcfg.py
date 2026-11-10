@@ -169,9 +169,29 @@ def list_modules() -> list[str]:
 CORE = "core"
 
 
+# nixos/hosts/<host>/configuration.nix, shown as an always-on module of its
+# host (right after core), so the host's own file can be browsed and edited.
+HOST_PREFIX = "hosts/"
+
+
+def host_module(host: str) -> str:
+    return f"{HOST_PREFIX}{host}"
+
+
+def is_host_module(name: str) -> bool:
+    return name.startswith(HOST_PREFIX)
+
+
+def is_pinned(name: str) -> bool:
+    """core and the host's configuration: always on, can't be deleted."""
+    return name == CORE or is_host_module(name)
+
+
 def module_path(name: str) -> Path:
     if name == CORE:
         return DOTFILES / "nixos" / "core.nix"
+    if is_host_module(name):
+        return host_path(name.removeprefix(HOST_PREFIX))
     return MODULES_DIR / f"{name}.nix"
 
 
@@ -198,7 +218,7 @@ def is_group(name: str) -> bool:
 
 
 def is_active(name: str, enabled: list[str]) -> bool:
-    if name == CORE:
+    if is_pinned(name):
         return True
     core = group_core(name)
     return name in enabled and (core is None or core in enabled)
@@ -207,8 +227,8 @@ def is_active(name: str, enabled: list[str]) -> bool:
 def display_key(name: str) -> tuple:
     """Sort groups by folder name, with their submodules right after them
     (and core.nix first)."""
-    if name == CORE:
-        return ("", False, "")
+    if is_pinned(name):
+        return ("", False, name if is_host_module(name) else "")
     folder, sep, base = name.rpartition("/")
     if sep and module_path(f"{folder}/core").exists():
         return (folder, base != "core", base)
@@ -286,7 +306,8 @@ def check_module(name: str) -> str | None:
                           capture_output=True, text=True)
     if proc.returncode != 0:
         return nix_error(proc.stderr)
-    for host in list_hosts():
+    hosts = [name.removeprefix(HOST_PREFIX)] if is_host_module(name) else list_hosts()
+    for host in hosts:
         if not is_active(name, load_state(host)["modules"]):
             continue
         proc = subprocess.run(
@@ -789,7 +810,8 @@ class NixCfg(App):
         self.refresh_all_packages()
 
     def module_names(self) -> list[str]:
-        return sorted({CORE, *list_modules(), *self.state["modules"]}, key=display_key)
+        return sorted({CORE, host_module(self.host), *list_modules(), *self.state["modules"]},
+                      key=display_key)
 
     def refresh_modules(self) -> None:
         others = {h: load_state(h)["modules"] for h in list_hosts() if h != self.host}
@@ -819,6 +841,11 @@ class NixCfg(App):
                 label = escape(name)
             if name == CORE:
                 label = f"{escape(name)}  [dim]nixos/core.nix · every host[/]"
+                selections.append(Selection(label, name, True))
+                continue
+            if is_host_module(name):
+                rel = module_path(name).relative_to(DOTFILES).as_posix()
+                label = f"configuration  [dim]{escape(rel)} · this host[/]"
                 selections.append(Selection(label, name, True))
                 continue
             if name not in on_disk:
@@ -871,7 +898,7 @@ class NixCfg(App):
         if not self.module:
             return
         on = sum(e.enabled for e in self.entries.values())
-        title = f"[b]{escape(Path(self.module).name)}.nix[/]  [dim]{on}/{len(self.entries)}[/]"
+        title = f"[b]{escape(module_path(self.module).name)}[/]  [dim]{on}/{len(self.entries)}[/]"
         if self.check_status:
             title += f"  {self.check_status}"
         self.query_one("#pkg-title", Static).update(title)
@@ -898,6 +925,8 @@ class NixCfg(App):
         query = self.query_one("#filter", Input).value.strip().lower()
         rows = [(e.name, "this host", e.enabled, f"h:{e.line}") for e in host_entries(self.host)]
         for module in self.module_names():
+            if is_host_module(module):  # already listed as "this host"
+                continue
             active = is_active(module, enabled)
             for entry in module_entries(module):
                 if entry.editable:
@@ -949,7 +978,8 @@ class NixCfg(App):
         modules_tab = self.query_one("#tabs", TabbedContent).active == "modules-tab"
         focus = self.focused_id()
         if action == "delete_module":
-            return modules_tab and focus == "modules" and self.highlighted_module() != CORE
+            return (modules_tab and focus == "modules"
+                    and not is_pinned(self.highlighted_module() or CORE))
         if action == "new_module":
             return modules_tab and focus == "modules"
         if action == "edit":
@@ -999,9 +1029,11 @@ class NixCfg(App):
     @on(SelectionList.SelectionToggled, "#modules")
     def module_toggled(self, event: SelectionList.SelectionToggled) -> None:
         name = event.selection.value
-        if name == CORE:
+        if is_pinned(name):
             event.selection_list.select(name)  # can't be turned off
-            self.notify("core.nix is imported by every host: toggle its packages instead.")
+            what = ("core.nix is imported by every host" if name == CORE
+                    else "configuration.nix is this host itself")
+            self.notify(f"{what}: toggle its packages instead.")
             return
         self.set_module(name, name not in self.state["modules"])
 
@@ -1096,7 +1128,7 @@ class NixCfg(App):
 
     def action_delete_module(self) -> None:
         name = self.highlighted_module()
-        if not name:
+        if not name or is_pinned(name):
             return
         path = module_path(name)
         hosts = [h for h in list_hosts() if name in load_state(h)["modules"]]
@@ -1198,16 +1230,16 @@ class NixCfg(App):
             def add_to_module(attr: str, comment: str) -> None:
                 text = module_path(module).read_text()
                 if any(e.name == attr for e in modfile.entries(text)):
-                    self.notify(f"{attr} is already in {module}.nix.")
+                    self.notify(f"{attr} is already in {module_path(module).name}.")
                     return
                 result = modfile.add(text, attr, comment)
                 if result is None:
-                    self.notify(f"{module}.nix has no environment.systemPackages list: "
+                    self.notify(f"{module_path(module).name} has no environment.systemPackages list: "
                                 "press e to add one.", severity="warning")
                     return
                 self.write_module(module, *result)
 
-            self.push_screen(PackageSearch(f"{Path(module).name}.nix"),
+            self.push_screen(PackageSearch(module_path(module).name),
                              self.with_description(add_to_module))
             return
 
@@ -1255,7 +1287,7 @@ class NixCfg(App):
             if entry and entry.editable:
                 text = module_path(self.module).read_text()
                 self.write_module(self.module, modfile.remove(text, entry), entry.line)
-                self.notify(f"Removed {entry.name} from {self.module}.nix.")
+                self.notify(f"Removed {entry.name} from {module_path(self.module).name}.")
             return
         option = self.query_one("#all-packages", OptionList).highlighted_option
         if option and option.id.startswith("h:"):

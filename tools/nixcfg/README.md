@@ -79,7 +79,9 @@ Three columns, like a file manager:
   [`nixos/core.nix`](../../nixos/core.nix): every host imports it, so it
   can't be turned off (or deleted), but its packages are toggled like any
   module's, for every host. For per-host control, move a block of it into a
-  module (like `useful-apps.nix`). A group (`epita 4/10 ▸`)
+  module (like `useful-apps.nix`). The second row, `configuration`, is the
+  host's own `nixos/hosts/<host>/configuration.nix`: always on too, so you
+  can browse it, edit it with `e` and toggle its packages. A group (`epita 4/10 ▸`)
   opens with `→` to show its submodules.
 - **Packages** of the highlighted module (middle): `→` enters this column,
   `←` goes back. `●` means the line is active, `○` that it is commented out.
