@@ -7,11 +7,6 @@
 let
   useGrub = false; # Set to false if you don't want to use my grub theme or prefer systemd-boot
 
-  # Packages that aren't in nixpkgs, named so that they are plain lines of
-  # environment.systemPackages (and can be toggled with nixcfg). A let name
-  # wins over `with pkgs;`.
-  zen-browser = inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default;
-
   # TUI to toggle modules and packages (also in the app launcher)
   nixcfg = import ../tools/nixcfg { inherit pkgs; };
 

@@ -47,6 +47,7 @@
     ./../../modules/useful-apps.nix
     # ./../../modules/vm.nix
     ./../../modules/windows.nix
+    ./../../modules/browsers.nix
   ];
 
   # Desktops: all selectable on the login screen (or use `nixcfg`).
