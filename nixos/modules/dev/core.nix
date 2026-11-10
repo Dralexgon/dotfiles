@@ -3,6 +3,8 @@
 {
   imports = [
     ./neovim.nix
+    # ./jetbrains.nix
+    # ./game-creation.nix
   ];
 
   environment.systemPackages = with pkgs; [

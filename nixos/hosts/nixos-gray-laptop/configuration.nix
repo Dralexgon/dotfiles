@@ -24,7 +24,6 @@
 
     # ./../../modules/file-transfer.nix
     # ./../../modules/flatpak.nix
-    # ./../../modules/game-creation.nix
 
     ./../../modules/gaming/core.nix
 
