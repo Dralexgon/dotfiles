@@ -14,7 +14,6 @@
     # Modules: comment a line out to disable it (or use `nixcfg`)
     ./../../modules/auto-update.nix
     ./../../modules/boot-animation.nix
-    # ./../../modules/caelestia.nix
 
     ./../../modules/epita/core.nix
 
@@ -23,10 +22,7 @@
 
     ./../../modules/gaming/core.nix
 
-    ./../../modules/gnome.nix
-    ./../../modules/hyprland.nix
     # ./../../modules/hyprland-utils.nix
-    # ./../../modules/kde-plasma.nix
     ./../../modules/latest-kernel.nix
     # ./../../modules/life-manager.nix
     # ./../../modules/llm.nix
@@ -46,9 +42,19 @@
     # ./../../modules/troubleshooting.nix
     ./../../modules/useful-apps.nix
     # ./../../modules/vm.nix
-    # ./../../modules/wayfire.nix
     # ./../../modules/windows.nix
   ];
+
+  # Desktops: all selectable on the login screen (or use `nixcfg`).
+  # caelestia also turns hyprland on. See nixos/modules/desktop/default.nix
+  desktop.enabled = [
+    # "caelestia"
+    "gnome"
+    "hyprland"
+    # "kde"
+    # "wayfire"
+  ];
+  desktop.defaultSession = "hyprland";
 
   # Packages for this host only
   environment.systemPackages = with pkgs; [

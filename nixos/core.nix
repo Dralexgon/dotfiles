@@ -34,6 +34,9 @@ in
 
 {
   imports = [
+    # Desktops: options to pick them per host (desktop.enabled)
+    ./modules/desktop
+
     #inputs.nix-minecraft.nixosModules.minecraft-servers
   ];
   #nixpkgs.overlays = [ inputs.nix-minecraft.overlay ];

@@ -182,9 +182,24 @@ def is_host_module(name: str) -> bool:
     return name.startswith(HOST_PREFIX)
 
 
+# nixos/modules/desktop: a group imported by core.nix (so always on), whose
+# desktops are picked per host in its desktop.enabled list (see hostfile.py),
+# not in imports. desktop/default.nix holds the options and the login screen.
+DESKTOP_CORE = "desktop/default"
+
+
+def desktop_name(name: str) -> str:
+    return name.removeprefix("desktop/")
+
+
+def list_desktops() -> list[str]:
+    return [n for n in list_modules() if group_core(n) == DESKTOP_CORE]
+
+
 def is_pinned(name: str) -> bool:
-    """core and the host's configuration: always on, can't be deleted."""
-    return name == CORE or is_host_module(name)
+    """core, the host's configuration and the desktop group: always on,
+    can't be deleted."""
+    return name in (CORE, DESKTOP_CORE) or is_host_module(name)
 
 
 def module_path(name: str) -> Path:
@@ -204,34 +219,44 @@ def module_entries(name: str) -> list[modfile.Entry]:
 
 # A folder with a core.nix is a group (see hostfile.py): its core
 # switches the whole group, and each submodule is toggled on its own.
+# The desktop folder is a group too, with default.nix as its core.
+def folder_core(folder: str) -> str | None:
+    """The core of a folder, if it is a group."""
+    core = DESKTOP_CORE if folder == "desktop" else f"{folder}/core"
+    return core if module_path(core).exists() else None
+
+
 def group_core(name: str) -> str | None:
     """The core of the group a submodule is in ("epita/c" -> "epita/core")."""
     folder, sep, _ = name.rpartition("/")
-    core = f"{folder}/core"
-    if not sep or name == core or not module_path(core).exists():
-        return None
-    return core
+    core = folder_core(folder) if sep else None
+    return None if name == core else core
 
 
 def is_group(name: str) -> bool:
-    return name.endswith("/core") and module_path(name).exists()
+    folder, sep, _ = name.rpartition("/")
+    return bool(sep) and folder_core(folder) == name
+
+
+def group_label(core: str) -> str:
+    return core.rpartition("/")[0]
 
 
 def is_active(name: str, enabled: list[str]) -> bool:
     if is_pinned(name):
         return True
     core = group_core(name)
-    return name in enabled and (core is None or core in enabled)
+    return name in enabled and (core is None or is_pinned(core) or core in enabled)
 
 
 def display_key(name: str) -> tuple:
     """Sort groups by folder name, with their submodules right after them
     (and core.nix first)."""
-    if is_pinned(name):
+    if name == CORE or is_host_module(name):
         return ("", False, name if is_host_module(name) else "")
     folder, sep, base = name.rpartition("/")
-    if sep and module_path(f"{folder}/core").exists():
-        return (folder, base != "core", base)
+    if sep and (core := folder_core(folder)):
+        return (folder, name != core, base)
     return (name, False, "")
 
 
@@ -252,12 +277,17 @@ def group_subs(core: str) -> list[str]:
 
 
 def load_state(host: str) -> dict:
-    """{"modules": [...]}: the modules the host imports, and the submodules
+    """{"modules": [...]}: the modules the host imports, the submodules
     chosen in every group's core.nix (active only when the host imports
-    that core)."""
+    that core), and the host's desktops ("desktop/gnome")."""
     modules = imported(host_path(host))
     for core in filter(is_group, list_modules()):
-        modules += [n for n in group_subs(core) if n not in modules]
+        if core != DESKTOP_CORE:
+            modules += [n for n in group_subs(core) if n not in modules]
+    try:
+        modules += [f"desktop/{n}" for n in hostfile.desktops(host_path(host).read_text())]
+    except OSError:
+        pass
     return {"modules": modules}
 
 
@@ -267,9 +297,13 @@ def updated_imports(path: Path, chosen: list[str]) -> str:
 
 
 def save_state(host: str, state: dict) -> None:
-    """Write the host's own imports (submodules live in their core.nix)."""
+    """Write the host's own imports (submodules live in their core.nix)
+    and its desktops."""
     path = host_path(host)
     new = updated_imports(path, [n for n in state["modules"] if not group_core(n)])
+    new = hostfile.update_desktops(
+        new, [desktop_name(n) for n in state["modules"] if group_core(n) == DESKTOP_CORE],
+        [desktop_name(n) for n in list_desktops()])
     if new != path.read_text():
         path.write_text(new)
 
@@ -694,6 +728,7 @@ class NixCfg(App):
         Binding("n", "new_module", "New module"),
         Binding("e", "edit", "Edit"),
         Binding("D", "delete_module", "Delete module"),
+        Binding("s", "default_desktop", "Default desktop"),
         Binding("a", "add_package", "Add package"),
         Binding("x,delete", "remove_package", "Remove package"),
         Binding("slash", "focus_filter", "Filter"),
@@ -819,6 +854,7 @@ class NixCfg(App):
         on_disk = list_modules()
         names = self.module_names()
         visible = [n for n in names if group_core(n) in (None, *self.expanded)]
+        default = hostfile.default_session(host_path(self.host).read_text())
 
         modules = self.query_one("#modules", ModuleList)
         current = self.highlighted_module()
@@ -830,17 +866,23 @@ class NixCfg(App):
                 # Submodule: drawn as a branch of its group, dimmed when the group is off.
                 last = i + 1 == len(visible) or group_core(visible[i + 1]) != core
                 label = f"  [dim]{'└─' if last else '├─'}[/] {escape(name.rsplit('/', 1)[1])}"
-                if core not in enabled:
+                if core == DESKTOP_CORE and name in enabled and desktop_name(name) == default:
+                    label += "  [$primary]★ login default[/]"
+                if not is_active(core, enabled):
                     label = f"[dim]{label}[/]"
             elif is_group(name):
                 subs = [n for n in names if group_core(n) == name]
                 on = sum(n in enabled for n in subs)
                 arrow = "▾" if name in self.expanded else "▸"
-                label = f"{escape(name.removesuffix('/core'))}  [dim]{on}/{len(subs)} {arrow}[/]"
+                label = f"{escape(group_label(name))}  [dim]{on}/{len(subs)} {arrow}[/]"
             else:
                 label = escape(name)
             if name == CORE:
                 label = f"{escape(name)}  [dim]nixos/core.nix · every host[/]"
+                selections.append(Selection(label, name, True))
+                continue
+            if name == DESKTOP_CORE:
+                label += "  [dim]login screen, per host · s: default[/]"
                 selections.append(Selection(label, name, True))
                 continue
             if is_host_module(name):
@@ -978,8 +1020,12 @@ class NixCfg(App):
         modules_tab = self.query_one("#tabs", TabbedContent).active == "modules-tab"
         focus = self.focused_id()
         if action == "delete_module":
+            name = self.highlighted_module() or CORE
             return (modules_tab and focus == "modules"
-                    and not is_pinned(self.highlighted_module() or CORE))
+                    and not is_pinned(name) and group_core(name) != DESKTOP_CORE)
+        if action == "default_desktop":
+            return (modules_tab and focus == "modules"
+                    and group_core(self.highlighted_module() or "") == DESKTOP_CORE)
         if action == "new_module":
             return modules_tab and focus == "modules"
         if action == "edit":
@@ -1035,9 +1081,11 @@ class NixCfg(App):
         name = event.selection.value
         if is_pinned(name):
             event.selection_list.select(name)  # can't be turned off
-            what = ("core.nix is imported by every host" if name == CORE
-                    else "configuration.nix is this host itself")
-            self.notify(f"{what}: toggle its packages instead.")
+            what = {CORE: "core.nix is imported by every host: toggle its packages instead.",
+                    DESKTOP_CORE: "The desktop options are imported by core.nix: "
+                                  "turn its desktops on or off instead (→ to open)."}
+            self.notify(what.get(name, "configuration.nix is this host itself: "
+                                       "toggle its packages instead."))
             return
         self.set_module(name, name not in self.state["modules"])
 
@@ -1049,7 +1097,7 @@ class NixCfg(App):
         elif not on and name in self.state["modules"]:
             self.state["modules"].remove(name)
         core = group_core(name)
-        if core:
+        if core and core != DESKTOP_CORE:  # desktops are in the host file
             subs = [n for n in self.state["modules"] if group_core(n) == core]
             self.write_module(core, core_text(core, subs), None, show=False)
         else:
@@ -1090,6 +1138,10 @@ class NixCfg(App):
             if path.exists():
                 self.notify(f"{path.name} already exists.", severity="error")
                 return
+            if group_core(name) == DESKTOP_CORE:
+                self.notify("A desktop also needs its session in desktop/default.nix: "
+                            "add it by hand (see that file).", severity="error")
+                return
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(MODULE_TEMPLATE)
             # Flakes only see files tracked by git.
@@ -1129,6 +1181,20 @@ class NixCfg(App):
             subprocess.call(editor_command(path, line))
         self.refresh_all()
         self.show_module(self.module)
+
+    def action_default_desktop(self) -> None:
+        """Preselect the highlighted desktop on this host's login screen
+        (turning it on if needed)."""
+        name = self.highlighted_module()
+        if not name or group_core(name) != DESKTOP_CORE:
+            return
+        if name not in self.state["modules"]:
+            self.state["modules"].append(name)
+            self.save()
+        path = host_path(self.host)
+        path.write_text(hostfile.set_default_session(path.read_text(), desktop_name(name)))
+        self.refresh_all()
+        self.notify(f"{desktop_name(name)} is the default desktop of {self.host}.")
 
     def action_delete_module(self) -> None:
         name = self.highlighted_module()

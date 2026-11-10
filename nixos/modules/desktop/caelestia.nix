@@ -1,17 +1,17 @@
-{ inputs, pkgs, ... }:
+{ config, lib, inputs, pkgs, ... }:
 
 let
   # Mouse pointer trail, drawn by Hyprland itself (tools/hypr-cursortrail).
   # Built against pkgs.hyprland: it refuses to load into another Hyprland version.
-  cursortrail = import ../../tools/hypr-cursortrail { inherit pkgs; };
+  cursortrail = import ../../../tools/hypr-cursortrail { inherit pkgs; };
   # Workspace overview (SUPER + Tab), hyprexpo ported to the current Hyprland (tools/hypr-expo).
-  hyprexpo = import ../../tools/hypr-expo { inherit pkgs; };
+  hyprexpo = import ../../../tools/hypr-expo { inherit pkgs; };
   # Liquid Glass / Acrylic / Mica window effects (flake input hyprliquid, tools/hypr-liquid).
-  hyprliquid = import ../../tools/hypr-liquid { inherit pkgs; src = inputs.hyprliquid; };
+  hyprliquid = import ../../../tools/hypr-liquid { inherit pkgs; src = inputs.hyprliquid; };
   # Closing / opening window animations: petals blown by the wind or blood (tools/hypr-windowfx).
-  windowfx = import ../../tools/hypr-windowfx { inherit pkgs; };
+  windowfx = import ../../../tools/hypr-windowfx { inherit pkgs; };
   # Petals, blood drops or images thrown behind the mouse pointer (tools/hypr-cursorfx).
-  cursorfx = import ../../tools/hypr-cursorfx { inherit pkgs; };
+  cursorfx = import ../../../tools/hypr-cursorfx { inherit pkgs; };
   # Preferred overview, but it often lags behind Hyprland. A failed build leaves lib/ empty instead of
   # failing the system build, and hypr-user.lua then falls back to hyprexpo. It is retried whenever
   # nixpkgs updates it (or Hyprland).
@@ -19,7 +19,7 @@ let
   # copied into it. The package has its own patchPhase, which skips postPatch, hence appending to it.
   caelestia-cli = inputs.caelestia-cli.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (old: {
     patchPhase = (old.patchPhase or "") + ''
-      cp -r ${../../config/caelestia/schemes}/. src/caelestia/data/schemes/
+      cp -r ${../../../config/caelestia/schemes}/. src/caelestia/data/schemes/
     '';
   });
   # Petals lock screen (config/caelestia/lock), only active with the petals scheme: falling petals pushed
@@ -31,13 +31,13 @@ let
   # (apply-scheme.sh) shows at once instead of after the cached icons expire.
   caelestia-shell = inputs.caelestia-shell.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (old: {
     patches = (old.patches or [ ]) ++ [
-      ../../config/caelestia/lock/lock-petals.patch
-      ../../config/caelestia/launcher/launcher-icons-nocache.patch
+      ../../../config/caelestia/lock/lock-petals.patch
+      ../../../config/caelestia/launcher/launcher-icons-nocache.patch
     ];
     postPatch = (old.postPatch or "") + ''
-      cp ${../../config/caelestia/lock/PetalShape.qml} modules/lock/PetalShape.qml
-      cp ${../../config/caelestia/lock/PetalField.qml} modules/lock/PetalField.qml
-      cp ${../../config/caelestia/lock/PetalBloom.qml} modules/lock/center/PetalBloom.qml
+      cp ${../../../config/caelestia/lock/PetalShape.qml} modules/lock/PetalShape.qml
+      cp ${../../../config/caelestia/lock/PetalField.qml} modules/lock/PetalField.qml
+      cp ${../../../config/caelestia/lock/PetalBloom.qml} modules/lock/center/PetalBloom.qml
     '';
   });
   hyprtasking = pkgs.hyprlandPlugins.hyprtasking.overrideAttrs {
@@ -54,7 +54,8 @@ let
     '';
   };
 in
-{
+# Caelestia shell, on Hyprland (desktop.enabled, see default.nix)
+lib.mkIf (lib.elem "caelestia" config.desktop.enabled) {
   # Stable path for hl.plugin.load in config/caelestia/hypr-user.lua
   environment.etc."hypr/plugins/cursortrail.so".source = "${cursortrail}/lib/libcursortrail.so";
   environment.etc."hypr/plugins/hyprexpo.so".source = "${hyprexpo}/lib/libhyprexpo.so";
@@ -102,16 +103,16 @@ in
     spicetify-cli
 
     # SUPER + /: every Hyprland shortcut on a drawing of the keyboard (tools/keybinds-viewer)
-    (import ../../tools/keybinds-viewer { inherit pkgs; })
+    (import ../../../tools/keybinds-viewer { inherit pkgs; })
 
     # "Rices" in the app launcher: pick adaptive / petals / vampire (tools/rice-picker)
-    (import ../../tools/rice-picker { inherit pkgs; })
+    (import ../../../tools/rice-picker { inherit pkgs; })
 
     # Recolours Yaru folders to the exact scheme primary, called by apply-scheme.sh
     (writers.writePython3Bin "caelestia-recolor-folders" {
       libraries = with python3Packages; [ pillow numpy ];
       flakeIgnore = [ "E203" "E501" "W503" ];
-    } (builtins.readFile ../../config/caelestia/recolor-folders.py))
+    } (builtins.readFile ../../../config/caelestia/recolor-folders.py))
   ];
 
   # Adds the system profile to QT_PLUGIN_PATH so Qt apps (quickshell) can load qtengine.

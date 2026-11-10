@@ -61,7 +61,7 @@ Every change to .config should change files in dotfiles. If not create a file he
 
 ### Login screen (vampire style)
 
-Currently SDDM + the custom `predatoria` QML theme (`themes/sddm/predatoria`), set in `nixos/modules/hyprland.nix` (ly and sddm-astronaut configs kept there, disabled). Try each option:
+Currently SDDM + the custom `predatoria` QML theme (`themes/sddm/predatoria`), set in `nixos/modules/desktop/default.nix` (ly and sddm-astronaut configs kept there, disabled). Try each option:
 
 - [x] ly with a red doom fire: `services.displayManager.ly.settings` with `animation = "doom"`, `doom_top_color = "0x00300000"` (flame tips), `doom_middle_color = "0x00A00000"`, `doom_bottom_color = "0x00FF2020"` (fire base), `border_fg = "0x00B00000"`, `bigclock = "en"`
 - [x] SDDM with `sddm-astronaut`, recolored through its `embeddedTheme` / `themeConfig` overrides: Predatoria art or a gothic video loop as the background, Cinzel or UnifrakturMaguntia font, palette `#0b0507` / `#8a0303` / `#ff2a2a` / bone-white text

@@ -145,14 +145,14 @@ hl.window_rule({
 
 -- change the icon pack (yaru-magenta, yaru-green, etc...) depending on wallpaper when changing wallpaper with caelestia
 
--- Mouse pointer trail, a Hyprland plugin (tools/hypr-cursortrail, installed by nixos/modules/caelestia.nix).
+-- Mouse pointer trail, a Hyprland plugin (tools/hypr-cursortrail, installed by nixos/modules/desktop/caelestia.nix).
 -- Follows the Caelestia scheme and hides in game mode. Tunable with
 -- hl.config({ plugin = { cursortrail = { width = 8, life_ms = 220, color = 0 } } })
 hl.plugin.load("/etc/hypr/plugins/cursortrail.so")
 -- Its colour is set by the rice (see "Rices" below)
 
 -- Closing / opening window animations, a Hyprland plugin (tools/hypr-windowfx, installed by
--- nixos/modules/caelestia.nix). It replaces windowsOut / windowsIn for those windows and stays off in game mode.
+-- nixos/modules/desktop/caelestia.nix). It replaces windowsOut / windowsIn for those windows and stays off in game mode.
 --  petals: closing windows shatter into petals blown away by the wind, opening ones assemble from petals.
 --  blood:  closing windows shrink to nothing at their centre and burst into blood droplets (cursorfx's
 --          drops); opening windows pop in from 50% (like windowsIn), then drops drip off their edges.
@@ -183,7 +183,7 @@ pcall(hl.config, {
 })
 
 -- Petals, blood drops or images thrown behind the mouse pointer, a Hyprland plugin (tools/hypr-cursorfx,
--- installed by nixos/modules/caelestia.nix). Stays off in game mode. Switch live with
+-- installed by nixos/modules/desktop/caelestia.nix). Stays off in game mode. Switch live with
 -- hyprctl eval 'hl.config({ plugin = { cursorfx = { style = "blood" } } })'   (petals | blood | image | off)
 -- Tunable with hl.config({ plugin = { cursorfx = { style = "petals", image = "~/Pictures/bat.png", density = 5,
 -- size = 14, life_ms = 1400, max_particles = 400, color = 0, blood_color = 0xFF8A0012, splat_ms = 1600 } } })
@@ -278,7 +278,7 @@ hl.bind("SUPER + SHIFT + R", function()
 end, { description = "Next rice" })
 
 -- Liquid Glass / Acrylic / Mica window effects, a Hyprland plugin (tools/hypr-liquid, installed by
--- nixos/modules/caelestia.nix). Options: https://github.com/zaregototsukai/hyprliquid#configuration
+-- nixos/modules/desktop/caelestia.nix). Options: https://github.com/zaregototsukai/hyprliquid#configuration
 -- hl.plugin.load("/etc/hypr/plugins/hyprliquid.so")
 -- Unknown rule keys abort the file before the plugin is loaded (see the hyprexpo note below)
 if hl.plugin.hyprliquid then
@@ -296,7 +296,7 @@ if hl.plugin.hyprliquid then
 end
 
 -- Workspace overview on SUPER + Tab: hyprtasking when it builds against the current Hyprland
--- (it often lags behind), else hyprexpo (tools/hypr-expo). Both are installed by nixos/modules/caelestia.nix.
+-- (it often lags behind), else hyprexpo (tools/hypr-expo). Both are installed by nixos/modules/desktop/caelestia.nix.
 local HYPRTASKING = "/etc/hypr/plugins/hyprtasking/libhyprtasking.so"
 local function file_exists(path)
     local file = io.open(path, "r")

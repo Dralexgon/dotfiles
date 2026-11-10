@@ -1,10 +1,9 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
-{
-  services = {
-    # displayManager.gdm.enable = true; # /!\ warning enable that to use it !
-    desktopManager.gnome.enable = true;
-  };
+# GNOME (desktop.enabled, see default.nix)
+lib.mkIf (lib.elem "gnome" config.desktop.enabled) {
+  # The login screen (sddm or gdm) is chosen in default.nix: desktop.displayManager
+  services.desktopManager.gnome.enable = true;
   services.gnome.gnome-keyring.enable = true;
 
   # Enable the X11 windowing system, needed for Gnome (XWayland).

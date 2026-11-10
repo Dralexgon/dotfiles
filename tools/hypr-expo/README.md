@@ -4,7 +4,7 @@ Workspace overview for Hyprland: a grid of live workspace previews, with a zoom 
 
 This is **hyprexpo** from [hyprwm/hyprland-plugins](https://github.com/hyprwm/hyprland-plugins) (BSD-3, see `LICENSE`), which upstream dropped as unmaintained in May 2026 ("all: drop unmaintained plugins"). It is ported here to Hyprland 0.57 and its Lua config.
 
-It is built against `pkgs.hyprland` and installed to `/etc/hypr/plugins/hyprexpo.so` by `nixos/modules/caelestia.nix`, then loaded by `config/caelestia/hypr-user.lua`. Like any plugin, it refuses to load into another Hyprland version, and a Hyprland update can break the build.
+It is built against `pkgs.hyprland` and installed to `/etc/hypr/plugins/hyprexpo.so` by `nixos/modules/desktop/caelestia.nix`, then loaded by `config/caelestia/hypr-user.lua`. Like any plugin, it refuses to load into another Hyprland version, and a Hyprland update can break the build.
 
 ## Usage
 

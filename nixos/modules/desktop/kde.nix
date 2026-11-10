@@ -1,11 +1,9 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
-{
-  services = {
-    desktopManager.plasma6.enable = true;
-    displayManager.sddm.enable = true;
-    displayManager.sddm.wayland.enable = true;
-  };
+# KDE Plasma 6 (desktop.enabled, see default.nix)
+lib.mkIf (lib.elem "kde" config.desktop.enabled) {
+  # The login screen (sddm or gdm) is chosen in default.nix: desktop.displayManager
+  services.desktopManager.plasma6.enable = true;
 
 environment.systemPackages = with pkgs;
   [

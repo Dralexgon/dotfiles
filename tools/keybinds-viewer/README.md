@@ -23,7 +23,7 @@ Escape (when nothing is selected), Ctrl + W or Ctrl + Q close the window.
 | `keybinds_viewer.py` | reads and names the binds, writes the page, entry point |
 | `index.html` | the page: keyboard drawing, panels, search (HTML/CSS/JS, no dependencies) |
 | `window.py` | the window: GTK4 + WebKitGTK, single instance (app id `dev.dralexgon.KeybindsViewer`) |
-| `default.nix` | the `keybinds-viewer` command + launcher entry, installed by `nixos/modules/caelestia.nix` |
+| `default.nix` | the `keybinds-viewer` command + launcher entry, installed by `nixos/modules/desktop/caelestia.nix` |
 
 The window rule (float, centered, 80 %) and the SUPER + / bind are in `config/caelestia/hypr-user.lua`.
 

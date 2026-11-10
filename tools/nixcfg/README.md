@@ -22,9 +22,9 @@ imports = [
   ./../../core.nix
 
   # Modules: comment a line out to disable it (or use `nixcfg`)
-  ./../../modules/caelestia.nix
+  ./../../modules/boot-animation.nix
   ./../../modules/epita/core.nix
-  ./../../modules/gnome.nix
+  ./../../modules/flatpak.nix
   # ./../../modules/jetbrains.nix
 ];
 
@@ -36,7 +36,7 @@ environment.systemPackages = with pkgs; [
 ```
 
 - Every `.nix` file in `nixos/modules/` is a module, subfolders included
-  (`gnome.nix` → `gnome`, `epita/c.nix` → `epita/c`). A module with no
+  (`flatpak.nix` → `flatpak`, `epita/c.nix` → `epita/c`). A module with no
   line is off; nixcfg adds its line when you turn it on.
 - The host's own packages are a normal `environment.systemPackages` list,
   edited like the ones in modules (see [Editing modules safely](#editing-modules-safely)).
@@ -57,6 +57,25 @@ imports = [
 So the submodule choices are **shared by every host** that turns the group
 on. Toggling a submodule in nixcfg edits the core's `imports` (and is
 checked with Nix, like a package change); toggling the group edits the host.
+
+**Desktops**: `nixos/modules/desktop/` (GNOME, KDE, Hyprland, Caelestia,
+Wayfire) is shown as the `desktop` group, but it works per host: core.nix
+imports it for every host, and each host picks its desktops in a list of its
+own `configuration.nix`, toggled like imports:
+
+```nix
+desktop.enabled = [
+  "caelestia"
+  "gnome"
+  # "kde"
+];
+desktop.defaultSession = "caelestia"; # preselected on the login screen
+```
+
+`s` on a desktop makes it this host's default (`★ login default`). Turning the
+default off moves it to the first desktop left on. Desktops can't be created
+or deleted from nixcfg: each one also has its session in
+`desktop/default.nix`.
 
 Lines keep their place, so you can reorder them, add comments after them or
 edit the files by hand; [`hostfile.py`](hostfile.py) only comments or
@@ -96,6 +115,7 @@ Three columns, like a file manager:
 | `→` / `←` | Modules | Open / close a group, or enter / leave the packages column |
 | `n` | Modules | New module: creates `nixos/modules/<name>.nix` (`<name>` can be `folder/name`) from a template, enables it and opens it in `$EDITOR` |
 | `D` | Modules | Delete the module and disable it on every host |
+| `s` | Modules | On a desktop: make it this host's default on the login screen (turns it on) |
 | `Space` / `Enter` | Packages column | Comment or uncomment the package's line |
 | `a` | Modules / Packages column | Add a package line to the highlighted module (searches nixpkgs, then asks for an optional description written as `# comment`) |
 | `x` / `Delete` | Packages column | Delete the package's line |
@@ -103,7 +123,7 @@ Three columns, like a file manager:
 
 ## Packages tab
 
-Every package in one list: the ones in each module (`gnome.nix`,
+Every package in one list: the ones in each module (`flatpak.nix`,
 `gaming.nix`…) and this host's own packages (`this host`, from its
 `configuration.nix`). `●` means it is installed on this host: its line is active and
 its module is enabled. This host's packages can be commented out too.

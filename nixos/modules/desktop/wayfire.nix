@@ -1,6 +1,7 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
-{
+# Wayfire (desktop.enabled, see default.nix)
+lib.mkIf (lib.elem "wayfire" config.desktop.enabled) {
   programs.wayfire = {
     enable = true;
     plugins = with pkgs.wayfirePlugins; [

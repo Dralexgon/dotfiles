@@ -8,7 +8,7 @@ line in `imports` out. Hosts import top-level modules and group cores:
       ./hardware-configuration.nix
       ./../../core.nix
 
-      ./../../modules/gnome.nix             <- enabled
+      ./../../modules/flatpak.nix           <- enabled
       # ./../../modules/jetbrains.nix       <- disabled
       ./../../modules/epita/core.nix        <- the epita group
     ];
@@ -168,4 +168,125 @@ def add_packages_block(text: str) -> str:
         if lines[n].strip() == "}":
             lines[n:n] = PACKAGES_BLOCK.rstrip("\n").splitlines()
             break
+    return "\n".join(lines) + "\n"
+
+
+# Desktops (nixos/modules/desktop) are chosen per host by a list of names,
+# with a commented line for each one that is off, and an optional default:
+#
+#     desktop.enabled = [
+#       "caelestia"
+#       # "kde"
+#     ];
+#     desktop.defaultSession = "caelestia";
+DESKTOPS = re.compile(r"^(?P<indent>\s*)desktop\.enabled\s*=\s*\[\s*$")
+DESKTOP = re.compile(
+    r'^(?P<indent>\s*)(?P<hashes>(?:#\s*)*)"(?P<name>[\w-]+)"'
+    r"(?P<comment>\s+#.*)?\s*$"
+)
+DEFAULT_SESSION = re.compile(
+    r'^(?P<head>\s*desktop\.defaultSession\s*=\s*)(?:"(?P<name>[\w-]*)"|null)(?P<tail>\s*;.*)$'
+)
+
+
+@dataclass
+class Desktop:
+    line: int  # 0-based
+    name: str
+    enabled: bool
+    indent: str
+    comment: str
+
+
+def desktops_block(lines: list[str]) -> tuple[int, int] | None:
+    """The lines of "desktop.enabled = [" and of its closing "]"."""
+    for start, line in enumerate(lines):
+        if DESKTOPS.match(line):
+            for end in range(start + 1, len(lines)):
+                if lines[end].strip().startswith("]"):
+                    return start, end
+    return None
+
+
+def parse_desktops(text: str) -> list[Desktop]:
+    lines = text.splitlines()
+    block = desktops_block(lines)
+    if not block:
+        return []
+    return [Desktop(n, m["name"], not m["hashes"], m["indent"], m["comment"] or "")
+            for n in range(block[0] + 1, block[1]) if (m := DESKTOP.match(lines[n]))]
+
+
+def desktops(text: str) -> list[str]:
+    """The desktops the host turns on, in file order."""
+    return [d.name for d in parse_desktops(text) if d.enabled]
+
+
+def default_session(text: str) -> str | None:
+    """desktop.defaultSession if set, else the first desktop (Nix's default)."""
+    for line in text.splitlines():
+        if m := DEFAULT_SESSION.match(line):
+            return m["name"]
+    on = desktops(text)
+    return on[0] if on else None
+
+
+def update_desktops(text: str, chosen: list[str], known: list[str]) -> str:
+    """Comment and uncomment the lines of desktop.enabled so that exactly
+    `chosen` are on. A desktop of `known` without a line gets one (commented
+    when off), and the list is added if missing. If the default session is
+    turned off, it moves to the first desktop left on (or null)."""
+    if not text.endswith("\n"):
+        text += "\n"
+    lines = text.splitlines()
+    if not desktops_block(lines):
+        if not chosen:
+            return text
+        lines = add_desktops_block(text).splitlines()
+    start, end = desktops_block(lines)
+    found = parse_desktops("\n".join(lines))
+    for d in found:
+        on = d.name in chosen
+        if on != d.enabled:
+            lines[d.line] = f'{d.indent}{"" if on else "# "}"{d.name}"{d.comment}'
+    have = {d.name for d in found}
+    indent = found[0].indent if found else DESKTOPS.match(lines[start])["indent"] + "  "
+    missing = [f'{indent}{"" if n in chosen else "# "}"{n}"'
+               for n in sorted(set(known) - have)]
+    lines[end:end] = missing
+
+    for n, line in enumerate(lines):
+        if (m := DEFAULT_SESSION.match(line)) and m["name"] not in chosen:
+            on = desktops("\n".join(lines))
+            value = f'"{on[0]}"' if on else "null"
+            lines[n] = f"{m['head']}{value}{m['tail']}"
+    return "\n".join(lines) + "\n"
+
+
+def set_default_session(text: str, name: str) -> str:
+    """Set desktop.defaultSession, adding the line after the list if needed."""
+    lines = text.splitlines()
+    for n, line in enumerate(lines):
+        if m := DEFAULT_SESSION.match(line):
+            lines[n] = f'{m["head"]}"{name}"{m["tail"]}'
+            return "\n".join(lines) + "\n"
+    block = desktops_block(lines)
+    if not block:
+        raise ValueError("no `desktop.enabled = [` list")
+    indent = DESKTOPS.match(lines[block[0]])["indent"]
+    lines.insert(block[1] + 1, f'{indent}desktop.defaultSession = "{name}";')
+    return "\n".join(lines) + "\n"
+
+
+def add_desktops_block(text: str) -> str:
+    """Add an empty desktop.enabled list after the imports (or before the last "}")."""
+    lines = text.rstrip("\n").splitlines()
+    block = imports_block(lines)
+    new = ["", "  # Desktops: all selectable on the login screen (or use `nixcfg`)",
+           "  desktop.enabled = [", "  ];"]
+    if block:
+        at = block[1] + 1
+    else:
+        at = max(n for n, line in enumerate(lines) if line.strip() == "}")
+    lines[at:at] = new
     return "\n".join(lines) + "\n"
