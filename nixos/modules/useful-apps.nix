@@ -5,7 +5,7 @@
   environment.systemPackages = with pkgs; [
     libreoffice # Office suite
     drawing # Paint
-    clapper # Video player
+    # clapper # Video player
     eyedropper # Color picker
     pkgs-stable.amberol # Music player
     eartag # Music tag editor

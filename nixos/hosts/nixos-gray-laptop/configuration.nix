@@ -35,7 +35,7 @@
     # ./../../modules/latest-kernel.nix
     # ./../../modules/life-manager.nix
     # ./../../modules/llm.nix
-    ./../../modules/neovim.nix
+    ./../../modules/dev/core.nix
     # ./../../modules/nix.nix
     # ./../../modules/nvidia-drivers.nix
     # ./../../modules/passwordless-rebuild.nix

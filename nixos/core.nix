@@ -113,10 +113,15 @@ in
     ];
   };
 
+  # NixOS defaults EDITOR to nano for every session; the bashrc's nvim only
+  # reaches interactive bash, not apps started from the launcher (like nixcfg).
+  environment.variables.EDITOR = "nvim";
+  environment.variables.VISUAL = "nvim";
+
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    firefox # Always useful to have at least one browser, you can add more in browsers.nix
+    firefox # Always useful to have at least one browser, you can add more in ./modules/browsers.nix
 
     # Text editors/IDE
     vim
