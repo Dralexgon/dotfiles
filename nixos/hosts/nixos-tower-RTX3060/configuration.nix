@@ -45,7 +45,7 @@
     ./../../modules/ricing.nix
     ./../../modules/ricing-tools.nix
     ./../../modules/secure-boot.nix
-    ./../../modules/ssh.nix
+    # ./../../modules/ssh.nix
     ./../../modules/swap.nix
     # ./../../modules/theme-catpuccin.nix
     # ./../../modules/troubleshooting.nix
