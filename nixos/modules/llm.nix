@@ -1,13 +1,14 @@
-{ pkgs, pkgs-stable, username, ... }:
+{ pkgs, pkgs-stable, ... }:
 
 {
+  imports = [
+    ./epita/docker.nix
+  ];
+
   services.ollama = {
     enable = true;
     package = pkgs.ollama-cuda;
   };
-
-  virtualisation.docker.enable = true;
-  users.users.${username}.extraGroups = [ "docker" ];
 
   environment.systemPackages = with pkgs; [
     # upstream node_modules hash is stale in nixpkgs, remove once fixed
