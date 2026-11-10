@@ -116,12 +116,7 @@ in
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    # Web browsers
-    firefox
-    zen-browser
-    # tor-browser
-    # brave
-    # chromium
+    firefox # Always useful to have at least one browser, you can add more in browsers.nix
 
     # Text editors/IDE
     vim
@@ -146,15 +141,6 @@ in
     wget
     unzip
     xkill
-
-    # Simple useful tools for Nixos
-    nh # Beautiful rebuild switch animation (nh os rebuild)
-    nix-output-monitor # Same but work with more things
-    nvd # View package difference between generations
-    # Example:
-    # - nvd history
-    # nvd diff /nix/var/nix/profiles/system-{42,43}-link
-    nil # Nix lsp (language server protocol) for errors and warnings in .nix files
 
     # 2 discord clients for multiple accounts
     # discord
