@@ -183,7 +183,7 @@ return {
     "williamboman/mason.nvim",
     opts = {
       ensure_installed = {
-        "clangd",
+        -- "clangd",
         "stylua",
         "shellcheck",
         "shfmt",

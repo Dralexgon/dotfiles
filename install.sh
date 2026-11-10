@@ -31,7 +31,9 @@ Steps:
      hostname and modules you choose (and the target user), generates
      hardware-configuration.nix, and registers the host in flake.nix.
   3. Dotfile configuration: symlinks selected config groups from config/
-     into \$HOME (bash -> ~/.bashrc, others -> ~/.config/<name>), offering
+     into \$HOME (bash -> ~/.bashrc, git -> ~/.gitconfig*, ssh -> ~/.ssh/config,
+     clang-format -> ~/.clang-format,
+     others -> ~/.config/<name>), offering
      to back up existing files first.
 
 Options:
@@ -579,17 +581,36 @@ configure_dotfiles() {
 	printf '\n'
 	select_many "Config groups to link:" DOTFILE_OPTIONS DOTFILE_CHECKED
 
+	local link
 	for i in "${!DOTFILE_OPTIONS[@]}"; do
 		(( DOTFILE_CHECKED[i] )) || continue
-		source="${DOTFILE_OPTIONS[$i]}"
-		if [[ "$source" == "bash" ]]; then
-			source="bash/bashrc"
-			target="$HOME/.bashrc"
-		else
-			target="$HOME/.config/$source"
-		fi
-		backup_and_link "$DOTFILES_DIR/config/$source" "$target"
+		dotfile_links "${DOTFILE_OPTIONS[$i]}"
+		for link in "${DOTFILE_LINKS[@]}"; do
+			source="${link%%|*}"
+			target="${link#*|}"
+			backup_and_link "$DOTFILES_DIR/config/$source" "$target"
+		done
 	done
+	[[ -d "$HOME/.ssh" ]] && chmod 700 "$HOME/.ssh"
+	return 0
+}
+
+# Fills DOTFILE_LINKS with "source|target" pairs for a config group: source is
+# relative to config/. Groups not listed here link to ~/.config/<group>.
+dotfile_links() {
+	case "$1" in
+		bash) DOTFILE_LINKS=("bash/bashrc|$HOME/.bashrc") ;;
+		git)
+			DOTFILE_LINKS=(
+				"git/gitconfig|$HOME/.gitconfig"
+				"git/gitconfig-public|$HOME/.gitconfig-public"
+				"git/gitconfig-work|$HOME/.gitconfig-work"
+			)
+			;;
+		ssh) DOTFILE_LINKS=("ssh/config|$HOME/.ssh/config") ;; # never the keys
+		clang-format) DOTFILE_LINKS=("clang-format/clang-format|$HOME/.clang-format") ;;
+		*) DOTFILE_LINKS=("$1|$HOME/.config/$1") ;;
+	esac
 }
 
 while (( $# > 0 )); do
