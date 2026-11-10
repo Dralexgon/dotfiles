@@ -985,7 +985,11 @@ class NixCfg(App):
         if action == "edit":
             return modules_tab
         if action == "add_package":
-            return focus == "module-packages" or not modules_tab
+            # In the Modules tab: to the highlighted module (from either
+            # column); in the Packages tab: to this host.
+            return not modules_tab or bool(
+                focus in ("modules", "module-packages")
+                and self.module and module_path(self.module).exists())
         if action == "remove_package":
             if focus == "module-packages":
                 entry = self.entries.get(self.highlighted_line())
@@ -1224,7 +1228,8 @@ class NixCfg(App):
     # Packages: add / remove (to the module in focus, or to this host)
 
     def action_add_package(self) -> None:
-        if self.focused_id() == "module-packages" and self.module:
+        modules_tab = self.query_one("#tabs", TabbedContent).active == "modules-tab"
+        if modules_tab and self.module and not is_host_module(self.module):
             module = self.module
 
             def add_to_module(attr: str, comment: str) -> None:
@@ -1262,6 +1267,8 @@ class NixCfg(App):
                     result = modfile.add(hostfile.add_packages_block(text), attr, comment)
                 path.write_text(result[0])
             self.refresh_all_packages()
+            if self.module and is_host_module(self.module):
+                self.show_module(self.module)  # its row in the Modules tab
             self.notify(f"Added {attr} to this host.")
 
         self.push_screen(PackageSearch("this host"), self.with_description(add_to_host))
