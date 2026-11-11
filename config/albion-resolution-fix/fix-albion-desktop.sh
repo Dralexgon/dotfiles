@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-MONITOR="DP-2"
+# Monitor to rescale: $ALBION_MONITOR if set, else the focused one (names change with ports/cables).
+MONITOR="${ALBION_MONITOR:-$(hyprctl monitors -j | jq -r '.[] | select(.focused) | .name' | head -n1)}"
 GAME_WIDTH="3840"
 GAME_HEIGHT="1620" # even larger : 1620
 GAME_DIR="${ALBION_DIR:-$HOME/games/albiononline}"
