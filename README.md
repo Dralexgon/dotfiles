@@ -18,6 +18,20 @@ Not the priority, it could be in another repo later
 
 Every change to .config should change files in dotfiles. If not create a file here and create a symlink.
 
+### IMPORTANT
+
+Make this abstract or add it in the install srcipt :
+```
+nixosConfigurations."nixos-tower-RTX3060" = nixpkgs.lib.nixosSystem {
+  # Main pc POWERFUL RTXXXX !!!
+  inherit specialArgs;
+  modules = [
+    ./nixos/hosts/nixos-tower-RTX3060/configuration.nix
+    # inputs.boot-animation.nixosModules.default
+  ];
+};
+```
+
 ### install.sh
 
 - [x] install.sh will have 2 modes : an input one : asking for user input, example : yes/no and a TUI one : where they can select their choice with the arrows (this one will be the default)

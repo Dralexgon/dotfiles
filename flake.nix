@@ -109,6 +109,15 @@
       ];
     };
 
+    nixosConfigurations."nixos-tower-RTX3060-4Tssd" = nixpkgs.lib.nixosSystem {
+      # Main pc POWERFUL RTXXXX !!! (with a 4T SSD)
+      inherit specialArgs;
+      modules = [
+        ./nixos/hosts/nixos-tower-RTX3060-4Tssd/configuration.nix
+        # inputs.boot-animation.nixosModules.default
+      ];
+    };
+
     nixosConfigurations."nixos-gray-laptop" = nixpkgs.lib.nixosSystem {
       # Work laptop, nixos-gray-laptop: 50 nuance...
       inherit specialArgs;
