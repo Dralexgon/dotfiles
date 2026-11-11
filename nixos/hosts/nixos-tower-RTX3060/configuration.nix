@@ -30,6 +30,7 @@
     ./../../modules/latest-kernel.nix
     ./../../modules/life-manager.nix
     ./../../modules/llm.nix
+    ./../../modules/my-websites.nix
     ./../../modules/dev/core.nix
     ./../../modules/nix.nix
     ./../../modules/nvidia-drivers.nix
@@ -42,6 +43,7 @@
     ./../../modules/secure-boot.nix
     # ./../../modules/ssh.nix
     ./../../modules/swap.nix
+    ./../../modules/tailscale.nix
     # ./../../modules/theme-catpuccin.nix
     # ./../../modules/troubleshooting.nix
     ./../../modules/useful-apps.nix

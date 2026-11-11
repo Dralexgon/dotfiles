@@ -67,3 +67,8 @@ Currently SDDM + the custom `predatoria` QML theme (`themes/sddm/predatoria`), s
 - [x] SDDM with `sddm-astronaut`, recolored through its `embeddedTheme` / `themeConfig` overrides: Predatoria art or a gothic video loop as the background, Cinzel or UnifrakturMaguntia font, palette `#0b0507` / `#8a0303` / `#ff2a2a` / bone-white text
 - [x] Custom greeter in QML (SDDM QML theme, or Quickshell + greetd like Caelestia): blood drips from the top edge that splat (same idea as windowfx/cursorfx), password field bleeds and shakes on a wrong password, red eyelid vignette on login, Predatoria crest above the clock, "Speak the word, mortal…" placeholder
   - Match hyprlock with the same palette, and maybe switch Plymouth to `red_loader` / `hexagon_red`, so boot → login → lock looks like one theme
+
+### Nix config cleanup
+
+- [ ] Use bibata-cursors everywhere, in its own nix file
+- [ ] Move fonts into their own nix file

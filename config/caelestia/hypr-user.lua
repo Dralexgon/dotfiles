@@ -34,6 +34,14 @@ hl.config({
     }
 })
 
+-- Don't switch DP-1 to HDR when a fullscreen app asks for it (VSCodium on SUPER + F did): the monitor
+-- changes mode, goes black for a few seconds and shows its "HDR" popup
+hl.config({
+    render = {
+        cm_auto_hdr = 0
+    }
+})
+
 -- Keyboard layouts: en, en_international, fr. SUPER + SHIFT + Space rolls between them (bind below).
 -- Not the xkb option grp:win_space_toggle: xkb fires it on top of the Hyprland binds, it took
 -- SUPER + Space from Nova, and binds made by xkb are invisible to `hyprctl binds` (and keybinds-viewer)
