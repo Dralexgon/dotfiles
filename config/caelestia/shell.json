@@ -18,7 +18,6 @@
             "inverted": true,
             "showOnHover": false
         },
-        "persistent": false,
         "popouts": {
             "activeWindow": false
         },
@@ -130,9 +129,5 @@
                 "stop"
             ]
         }
-    },
-    "sidebar": {
-        "enabled": true,
-        "showOnHover": true
     }
 }
