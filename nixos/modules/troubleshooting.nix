@@ -26,6 +26,19 @@
     };
   };
 
+  # Let admins (and coding agents) read disk health without a password.
+  # Read-only only: no self-tests, settings, format or sanitize.
+  security.sudo.extraRules = let
+    disk = "/dev/nvme[0-9]+(n[0-9]+)?";
+  in [{
+    groups = [ "wheel" ];
+    commands = [
+      { command = "/run/current-system/sw/bin/smartctl ^-(a|x|A|H|i|l (error|selftest)) ${disk}$"; options = [ "NOPASSWD" ]; }
+      { command = "/run/current-system/sw/bin/nvme ^(smart-log|error-log|self-test-log|id-ctrl) ${disk}$"; options = [ "NOPASSWD" ]; }
+      { command = "/run/current-system/sw/bin/systemctl start scrutiny-collector.service"; options = [ "NOPASSWD" ]; }
+    ];
+  }];
+
   services.scrutiny = {
     enable = true;
     openFirewall = false; # local only
