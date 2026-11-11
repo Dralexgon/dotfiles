@@ -45,7 +45,7 @@
     ./../../modules/swap.nix
     ./../../modules/tailscale.nix
     # ./../../modules/theme-catpuccin.nix
-    # ./../../modules/troubleshooting.nix
+    ./../../modules/troubleshooting.nix
     ./../../modules/useful-apps.nix
     # ./../../modules/vm.nix
     ./../../modules/windows.nix
