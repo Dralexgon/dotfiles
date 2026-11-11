@@ -570,6 +570,8 @@ configure_dotfiles() {
 
 	while IFS= read -r config_name; do
 		[[ "$config_name" == "bash" ]] && continue
+		# config/zen is not linked: it's the Zen sidebar layout, restored with `zen-sidebar apply`
+		[[ "$config_name" == "zen" ]] && continue
 		DOTFILE_OPTIONS+=("$config_name")
 		if (( WANT_CAELESTIA )) && [[ "$config_name" == "caelestia" ]]; then
 			DOTFILE_CHECKED+=(1)
