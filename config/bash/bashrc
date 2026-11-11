@@ -133,5 +133,38 @@ if [ -f ~/.bashrc-personal ]; then
     source ~/.bashrc-personal
 fi
 
+# Local AI: Ollama + mcpo (DuckDuckGo search tool) + Open WebUI on :8080, stops all on exit
+alex-llm() {
+    local ollama_pid=""
+    local mcpo_pid=""
+
+    if ! pgrep -x ollama >/dev/null 2>&1; then
+	OLLAMA_CONTEXT_LENGTH=8192 \
+        ollama serve >"$HOME/.ollama/serve.log" 2>&1 &
+        ollama_pid=$!
+    fi
+
+    uvx --with 'mcp<2' mcpo --port 8000 --api-key "uwu" -- uvx duckduckgo-mcp-server \
+        >"$HOME/.ollama/mcpo.log" 2>&1 &
+    mcpo_pid=$!
+
+    (
+        cd "$HOME" || return 1
+        DATA_DIR="$HOME/.local/share/open-webui" \
+        OLLAMA_BASE_URL="http://127.0.0.1:11434" \
+        open-webui serve
+    )
+    local webui_status=$?
+
+    [[ -n "$ollama_pid" ]] && kill "$ollama_pid" 2>/dev/null
+    [[ -n "$mcpo_pid" ]] && kill "$mcpo_pid" 2>/dev/null
+
+    return "$webui_status"
+}
+
+# EPITA minishell
+alias minishell-build="autoreconf --install; ./configure; make -j$(nproc)"
+alias minishell-clean="git clean -fdx"
+
 alias fastfetch="$HOME/.config/fastfetch-paimon/run.sh"
 fastfetch
