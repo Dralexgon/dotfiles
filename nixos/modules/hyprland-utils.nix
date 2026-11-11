@@ -18,6 +18,7 @@
     grim # Screenshot
     slurp # Screenshot area selector
     hyprshot # Screenshot
+    zenity # GTK dialogs (folder picker for the image generator)
 
     #ZaneyOS conf
     eza
