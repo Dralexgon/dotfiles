@@ -5,7 +5,7 @@
   networking.firewall.allowedTCPPorts = [ 8000 8384 ];
 
   # Cloud sync / backups (OneDrive, Google Drive, ...)
-  environment.systemPackages = with pkgs; [ rclone ];
+  environment.systemPackages = with pkgs; [ rclone gnupg ];
 
   # services.samba = {
   #   enable = true;
