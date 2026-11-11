@@ -12,6 +12,9 @@
     # The assistant runs claude, git and Bash as me, so give it my system tools.
     path = [ "/run/wrappers" "/run/current-system/sw" ];
 
+    # Skip (not fail) when the project isn't there, so rebuilds don't error out.
+    unitConfig.ConditionPathExists = "/home/${username}/dev/apps/life-manager/run.sh";
+
     serviceConfig = {
       User = username;
       WorkingDirectory = "/home/${username}/dev/apps/life-manager";

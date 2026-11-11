@@ -50,13 +50,16 @@ in
 
   # nginx can't enter my home (chmod 700), so mount the site folder (read-only) where it can read it.
   systemd.services.nginx.serviceConfig.BindReadOnlyPaths = [
-    "/home/${username}/dev/web/my-websites:/var/www/my-websites"
+    # "-" = skip if the folder is missing, instead of failing nginx.
+    "-/home/${username}/dev/web/my-websites:/var/www/my-websites"
   ];
 
   systemd.services.my-websites-ports = {
     description = "Ports API for the websites hub";
     wantedBy = [ "multi-user.target" ];
     path = [ pkgs.iproute2 ];
+    # Skip (not fail) when the project isn't there, so rebuilds don't error out.
+    unitConfig.ConditionPathExists = "/home/${username}/dev/web/my-websites/server/ports.py";
     serviceConfig = {
       User = username;
       ExecStart = "${pkgs.python3}/bin/python3 /home/${username}/dev/web/my-websites/server/ports.py";
