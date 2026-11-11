@@ -4,6 +4,11 @@
 
 alias v='nix run ~/dotfiles'
 
+# Use eza instead of ls when available
+if command -v eza >/dev/null 2>&1; then
+    alias ls='eza --icons'
+fi
+
 # Setup your variables
 EDITOR='nvim'
 #CONFIGURATION_NIX_FILE='/etc/nixos/configuration.nix'
