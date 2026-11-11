@@ -42,9 +42,9 @@ hl.config({
     }
 })
 
--- Keyboard layouts: en, en_international, fr. SUPER + SHIFT + Space rolls between them (bind below).
--- Not the xkb option grp:win_space_toggle: xkb fires it on top of the Hyprland binds, it took
--- SUPER + Space from Nova, and binds made by xkb are invisible to `hyprctl binds` (and keybinds-viewer)
+-- Keyboard layouts: en, en_international, fr. SUPER + Space rolls between them (bind below).
+-- Not the xkb option grp:win_space_toggle: xkb fires it on top of the Hyprland binds,
+-- and binds made by xkb are invisible to `hyprctl binds` (and keybinds-viewer)
 hl.config({
     input = {
         sensitivity = -0.1, -- -0.3, -- -0.1,
@@ -54,7 +54,7 @@ hl.config({
     }
 })
 
-hl.bind("SUPER + SHIFT + Space", hl.dsp.exec_cmd("hyprctl switchxkblayout all next"), { description = "Next keyboard layout" })
+hl.bind("SUPER + Space", hl.dsp.exec_cmd("hyprctl switchxkblayout all next"), { description = "Next keyboard layout" })
 
 hl.window_rule({
     match = {
@@ -131,10 +131,10 @@ end, { description = "nixcfg" })
 -- SUPER + A opens Nova, then switches her between full screen and the mini orb (top right)
 hl.bind("SUPER + A", hl.dsp.exec_cmd("sh -c 'curl -sf -X POST http://127.0.0.1:8765/api/toggle || exec ~/dev/ai/nova/run.sh'"), { description = "Nova (open / toggle)" })
 
--- SUPER + Space talks to Nova from anywhere, like Space in her window: hold it and she sends when
+-- F8 talks to Nova from anywhere, like Space in her window: hold it and she sends when
 -- you let go, or tap it and she listens until the next press (the logic is in Nova.ptt())
-hl.bind("SUPER + Space", hl.dsp.exec_cmd("curl -s -X POST http://127.0.0.1:8765/api/talk-down"), { description = "Talk to Nova (tap or hold)" })
-hl.bind("SUPER + Space", hl.dsp.exec_cmd("curl -s -X POST http://127.0.0.1:8765/api/talk-up"), { release = true })
+hl.bind("F8", hl.dsp.exec_cmd("curl -s -X POST http://127.0.0.1:8765/api/talk-down"), { description = "Talk to Nova (tap or hold)" })
+hl.bind("F8", hl.dsp.exec_cmd("curl -s -X POST http://127.0.0.1:8765/api/talk-up"), { release = true })
 
 -- SUPER + SHIFT + Return opens kitty with the plain kitty.conf colours (SUPER + Return uses the Caelestia scheme)
 hl.bind("SUPER + SHIFT + Return", hl.dsp.exec_cmd("kitty"), { description = "Kitty (plain colours)" })
