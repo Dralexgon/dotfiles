@@ -7,6 +7,8 @@ alias v='nix run ~/dotfiles'
 # Use eza instead of ls when available
 if command -v eza >/dev/null 2>&1; then
     alias ls='eza --icons'
+    alias ll='eza --icons -l'
+    alias la='eza --icons -la'
 fi
 
 # Setup your variables
