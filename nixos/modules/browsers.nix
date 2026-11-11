@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, inputs, ... }:
 
 let
   # Packages that aren't in nixpkgs, named so that they are plain lines of
@@ -16,3 +16,4 @@ in
     # chromium
   ];
 }
+
