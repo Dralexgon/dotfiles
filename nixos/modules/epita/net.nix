@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, username, ... }:
 
 {
   environment.systemPackages = with pkgs; [
@@ -13,7 +13,7 @@
     dig # for DNS queries
   ];
 
-  users.users."alex".extraGroups = [
+  users.users.${username}.extraGroups = [
     "ubridge"
   ];
 

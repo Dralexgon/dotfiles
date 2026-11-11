@@ -1,20 +1,24 @@
-{ lib, pkgs, ... }:
+{ inputs, lib, pkgs, ... }:
 
+# Secure Boot with lanzaboote: signs the systemd-boot entries with the keys in /var/lib/sbctl.
+# First setup on a new host:
+#   1. Without this module, run `sudo sbctl create-keys`
+#   2. Enable this module and rebuild, check with `sudo sbctl verify`
+#   3. In the UEFI menu, reset Secure Boot to Setup Mode, then `sudo sbctl enroll-keys --microsoft`
+#   4. Reboot with Secure Boot on, `bootctl status` shows "Secure Boot: enabled (user)"
 {
-  # # Enable that first
-  # boot.loader.limine.enable = true;
-  # # Then run sudo sbctl create-keys
-  # # Then :
-  # # Enable UEFI Secure Boot Setup Mode
-  # # This usually involves entering the UEFI firmware menu (BIOS) and enabling the relevant option under Secure Boot named "Reset to Setup Mode" or "Erase all Secure Boot settings".
-  # # On some UEFI firmware implementations, there is not an explicit option to enter Setup Mode, instead the user must chose the option(s) to erase existing Secure Boot keys.
+  imports = [ inputs.lanzaboote.nixosModules.lanzaboote ];
 
-  # # Then enable this :
-  # boot.loader.limine.secureBoot.enable = true;
+  # Lanzaboote replaces the systemd-boot module (core.nix enables it).
+  boot.loader.systemd-boot.enable = lib.mkForce false;
 
+  boot.lanzaboote = {
+    enable = true;
+    pkiBundle = "/var/lib/sbctl";
+  };
 
   environment.systemPackages = with pkgs; [
-    sbctl
+    sbctl # For debugging and troubleshooting Secure Boot
     niv
   ];
 }

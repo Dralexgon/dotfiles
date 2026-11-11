@@ -1,0 +1,9 @@
+{
+    "theme": {
+        "enableGtk": true,
+        "enableQt": true,
+        "iconThemeLight": "Caelestia",
+        "iconThemeDark": "Caelestia-dark",
+        "postHook": "~/.config/caelestia/apply-scheme.sh"
+    }
+}

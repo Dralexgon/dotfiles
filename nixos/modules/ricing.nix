@@ -1,4 +1,10 @@
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 
 {
   environment.systemPackages = with pkgs; [
@@ -10,6 +16,7 @@
     cbonsai
     pipes-rs
     cava
+    eza # better ls
 
     # catppuccin rice
     # catppuccin-cursors.macchiatoMauve

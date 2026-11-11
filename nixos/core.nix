@@ -2,17 +2,36 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ pkgs, inputs, ... }:
+{ pkgs, pkgs-stable, inputs, username, ... }:
 
 let
-  # older way: nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
-  pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.system; config.allowUnfree = true; };
-  # use it as pkgs-stable.example
   useGrub = false; # Set to false if you don't want to use my grub theme or prefer systemd-boot
+
+  # TUI to toggle modules and packages (also in the app launcher)
+  nixcfg = import ../tools/nixcfg { inherit pkgs; };
+
+  # Nova (voice AI companion, ~/dev/ai/nova) in the app launcher.
+  # Same as SUPER + A: toggles her if she runs, starts her otherwise.
+  nova = pkgs.makeDesktopItem {
+    name = "nova";
+    desktopName = "Nova";
+    genericName = "Voice AI companion";
+    comment = "Talk with Nova";
+    exec = "${pkgs.writeShellScript "nova-launch" ''
+      ${pkgs.curl}/bin/curl -sf -X POST http://127.0.0.1:8765/api/toggle \
+        || exec "$HOME/dev/ai/nova/run.sh"
+    ''}";
+    icon = "audio-input-microphone";
+    categories = [ "Utility" ];
+    keywords = [ "nova" "ai" "voice" "assistant" "claude" ];
+  };
 in
 
 {
   imports = [
+    # Desktops: options to pick them per host (desktop.enabled)
+    ./modules/desktop
+
     #inputs.nix-minecraft.nixosModules.minecraft-servers
   ];
   #nixpkgs.overlays = [ inputs.nix-minecraft.overlay ];
@@ -41,6 +60,14 @@ in
     systemd-boot.enable = !useGrub; # Default boot loader
   };
 
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 14d";
+  };
+  nix.settings.auto-optimise-store = true;
+  boot.loader.systemd-boot.configurationLimit = 10;
+
 
 
   ##############################
@@ -57,6 +84,17 @@ in
 
   # programs.ssh.startAgent = true;
 
+  # GitHub HTTPS credentials through gh, found on PATH: `gh auth setup-git` writes a /nix/store path
+  # into ~/.gitconfig that breaks once gh updates and the old store path is garbage-collected.
+  # Don't run `gh auth setup-git` (and answer no to it in `gh auth login`).
+  programs.git = {
+    enable = true;
+    config.credential = {
+      "https://github.com".helper = [ "" "!gh auth git-credential" ];
+      "https://gist.github.com".helper = [ "" "!gh auth git-credential" ];
+    };
+  };
+
   fonts.packages = with pkgs; [
     jetbrains-mono
   ];
@@ -69,93 +107,58 @@ in
       # Libraries expected to be in /usr/lib
       # curl.dev
       clang-tools
-      criterion # doesn't work here, use modules/epita/criterion.nix instead
+      # criterion (testsuites for C programs) is in criterion.nix
     ];
   };
+
+  # NixOS defaults EDITOR to nano for every session; the bashrc's nvim only
+  # reaches interactive bash, not apps started from the launcher (like nixcfg).
+  environment.variables.EDITOR = "nvim";
+  environment.variables.VISUAL = "nvim";
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    # Web browsers
-    firefox
-    inputs.zen-browser.packages."${system}".default
-    # tor-browser
-    # brave
-    # chromium
+    firefox # Always useful to have at least one browser, you can add more in ./modules/browsers.nix
 
     # Text editors/IDE
     vim
-    vscode
-    # or activate modules/jetbrains.nix in configuration.nix
+    pkgs-stable.vscode
+    vscodium
 
     # Terminal <3 meow
     kitty # In kitty.conf set linux_display_server to x11 to have the same look as gnome-terminal
     # Set font to JetBrains Mono Nerd Font Mono if you want to use nerd fonts
 
+    # TUI to toggle modules and packages (also in the app launcher)
+    nixcfg
+
+    # Nova (voice AI companion, ~/dev/ai/nova) in the app launcher
+    nova
+
     # Simple useful tools
     git
+    gh # GitHub CLI (gh auth login, gh auth setup-git)
     tree
     tldr # better man (man pages)
     wget
     unzip
     xkill
 
-    # Simple useful apps
-    libreoffice # Office suite
-    drawing # Paint
-    clapper # Video player
-    eyedropper # Color picker
-    amberol # Music player
-    eartag # Music tag editor
-    papers # PDF viewer
-    inspector # "About your computer" app
-    fragments # Bit torrent client
-    gnome-frog # Extract text from images
-    turnon # Turn on remote computers
-    onedrivegui # OneDrive client
-    gpu-screen-recorder # Screen recorder that use GPU for encoding (much better performance)
-
-    # Simple useful tools for Nixos
-    nh # Beautiful rebuild switch animation (nh os rebuild)
-    nix-output-monitor # Same but work with more things
-    nvd # View package difference between generations
-    # Example:
-    # - nvd history
-    # nvd diff /nix/var/nix/profiles/system-{42,43}-link
-    nil # Nix lsp (language server protocol) for errors and warnings in .nix files
-    direnv # Show environment variables in a nice way
-    nixfmt # Format .nix files
-    nixd
-
     # 2 discord clients for multiple accounts
-    discord
+    # discord
     vesktop
   ];
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
-  users.users.alex = {
+  users.users.${username} = {
     isNormalUser = true;
-    description = "alex";
-    extraGroups = [ "networkmanager" "wheel" "docker" ];
+    description = username;
+    extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       #thunderbird
     ];
   };
-
-  # Minecraft server module
-  # services.minecraft-servers = {
-  #   enable = false;
-  #   eula = true;
-  #
-  #   servers = {
-  #     uwu = {
-  #       enable = true;
-  #       openFirewall = true;
-  #     };
-  #   };
-  # };
-
-
 
 
 
@@ -180,14 +183,13 @@ in
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "en_US.UTF-8";
     LC_IDENTIFICATION = "en_US.UTF-8";
-    LC_MEASUREMENT = "en_US.UTF-8";
+    LC_MEASUREMENT = "fr_FR.UTF-8";
     LC_MONETARY = "en_US.UTF-8";
     LC_NAME = "en_US.UTF-8";
     LC_NUMERIC = "en_US.UTF-8";
     LC_PAPER = "en_US.UTF-8";
     LC_TELEPHONE = "en_US.UTF-8";
     LC_TIME = "fr_FR.UTF-8";
-    LC_ALL = "en_US.UTF-8";
   };
 
   # Enable touchpad support (enabled default in most desktopManager).
@@ -196,6 +198,10 @@ in
   # Enable CUPS to print documents.
   services.printing.enable = true;
   services.printing.drivers = [ pkgs.brlaser pkgs.brgenml1lpr pkgs.brgenml1cupswrapper ];
+
+  # OneDrive sync (abraunegg client). First login: run `onedrive` once.
+  # Choose folders in ~/.config/onedrive/sync_list
+  services.onedrive.enable = false;
 
   # Enable sound with pipewire.
   services.pulseaudio.enable = false; # hardware.pulseaudio.enable = false; # old versions
@@ -211,23 +217,11 @@ in
     wireplumber.enable = true;
   };
 
-  # Allow unfree packages
+  # Allow unfree packages (for nix-shell / nix run outside this flake: NIXPKGS_ALLOW_UNFREE=1 ... --impure)
   nixpkgs.config.allowUnfree = true;
-
-  # Allow unfree packages v2 (not sure if it works)
-  environment.variables = {
-    NIXPKGS_ALLOW_UNFREE = "1";
-    NIXPKGS_ALLOW_INSECURE = "1";
-  };
 
   # Enable experimental features like flakes
   nix.settings.experimental-features = ["nix-command" "flakes"];
 
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "24.11"; # Did you read the comment?
+  # system.stateVersion is set in each host configuration.nix
 }

@@ -1,18 +1,17 @@
 { pkgs, ... }:
 
 {
-
   imports = [
     # ./android.nix
     ./c.nix
-    ./criterion.nix
     # ./cpp.nix
+    ./criterion.nix
     ./docker.nix
     # ./image.nix
     # ./java.nix
     # ./js.nix
-    # ./net.nix
     ./latex.nix
+    # ./net.nix
   ];
 
   programs.ssh.package = pkgs.openssh_gssapi; # add GSSAPI support

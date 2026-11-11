@@ -1,19 +1,11 @@
-{ ... }:
+{ pkgs, ... }:
 
+# File transfer from other devices. SSH (scp, sftp) itself is in ssh.nix.
 {
-  networking.firewall.allowedTCPPorts = [ 22 8000 8384 ];
+  networking.firewall.allowedTCPPorts = [ 8000 8384 ];
 
-  services.openssh = {
-    enable = true;
-    ports = [ 22 ];
-    settings = {
-      PasswordAuthentication = true;
-      AllowUsers = null; # Allows all users by default. Can be [ "user1" "user2" ]
-      UseDns = true;
-      X11Forwarding = false;
-      PermitRootLogin = "prohibit-password"; # "yes", "without-password", "prohibit-password", "forced-commands-only", "no"
-    };
-  };
+  # Cloud sync / backups (OneDrive, Google Drive, ...)
+  environment.systemPackages = with pkgs; [ rclone gnupg ];
 
   # services.samba = {
   #   enable = true;

@@ -1,11 +1,8 @@
-{ pkgs, inputs, ... }:
+{ pkgs, pkgs-stable, ... }:
 
-let
-  # older way: nixpkgs-stable = inputs.nixpkgs-stable.legacyPackages.${pkgs.system};
-  pkgs-stable = import inputs.nixpkgs-stable { system = pkgs.system; config.allowUnfree = true; };
-  # use it as pkgs-stable.example
-in
 {
+  programs.dconf.enable = true;
+
   environment.systemPackages = with pkgs; [
     fastfetch # Most important ricing tool (that's the nice logo in the terminal)
     btop # System monitor
@@ -21,10 +18,11 @@ in
     nwg-look
     dconf-editor
     # gradience
+    yaru-theme
 
     # Generate color schemes from images
     python3
-    pywal
+    pkgs-stable.pywal # unstable pywal16 fails to build (makeWrapper --prefix bug)
 
     eww # This can be used to create a custom bar. I will try to do my own menu with it
 

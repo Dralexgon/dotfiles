@@ -17,6 +17,8 @@
     # impression # Write iso on usb # Not needed : right click on iso file and select gnome writer
     turtle # UI for git
     cambalache
+    turnon # Turn on remote computers
+    gnome-frog # Extract text from images
     # https://flathub.org/apps/net.code_industry.MasterPDFEditor
     # https://flathub.org/apps/io.github.Soundux
 

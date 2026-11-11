@@ -1,0 +1,21 @@
+# ~/.gitconfig
+
+[user]
+	name = Dralexgon
+	email = 99817451+Dralexgon@users.noreply.github.com
+
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+
+[push]
+    autoSetupRemote = true
+
+[includeIf "hasconfig:remote.*.url:https://github.com*/**"]
+    path = ~/.gitconfig-public
+[includeIf "hasconfig:remote.*.url:*epita.fr*/**"]
+    path = ~/.gitconfig-work
+[core]
+	autocrlf = input
