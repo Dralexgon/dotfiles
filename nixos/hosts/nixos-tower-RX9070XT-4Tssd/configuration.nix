@@ -5,7 +5,7 @@
 { pkgs, config, ... }:
 
 {
-  networking.hostName = "nixos-tower-RTX3060";
+  networking.hostName = "nixos-tower-RX9070XT-4Tssd";
 
   imports = [
     # Include the results of the hardware scan.
@@ -16,6 +16,7 @@
     ./../../core.nix
 
     # Modules: comment a line out to disable it (or use `nixcfg`)
+    # ./../../modules/amd-drivers.nix
     ./../../modules/auto-update.nix
     ./../../modules/boot-animation.nix
 
@@ -33,7 +34,7 @@
     ./../../modules/my-websites.nix
     ./../../modules/dev/core.nix
     ./../../modules/nix.nix
-    ./../../modules/nvidia-drivers.nix
+    # ./../../modules/nvidia-drivers.nix
     ./../../modules/passwordless-rebuild.nix
     # ./../../modules/quality-of-life.nix
     # ./../../modules/quickshell.nix
@@ -45,7 +46,7 @@
     ./../../modules/swap.nix
     ./../../modules/tailscale.nix
     # ./../../modules/theme-catpuccin.nix
-    # ./../../modules/troubleshooting.nix
+    ./../../modules/troubleshooting.nix
     ./../../modules/useful-apps.nix
     # ./../../modules/vm.nix
     ./../../modules/windows.nix

@@ -238,7 +238,7 @@ class Screen:
     """The focused monitor, averaged down to one colour per key (ROWS x COLS, RGB 0..1).
 
     Everything heavy happens on the GPU: gpu-screen-recorder captures the
-    monitor through KMS, scales it to 256x144 and encodes it with NVENC.
+    monitor through KMS, scales it to 256x144 and encodes it with VA-API (NVENC on NVIDIA).
     ffmpeg only decodes that tiny stream and averages it down to 18x6 raw
     RGB, which costs almost nothing. (Screenshots with grim made Hyprland
     copy the frame back to the CPU and wait for it, which slowed everything.)

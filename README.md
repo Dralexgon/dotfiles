@@ -22,11 +22,11 @@ Every change to .config should change files in dotfiles. If not create a file he
 
 Make this abstract or add it in the install srcipt :
 ```
-nixosConfigurations."nixos-tower-RTX3060" = nixpkgs.lib.nixosSystem {
-  # Main pc POWERFUL RTXXXX !!!
+nixosConfigurations."nixos-tower-RX9070XT" = nixpkgs.lib.nixosSystem {
+  # Main pc POWERFUL RX 9070 XT !!!
   inherit specialArgs;
   modules = [
-    ./nixos/hosts/nixos-tower-RTX3060/configuration.nix
+    ./nixos/hosts/nixos-tower-RX9070XT/configuration.nix
     # inputs.boot-animation.nixosModules.default
   ];
 };

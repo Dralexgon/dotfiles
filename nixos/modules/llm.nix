@@ -7,7 +7,7 @@
 
   services.ollama = {
     enable = true;
-    package = pkgs.ollama-cuda;
+    package = pkgs.ollama-rocm; # AMD GPU (RX 9070 XT is gfx1201, built by nixpkgs ROCm)
   };
 
   environment.systemPackages = with pkgs; [
@@ -30,25 +30,10 @@
     claude-code
   ];
 
-  nix.settings = { # avoid compiling from source
-    substituters = [ "https://cache.nixos-cuda.org" ];
-    trusted-public-keys = [ "cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M=" ];
-  };
-
-  # nixpkgs.config.allowUnfree = true;
-  # hardware.graphics.enable = true;
-  # services.xserver.videoDrivers = [ "nvidia" ];
-  # hardware.nvidia = {
-  #   open = true;            # fine for RTX 30xx
-  #   modesetting.enable = true;
-  #   package = config.boot.kernelPackages.nvidiaPackages.stable;
-  # };
-
   # programs.nix-ld.enable = true;   # lets pip wheels (ctranslate2, onnxruntime) run
 
   # services.ollama = {
   #   enable = true;
-  #   acceleration = "cuda";
   #   environmentVariables = {
   #     OLLAMA_CONTEXT_LENGTH = "32768";
   #     OLLAMA_FLASH_ATTENTION = "1";
