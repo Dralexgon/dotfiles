@@ -4,6 +4,8 @@
 # First time: `sudo tailscale up` to log in. Share the machine from https://login.tailscale.com/admin/machines
 {
   services.tailscale.enable = true; # also installs the `tailscale` CLI
+  # Lets alex run `tailscale serve` (used by life-manager's run.sh) without sudo
+  services.tailscale.extraSetFlags = [ "--operator=alex" ];
 
   networking.firewall = {
     # Only open what is needed, and only to tailnet devices (not the public internet)
