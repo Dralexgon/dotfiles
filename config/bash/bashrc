@@ -166,5 +166,25 @@ alex-llm() {
 alias minishell-build="autoreconf --install; ./configure; make -j$(nproc)"
 alias minishell-clean="git clean -fdx"
 
+alias ms='echo "No microslop here !"'
+
+# Format, commit, tag with the message and push
+acpmt() {
+    pre-commit
+    git add .
+    git commit -m "$1"
+    git tag -a "$1" -m "$1"
+    git push --follow-tags
+}
+
+# uv shell completion (generated at startup instead of pasting the script)
+if command -v uv >/dev/null 2>&1; then
+    eval "$(uv generate-shell-completion bash)"
+fi
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
 alias fastfetch="$HOME/.config/fastfetch-paimon/run.sh"
 fastfetch

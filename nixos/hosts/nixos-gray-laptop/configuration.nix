@@ -74,6 +74,7 @@
 
   # Packages for this host only
   environment.systemPackages = with pkgs; [
+    claude-code
   ];
 
   # NixOS release this host was installed with: keep it, even after upgrades
