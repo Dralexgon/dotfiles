@@ -31,7 +31,7 @@
     # ./../../modules/life-manager.nix
     # ./../../modules/llm.nix
     ./../../modules/dev/core.nix
-    # ./../../modules/nix.nix
+    ./../../modules/nix.nix
     # ./../../modules/nvidia-drivers.nix
     # ./../../modules/passwordless-rebuild.nix
     # ./../../modules/quality-of-life.nix
@@ -47,6 +47,7 @@
     ./../../modules/useful-apps.nix
     # ./../../modules/vm.nix
     # ./../../modules/windows.nix
+    ./../../modules/browsers.nix
   ];
 
   # Desktops: all selectable on the login screen (or use `nixcfg`).
