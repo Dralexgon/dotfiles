@@ -78,6 +78,11 @@
     claude-code
   ];
 
+  # Radeon Vega iGPU: load amdgpu in the initrd so the boot animation has a screen. Without it
+  # only simpledrm exists until ~10s in, which plymouth ignores: a black screen the whole boot.
+  # (plymouth.use-simpledrm instead was tried: it looked worse.)
+  hardware.amdgpu.initrd.enable = true;
+
   # NixOS release this host was installed with: keep it, even after upgrades
   # (read `man configuration.nix` before changing it).
   system.stateVersion = "24.11";
