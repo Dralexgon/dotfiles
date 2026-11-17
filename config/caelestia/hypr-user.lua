@@ -158,7 +158,19 @@ hl.bind("SUPER + SHIFT + Return", hl.dsp.exec_cmd("kitty"), { description = "Kit
 
 -- SUPER + C opens Claude Code in kitty, in ~/dotfiles (trusted, unlike ~, so no trust prompt every time).
 -- A shell stays open after Claude exits. Replaces Caelestia's editor bind (kbEditor = "" in hypr-vars.lua)
-hl.bind("SUPER + C", hl.dsp.exec_cmd([[kitty --directory ~/dotfiles bash -lc 'claude; exec bash']]), { description = "Claude Code" })
+-- Claude's colours (orange on warm dark) from config/kitty/claude.conf, on top of kitty.conf. Its own class
+-- keeps it out of the kitty rules (liquid glass) and lets the rule below make it fully opaque
+hl.bind("SUPER + C", hl.dsp.exec_cmd([[kitty --class claude --config ~/.config/kitty/kitty.conf --config ~/.config/kitty/claude.conf --directory ~/dotfiles bash -lc 'claude; exec bash']]), { description = "Claude Code" })
+
+-- No transparency for the Claude window: overrides Caelestia's 0.95 opacity on every window (active / inactive)
+hl.window_rule({
+    match = {
+        class = "^(claude)$"
+    },
+    opacity = "1.0 override",
+    no_blur = true,
+    fullscreen_state = 0 -- like the kitty rule below: kitty asks to be maximized
+})
 
 -- SUPER + / shows the keyboard with all these shortcuts (tools/keybinds-viewer). The descriptions given
 -- to hl.bind are the names it shows; Caelestia's own binds are named from their kb* variables
