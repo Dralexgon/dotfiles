@@ -17,7 +17,7 @@
 
     # Modules: comment a line out to disable it (or use `nixcfg`)
     # ./../../modules/auto-update.nix
-    # ./../../modules/boot-animation.nix
+    ./../../modules/boot-animation.nix
 
     ./../../modules/epita/core.nix
 

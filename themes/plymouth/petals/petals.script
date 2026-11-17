@@ -1,0 +1,232 @@
+# Petals: boot splash twin of the petals SDDM greeter (themes/sddm/petals) and lock screen.
+# A cherry blossom blooms petal by petal with the boot progress (an inner ring of 10, then an
+# outer one of 10) while petals tumble down the screen. On shutdown/reboot the flower is in full
+# bloom. Disk passwords are typed in a pill with blossom bullets. Images: render.sh.
+
+Window.SetBackgroundTopColor(0.102, 0.075, 0.094);    # #1A1318
+Window.SetBackgroundBottomColor(0.153, 0.118, 0.141); # #271E24
+
+W = Window.GetWidth();
+H = Window.GetHeight();
+X0 = Window.GetX();
+Y0 = Window.GetY();
+u = Math.Min(W / 1920, H / 1080); # 1 at 1080p, 2 at 4K
+
+mode = Plymouth.GetMode();
+ending = (mode == "shutdown" || mode == "reboot");
+
+FPS = 50;
+t = 0;
+
+fun clamp(v, lo, hi) {
+  if (v < lo) return lo;
+  if (v > hi) return hi;
+  return v;
+}
+
+# ---------------------------------------------------------------- The flower
+
+D = Math.Int(460 * u);            # on-screen size of the 640px flower canvas
+CX = X0 + W / 2;
+CY = Y0 + H * 0.44;
+FX = Math.Int(CX - D / 2);
+FY = Math.Int(CY - D / 2);
+
+fun layer(file, z) {
+  local.l.sprite = Sprite(Image(file).Scale(D, D));
+  l.sprite.SetPosition(FX, FY, z);
+  l.sprite.SetOpacity(0);
+  return l;
+}
+
+glow = layer("glow.png", 1);
+core = layer("core.png", 30);
+
+# petals[k]: k 0-9 the inner ring, 10-19 the outer one, in blooming order.
+# Angles match render.sh: clockwise from the top, outer ring offset by half a step.
+for (k = 0; k < 20; k++) {
+  if (k < 10) {
+    petals[k] = layer("inner-" + k + ".png", 20);
+    a = k * 36;
+  } else {
+    petals[k] = layer("outer-" + (k - 10) + ".png", 10);
+    a = (k - 10) * 36 + 18;
+  }
+  r = a * Math.Pi / 180;
+  petals[k].dx = Math.Sin(r);
+  petals[k].dy = -Math.Cos(r);
+}
+
+if (ending) bloom = 1; else bloom = 0;
+target = bloom;
+
+fun draw_flower() {
+  for (local.k = 0; k < 20; k++) {
+    # each petal unfolds over 1.6 "petal slots", gliding out from the heart
+    local.v = clamp((bloom * 20 - k) / 1.6, 0, 1);
+    local.e = 1 - (1 - v) * (1 - v); # ease out
+    local.back = (1 - e) * D * 0.09;
+    petals[k].sprite.SetX(FX - petals[k].dx * back);
+    petals[k].sprite.SetY(FY - petals[k].dy * back);
+    petals[k].sprite.SetOpacity(e);
+  }
+  local.breath = 0.75 + 0.25 * Math.Sin(t * 1.6);
+  glow.sprite.SetOpacity(clamp(bloom * 3, 0, 1) * breath);
+  core.sprite.SetOpacity(clamp(bloom * 8, 0, 1));
+}
+
+# ---------------------------------------------------------------- Falling petals
+
+FRAMES = 16;
+COLOURS = 3;
+small = 0.42 * u; # far petals: small, slow, dim, behind the flower
+large = 0.7 * u;  # near ones: in front of it
+
+for (c = 0; c < COLOURS; c++) {
+  for (f = 0; f < FRAMES; f++) {
+    local.img = Image("fall-" + c + "-" + f + ".png");
+    frames_small[c * FRAMES + f] = img.Scale(Math.Int(96 * small), Math.Int(96 * small));
+    frames_large[c * FRAMES + f] = img.Scale(Math.Int(96 * large), Math.Int(96 * large));
+  }
+}
+
+fun spawn(p, anywhere) {
+  p.near = (Math.Random() < 0.3);
+  p.colour = Math.Int(Math.Random() * COLOURS);
+  if (p.colour >= COLOURS) p.colour = COLOURS - 1;
+  if (p.near) {
+    p.size = 96 * large;
+    p.speed = (55 + Math.Random() * 35) * u;   # px per second
+    p.alpha = 0.8;
+    p.z = 40;
+  } else {
+    p.size = 96 * small;
+    p.speed = (30 + Math.Random() * 25) * u;
+    p.alpha = 0.45 + Math.Random() * 0.2;
+    p.z = 5;
+  }
+  p.x = X0 + Math.Random() * (W + 200 * u) - 100 * u;
+  if (anywhere) p.y = Y0 + Math.Random() * H - p.size;
+  else p.y = Y0 - p.size - Math.Random() * 120 * u;
+  p.drift = (10 + Math.Random() * 25) * u;   # wind, to the right
+  p.sway = (20 + Math.Random() * 45) * u;
+  p.freq = 0.6 + Math.Random() * 0.9;
+  p.phase = Math.Random() * 6.283;
+  p.spin = 5 + Math.Random() * 9;            # frames per second
+  p.frame0 = Math.Random() * FRAMES;
+  p.born = t;
+  p.sprite.SetZ(p.z);
+  return p;
+}
+
+NFALL = 26;
+for (i = 0; i < NFALL; i++) {
+  fall[i].sprite = Sprite();
+  fall[i] = spawn(fall[i], 1);
+}
+
+fun draw_falling() {
+  for (local.i = 0; i < NFALL; i++) {
+    local.p = fall[i];
+    p.y += p.speed / FPS;
+    p.x += p.drift / FPS;
+    if (p.y > Y0 + H + 10 || p.x > X0 + W + 120 * u) {
+      p = spawn(p, 0);
+    }
+    local.f = Math.Int(p.frame0 + (t - p.born) * p.spin);
+    f = f - Math.Int(f / FRAMES) * FRAMES;
+    local.n = p.colour * FRAMES + f;
+    if (p.near) p.sprite.SetImage(frames_large[n]);
+    else p.sprite.SetImage(frames_small[n]);
+    p.sprite.SetX(p.x + p.sway * Math.Sin(p.phase + t * p.freq));
+    p.sprite.SetY(p.y);
+    # fade in over the first second after a respawn
+    p.sprite.SetOpacity(p.alpha * clamp((t - p.born) + 0.25, 0, 1));
+    global.fall[i] = p;
+  }
+}
+
+# ---------------------------------------------------------------- Refresh
+
+fun refresh() {
+  global.t += 1 / FPS;
+  if (!ending) {
+    # Plymouth's progress is an estimate from previous boots: always bloom a little at first
+    local.goal = Math.Max(target, Math.Min(t / 4, 1) * 0.3);
+    global.bloom += (goal - bloom) * 0.05;
+  }
+  draw_flower();
+  draw_falling();
+}
+Plymouth.SetRefreshFunction(refresh);
+
+fun progress(duration, p) {
+  global.target = clamp(p, 0, 1);
+}
+Plymouth.SetBootProgressFunction(progress);
+
+# ---------------------------------------------------------------- Password prompt
+
+FONT = "Quicksand Medium " + Math.Int(17 * u);
+
+entry.image = Image("entry.png");
+EW = Math.Int(entry.image.GetWidth() / 2 * 0.8 * u);   # 480px at 1080p
+EH = Math.Int(entry.image.GetHeight() / 2 * 0.8 * u);
+entry.sprite = Sprite(entry.image.Scale(EW, EH));
+entry.x = Math.Int(CX - EW / 2);
+entry.y = Math.Int(Y0 + H * 0.76);
+entry.sprite.SetPosition(entry.x, entry.y, 100);
+entry.sprite.SetOpacity(0);
+
+BS = Math.Int(26 * u);
+bullet_image = Image("bullet.png").Scale(BS, BS);
+BMAX = Math.Int((EW - EH) / (BS * 1.15));
+
+prompt.sprite = Sprite();
+prompt.sprite.SetZ(101);
+
+fun hide_prompt() {
+  entry.sprite.SetOpacity(0);
+  prompt.sprite.SetOpacity(0);
+  for (local.i = 0; prompt.bullet[i]; i++) prompt.bullet[i].sprite.SetOpacity(0);
+}
+
+fun show_prompt(text, count) {
+  entry.sprite.SetOpacity(1);
+  if (text == "") text = "Whisper your passphrase…";
+  local.img = Image.Text(text, 0.965, 0.91, 0.937, 1, FONT); # #F6E8EF
+  prompt.sprite.SetImage(img);
+  prompt.sprite.SetPosition(Math.Int(CX - img.GetWidth() / 2), entry.y - img.GetHeight() - 14 * u, 101);
+  prompt.sprite.SetOpacity(1);
+
+  local.shown = Math.Min(count, BMAX);
+  local.step = BS * 1.15;
+  local.x = CX - (shown * step) / 2 + (step - BS) / 2;
+  # under the global prompt: a bare bullets[] here would be a local, freed (and hidden) on return
+  for (local.i = 0; prompt.bullet[i] || i < shown; i++) {
+    if (!prompt.bullet[i]) prompt.bullet[i].sprite = Sprite(bullet_image); # a hash: always truthy
+    prompt.bullet[i].sprite.SetPosition(Math.Int(x + i * step), Math.Int(entry.y + (EH - BS) / 2), 101);
+    if (i < shown) prompt.bullet[i].sprite.SetOpacity(1);
+    else prompt.bullet[i].sprite.SetOpacity(0);
+  }
+}
+
+fun display_password(text, count) { show_prompt(text, count); }
+fun display_normal() { hide_prompt(); }
+Plymouth.SetDisplayPasswordFunction(display_password);
+Plymouth.SetDisplayNormalFunction(display_normal);
+
+# ---------------------------------------------------------------- Messages
+
+message.sprite = Sprite();
+message.sprite.SetZ(101);
+
+fun display_message(text) {
+  local.img = Image.Text(text, 0.847, 0.761, 0.804, 1, FONT); # #D8C2CD
+  message.sprite.SetImage(img);
+  message.sprite.SetPosition(Math.Int(CX - img.GetWidth() / 2), Math.Int(Y0 + H * 0.92), 101);
+  message.sprite.SetOpacity(1);
+}
+fun hide_message(text) { message.sprite.SetOpacity(0); }
+Plymouth.SetDisplayMessageFunction(display_message);
+Plymouth.SetHideMessageFunction(hide_message);

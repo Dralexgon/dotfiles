@@ -14,7 +14,18 @@ let
   #   pixels polaroid red_loader rings rings_2 rog rog_2 seal seal_2 seal_3 sliced sphere spin
   #   spinner_alt splash square square_hud target target_2 tech_a tech_b unrap
   # (the list lives in nixpkgs: pkgs/by-name/ad/adi1090x-plymouth-themes/shas.nix)
-  theme = "glowing"; # old one : "red_loader";
+  # Or one of ours (themes/plymouth): "petals", a cherry blossom blooming with the boot, the twin
+  # of the petals login screen.
+  theme = "petals"; # old ones : "glowing", "red_loader";
+
+  petals = pkgs.runCommand "plymouth-theme-petals" { nativeBuildInputs = [ pkgs.librsvg ]; } ''
+    t=$out/share/plymouth/themes/petals
+    mkdir -p $t
+    bash ${../../themes/plymouth/petals/render.sh} $t
+    cp ${../../themes/plymouth/petals/petals.script} $t/petals.script
+    substitute ${../../themes/plymouth/petals/petals.plymouth} $t/petals.plymouth --subst-var out
+  '';
+  ours = { inherit petals; };
 in
 {
   # This module is used to configure the boot animation.
@@ -26,7 +37,11 @@ in
     enable = true;
     # Without `theme`, plymouth falls back to bgrt and the theme package is never used.
     inherit theme;
-    themePackages = [ (pkgs.adi1090x-plymouth-themes.override { selected_themes = [ theme ]; }) ];
+    themePackages = [
+      (ours.${theme} or (pkgs.adi1090x-plymouth-themes.override { selected_themes = [ theme ]; }))
+    ];
+    # The petals theme writes in Quicksand, like the login screen
+    font = lib.mkIf (theme == "petals") "${pkgs.quicksand}/share/fonts/truetype/Quicksand-Medium.ttf";
   };
 
   # Silent boot: kernel and systemd messages are otherwise drawn over the animation.
