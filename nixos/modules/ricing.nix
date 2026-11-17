@@ -19,7 +19,6 @@
     eza # better ls
 
     # catppuccin rice
-    # catppuccin-cursors.macchiatoMauve
     # catppuccin-gtk
   ];
 }

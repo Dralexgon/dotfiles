@@ -89,19 +89,10 @@ in
         wayland.enable = true;
         # weston (the default) shows no mouse pointer on NVIDIA; kwin does
         wayland.compositor = "kwin";
-        theme = "rice";
-        settings.Theme = {
-          CursorTheme = "Bibata-Modern-Classic"; # sweet-cursors (Hyprland's) isn't in nixpkgs
-          CursorSize = 24; # kwin already scales it by the 4K output scale
-        };
+        theme = "rice"; # its pointer is set in ../cursors.nix, its fonts in ../fonts.nix
       };
 
-      environment.systemPackages = with pkgs; [
-        sddm-rice
-        bibata-cursors # SDDM pointer
-      ];
-
-      fonts.packages = [ pkgs.cinzel pkgs.quicksand ];
+      environment.systemPackages = [ sddm-rice ];
 
       # set_rice() (config/caelestia/hypr-user.lua) leaves the current rice's name here as an
       # empty file, for the "rice" theme: the greeter can't read the home folder.

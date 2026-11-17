@@ -2,8 +2,5 @@
 
 {
   boot.loader.grub.theme = pkgs.catppuccin-grub;
-
-  environment.systemPackages = with pkgs; [
-    catppuccin-cursors.macchiatoMauve
-  ];
+  # Mouse pointer: Bibata everywhere (cursors.nix)
 }

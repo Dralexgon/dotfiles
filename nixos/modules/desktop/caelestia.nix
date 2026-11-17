@@ -98,7 +98,6 @@ lib.mkIf (lib.elem "caelestia" config.desktop.enabled) {
     libsForQt5.qt5ct
     qtengine # Qt platform theme set by the caelestia Hyprland env (QT_QPA_PLATFORMTHEME=qtengine)
     darkly # Qt style used by ~/.config/qtengine/config.json
-    nerd-fonts.jetbrains-mono
     gpu-screen-recorder
     spicetify-cli
 

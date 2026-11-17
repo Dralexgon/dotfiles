@@ -19,11 +19,13 @@
     # ./../../modules/amd-drivers.nix
     ./../../modules/auto-update.nix
     ./../../modules/boot-animation.nix
+    ./../../modules/cursors.nix
 
     # ./../../modules/epita/core.nix
 
     ./../../modules/file-transfer.nix
     ./../../modules/flatpak.nix
+    ./../../modules/fonts.nix
 
     ./../../modules/gaming/core.nix
 

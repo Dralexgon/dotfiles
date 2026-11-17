@@ -12,7 +12,8 @@ return {
     windowGapsOut        = 10,
     singleWindowGapsOut  = 10,
 
-    cursorTheme          = "sweet-cursors",
+    cursorTheme          = "Bibata-Modern-Classic", -- same pointer as nixos/modules/cursors.nix
+    cursorSize           = 24,
 
     -- Changing keybinds:
     kbTerminal           = "SUPER + Return", -- Change the keybind for opening terminal
