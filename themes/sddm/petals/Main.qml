@@ -292,20 +292,50 @@ Rectangle {
                 Keys.onEscapePressed: text = ""
             }
             Row {
+                id: blossomRow
                 anchors.centerIn: parent
                 spacing: 6 * root.u
                 // The newest blossoms stay in view when the field is full
                 readonly property int fits: Math.max(0, Math.floor((field.width - 48 * root.u) / (28 * root.u)))
+
+                // A ListModel, not `model: pw.text.length`: an int model rebuilds every blossom
+                // on each change, so they all popped in again. Here only the changed one moves.
+                // `n` is the character's position, so colours and tilts don't shift when the
+                // oldest blossom scrolls out of a full field.
+                ListModel { id: blossoms }
+                function sync() {
+                    const len = pw.text.length;
+                    const shown = Math.min(len, fits);
+                    // deleted characters: drop from the end
+                    while (blossoms.count > 0 && blossoms.get(blossoms.count - 1).n >= len)
+                        blossoms.remove(blossoms.count - 1);
+                    // new characters: add at the end (only these pop in)
+                    let next = blossoms.count > 0 ? blossoms.get(blossoms.count - 1).n + 1 : len - shown;
+                    for (; next < len; next++)
+                        blossoms.append({ n: next });
+                    // full field: the oldest scroll out at the start
+                    while (blossoms.count > shown)
+                        blossoms.remove(0);
+                    // room again (after a delete, or a wider field): bring older ones back
+                    while (blossoms.count < shown)
+                        blossoms.insert(0, { n: blossoms.get(0).n - 1 });
+                }
+                Connections {
+                    target: pw
+                    function onTextChanged() { blossomRow.sync() }
+                }
+                onFitsChanged: sync()
+
                 Repeater {
-                    model: Math.min(pw.text.length, parent.fits)
+                    model: blossoms
                     Blossom {
-                        required property int index
+                        required property int n
                         width: 22 * root.u
                         height: 22 * root.u
-                        colour: [root.primary, root.secondary, root.tertiary][index % 3]
+                        colour: [root.primary, root.secondary, root.tertiary][n % 3]
                         heart: root.blush
                         scale: 0
-                        rotation: index * 23
+                        rotation: n * 23
                         Component.onCompleted: scale = 1
                         Behavior on scale { SpringAnimation { spring: 4; damping: 0.25; epsilon: 0.005 } }
                     }
