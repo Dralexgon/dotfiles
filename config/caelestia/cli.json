@@ -5,5 +5,29 @@
         "iconThemeLight": "Caelestia",
         "iconThemeDark": "Caelestia-dark",
         "postHook": "~/.config/caelestia/apply-scheme.sh"
+    },
+    "toggles": {
+        "communication": {
+            "discord": {
+                "enable": false
+            },
+            "chat": {
+                "enable": true,
+                "match": [
+                    {
+                        "class": "discord"
+                    },
+                    {
+                        "class": "vesktop"
+                    }
+                ],
+                "command": [
+                    "sh",
+                    "-c",
+                    "if command -v discord >/dev/null; then exec discord; elif command -v vesktop >/dev/null; then exec vesktop; else caelestia shell toaster error 'Super + D' 'Neither discord nor vesktop is installed' error; fi"
+                ],
+                "move": true
+            }
+        }
     }
 }
