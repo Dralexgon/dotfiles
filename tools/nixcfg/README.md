@@ -8,7 +8,8 @@ nix run ~/dotfiles#nixcfg
 ```
 
 It opens on the host matching this machine's hostname (or the first host
-found), with two tabs: **Modules** and **Packages**.
+found), with three tabs: **Modules**, **Packages** and **Keybinds**
+(read-only, the Hyprland shortcuts of the Caelestia desktop).
 
 ## How it works
 
@@ -135,11 +136,40 @@ its module is enabled. This host's packages can be commented out too.
 | `a` | Add a package to this host (`configuration.nix`), with an optional description |
 | `x` / `Delete` | Remove one of this host's packages |
 
+## Keybinds tab
+
+Every Hyprland shortcut of the Caelestia desktop, read-only. `hyprctl binds`
+cannot name them (with the Lua config, every bind's dispatcher is `__lua`), so
+[`keybinds.py`](keybinds.py) reads the Lua files instead, without running them:
+
+- **default**: Caelestia's `kb*` variables (`~/.config/hypr/variables.lua`),
+  in the order and under the headings of `~/.config/hypr/hyprland/keybinds.lua`,
+  which also gives each one its action. The few binds it writes without a
+  variable (brightness keys, `SUPER + arrows`…) are listed too.
+- **override**: a variable set in `config/caelestia/hypr-vars.lua`, which
+  replaces the default (`was SUPER + T`). Set to `""`, the bind is **removed**
+  (struck through). A `kb*` variable Caelestia does not use (a typo) shows up
+  under *Unknown variables*.
+- **user**: the `hl.bind(...)` calls of `config/caelestia/hypr-user.lua`,
+  named by their `description`.
+
+A red `!` marks a conflict: several actions on the same combo, which all run
+on the same key press (the line under the list says with what). The tab
+title counts the binds and the conflicts. The files are read again each time
+the tab is shown.
+
+| Key | Action |
+|---|---|
+| `/` | Filter by combo, name, action, variable or source (`override`, `user`, `conflict`…) |
+| `e` | Open the file to change the bind in, in `$EDITOR`: `hypr-vars.lua` for Caelestia's variables (at the override's line), `hypr-user.lua` for your binds, Caelestia's `keybinds.lua` for the rest |
+
+`python3 tools/nixcfg/keybinds.py` prints the same list in the terminal.
+
 ## Everywhere
 
 | Key | Action |
 |---|---|
-| `1` / `2` | Show the Modules / Packages tab |
+| `1` / `2` / `3` | Show the Modules / Packages / Keybinds tab |
 | `h` | Switch host |
 | `g` | Show `git diff` of `nixos/` and `flake.lock` |
 | `u` | Update `flake.lock` (shared by all hosts, asks first). With `nh`, on this machine: `nh os switch --update` (update, then switch) |
@@ -207,6 +237,31 @@ while an update or rebuild runs).
 - `nixcfg --foreground` runs it in the current terminal, without tmux.
 - `tmux -L nixcfg kill-server` stops a nixcfg left in the background.
 
+### Startup speed
+
+Starting nixcfg from scratch takes ~0.5 s of Python just importing Textual,
+plus kitty opening a window. To avoid paying that again, the `nixcfg`
+wrapper in [`default.nix`](default.nix) checks whether the tmux session is
+already running and reattaches to it directly, without starting Python.
+
+If opening it still feels slow, these are the next options, best first:
+
+1. **Hide the window instead of closing it.** Put the `nixcfg` window on a
+   Hyprland special workspace (window rule on class `nixcfg`) and make
+   `SUPER + I` and the tray click (`show_window` in `nixcfg.py`) run
+   `togglespecialworkspace` instead of starting kitty. Reopening is then
+   just a workspace switch, nearly instant. Downside: you hide it with a
+   key instead of closing it (closing still works, it just reopens slower).
+2. **`kitty --single-instance`.** New windows open in the kitty process
+   that is already running instead of starting a new one (~0.1–0.2 s
+   saved). Only worth it if every kitty window uses it, and they all then
+   share one process.
+3. **Cold start.** The remaining time is the Textual import, which Python
+   (3.14) cannot load lazily. A Rust rewrite (Ratatui) would make it
+   instant, but Textual's widgets (tabs, modals, inputs, syntax
+   highlighting) would have to be rebuilt by hand. Not worth it as long as
+   nixcfg mostly stays in the tray.
+
 ## Details
 
 - **Package search** runs `nix search` on the nixpkgs locked in this flake's
@@ -243,6 +298,7 @@ back. `t` switches nixcfg to the terminal's own colors instead, for both.
 - `nixcfg.py`: the app ([Textual](https://textual.textualize.io/)).
 - `modfile.py`: reads and edits the package lists of module files.
 - `hostfile.py`: reads and edits the module imports of host files.
+- `keybinds.py`: reads the Hyprland binds of the Caelestia Lua config (Keybinds tab).
 - `tray.py`: the tray icon (D-Bus, with `dbus-fast`).
 - `default.nix`: packages it with Python, Textual and dbus-fast. It is exposed in
   `flake.nix` as `apps.x86_64-linux.nixcfg`.

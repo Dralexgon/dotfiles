@@ -43,6 +43,7 @@ from textual.widgets.selection_list import Selection
 from textual.worker import get_current_worker
 
 import hostfile
+import keybinds
 import modfile
 
 DOTFILES = Path(os.environ.get("NIXCFG_DOTFILES", Path.home() / "dotfiles"))
@@ -463,6 +464,52 @@ def number_ranges(numbers: list[int]) -> str:
     return ", ".join(str(a) if a == b else f"{a}–{b}" for a, b in ranges)
 
 
+KEYBIND_SOURCES = {
+    "default": "[dim]default [/]",
+    "override": "[$primary]override[/]",
+    "user": "[$accent]user    [/]",
+}
+
+
+def display_path(path: Path) -> str:
+    """A path from the dotfiles (config/caelestia/hypr-vars.lua) or from ~."""
+    for root, prefix in ((DOTFILES, ""), (Path.home(), "~/")):
+        if path.is_relative_to(root):
+            return prefix + path.relative_to(root).as_posix()
+    return str(path)
+
+
+def keybind_file(bind: keybinds.Bind) -> tuple[Path, int | None]:
+    """Where to change a bind: Caelestia's kb* variables are overridden in
+    hypr-vars.lua (not in Caelestia's own variables.lua), the rest is edited
+    where it is written."""
+    if bind.var:
+        vars_file = DOTFILES / "config/caelestia/hypr-vars.lua"
+        return vars_file, bind.line if bind.source == "override" else None
+    return bind.path, bind.line
+
+
+def keybind_row(bind: keybinds.Bind) -> str:
+    """One line of the Keybinds tab: combo, name, source, action."""
+    combo = bind.combo or bind.default or "?"
+    mark = "[$error]![/]" if bind.conflict else " "
+    if bind.disabled:
+        text = f"[dim strike]{escape(combo)}[/]"
+        source = "[$error]removed [/]"
+    else:
+        text = f"[b]{escape(combo)}[/]"
+        source = KEYBIND_SOURCES[bind.source]
+    row = f"{mark} {text}{' ' * max(2, 32 - len(combo))}"
+    row += f"{escape(bind.label)}{' ' * max(2, 40 - len(bind.label))}{source}  "
+    row += f"[dim]{escape(bind.action)}[/]"
+    if bind.source == "override" and bind.combo and bind.default:
+        if keybinds.combo_key(bind.combo) == keybinds.combo_key(bind.default):
+            row += "  [dim i]same as default[/]"
+        else:
+            row += f"  [dim i]was {escape(bind.default)}[/]"
+    return row
+
+
 class TextPrompt(ModalScreen[str | None]):
     BINDINGS = [Binding("escape", "dismiss(None)", "Cancel")]
 
@@ -720,10 +767,14 @@ class NixCfg(App):
     .dialog Input { background: $panel; }
     Input:focus { border: round $primary; }
     #results { height: 1fr; margin-top: 1; }
+
+    #kb-filter { margin: 0 1 1 1; }
+    #kb-detail { height: 2; padding: 0 2; margin-top: 1; color: $text-muted; }
     """
     BINDINGS = [
         Binding("1", "show_tab('modules-tab')", "Modules"),
         Binding("2", "show_tab('packages-tab')", "Packages"),
+        Binding("3", "show_tab('keybinds-tab')", "Keybinds"),
         Binding("h", "switch_host", "Host"),
         Binding("n", "new_module", "New module"),
         Binding("e", "edit", "Edit"),
@@ -756,6 +807,7 @@ class NixCfg(App):
         self.jumping = False  # switching tabs to show a package's module
         self.tray = None
         self.terminal_theme = False  # t: the terminal's colors instead of nixcfg's
+        self.hypr_binds: list[keybinds.Bind] = []  # the Keybinds tab's rows
 
     def compose(self) -> ComposeResult:
         yield Static(id="titlebar")
@@ -771,6 +823,10 @@ class NixCfg(App):
             with TabPane("Packages", id="packages-tab"):
                 yield Input(id="filter", placeholder="Filter all packages (press /)")
                 yield OptionList(id="all-packages")
+            with TabPane("Keybinds", id="keybinds-tab"):
+                yield Input(id="kb-filter", placeholder="Filter by key, name, action or source (press /)")
+                yield OptionList(id="keybinds")
+                yield Static(id="kb-detail")
         yield Footer(show_command_palette=False)
 
     def on_mount(self) -> None:
@@ -843,6 +899,7 @@ class NixCfg(App):
         self.query_one("#titlebar", Static).update(title)
         self.refresh_modules()
         self.refresh_all_packages()
+        self.refresh_keybinds()
 
     def module_names(self) -> list[str]:
         return sorted({CORE, host_module(self.host), *list_modules(), *self.state["modules"]},
@@ -1017,7 +1074,9 @@ class NixCfg(App):
             return False
         if not self.is_mounted:
             return True
-        modules_tab = self.query_one("#tabs", TabbedContent).active == "modules-tab"
+        tab = self.query_one("#tabs", TabbedContent).active
+        modules_tab = tab == "modules-tab"
+        packages_tab = tab == "packages-tab"
         focus = self.focused_id()
         if action == "delete_module":
             name = self.highlighted_module() or CORE
@@ -1029,11 +1088,11 @@ class NixCfg(App):
         if action == "new_module":
             return modules_tab and focus == "modules"
         if action == "edit":
-            return modules_tab
+            return modules_tab or (tab == "keybinds-tab" and self.highlighted_keybind() is not None)
         if action == "add_package":
             # In the Modules tab: to the highlighted module (from either
             # column); in the Packages tab: to this host.
-            return not modules_tab or bool(
+            return packages_tab or bool(modules_tab and
                 focus in ("modules", "module-packages")
                 and self.module and module_path(self.module).exists())
         if action == "remove_package":
@@ -1042,7 +1101,7 @@ class NixCfg(App):
                 return bool(entry and entry.editable)
             listing = self.query_one("#all-packages", OptionList)
             option = listing.highlighted_option
-            return not modules_tab and bool(option and option.id.startswith("h:"))
+            return packages_tab and bool(option and option.id.startswith("h:"))
         if action == "focus_filter":
             return not modules_tab
         return True
@@ -1053,10 +1112,15 @@ class NixCfg(App):
             self.jumping = False
             self.query_one("#module-packages", PackageList).focus()
             return
-        widget = event.pane.query_one("#modules, #all-packages", OptionList)
+        widgets = event.pane.query("#modules, #all-packages, #keybinds")
+        if not widgets:  # a tab key pressed before the panes are mounted
+            return
+        if event.pane.id == "keybinds-tab":
+            self.refresh_keybinds()  # the Lua files may have changed since
+        widget = widgets.first(OptionList)
         widget.focus()
         if widget.highlighted is None and widget.option_count:
-            widget.highlighted = 0
+            widget.action_first()  # the first option that is not a heading
         self.refresh_bindings()
 
     @on(SelectionList.SelectionHighlighted, "#modules")
@@ -1168,6 +1232,11 @@ class NixCfg(App):
         self.show_module(name, line)
 
     def action_edit(self) -> None:
+        if self.query_one("#tabs", TabbedContent).active == "keybinds-tab":
+            bind = self.highlighted_keybind()
+            if bind:
+                self.open_editor(*keybind_file(bind))
+            return
         name = self.highlighted_module()
         if not name or not module_path(name).exists():
             return
@@ -1389,11 +1458,82 @@ class NixCfg(App):
         self.query_one("#tabs", TabbedContent).active = tab
 
     def action_focus_filter(self) -> None:
-        self.query_one("#filter", Input).focus()
+        keybinds_tab = self.query_one("#tabs", TabbedContent).active == "keybinds-tab"
+        self.query_one("#kb-filter" if keybinds_tab else "#filter", Input).focus()
 
     def action_leave_filter(self) -> None:
         if self.focused_id() == "filter":
             self.query_one("#all-packages", OptionList).focus()
+        elif self.focused_id() == "kb-filter":
+            self.query_one("#keybinds", OptionList).focus()
+
+    # Keybinds tab (read-only)
+
+    def refresh_keybinds(self) -> None:
+        """Caelestia's binds with the hypr-vars.lua overrides, then hypr-user.lua's."""
+        self.hypr_binds = keybinds.load(DOTFILES)
+        query = self.query_one("#kb-filter", Input).value.strip().lower()
+        listing = self.query_one("#keybinds", OptionList)
+        current = listing.highlighted_option.id if listing.highlighted_option else None
+        listing.clear_options()
+        options, section = [], None
+        for i, bind in enumerate(self.hypr_binds):
+            text = " ".join((bind.combo, bind.default, bind.label, bind.action, bind.source,
+                             bind.var, bind.section, "conflict" if bind.conflict else "",
+                             "removed" if bind.disabled else "")).lower()
+            if query and query not in text:
+                continue
+            if bind.section != section:
+                section = bind.section
+                options.append(Option(f"[b $primary]{escape(section or 'Caelestia')}[/]",
+                                      id=f"section:{i}", disabled=True))
+            options.append(Option(keybind_row(bind), id=f"bind:{i}"))
+        listing.add_options(options)
+        ids = [o.id for o in options]
+        if current in ids:
+            listing.highlighted = ids.index(current)
+        self.show_keybind()
+
+        conflicts = sum(b.conflict for b in self.hypr_binds)
+        label = f"Keybinds [dim]{sum(not b.disabled for b in self.hypr_binds)}[/]"
+        if conflicts:
+            label += f" [$error]!{conflicts}[/]"
+        self.query_one("#tabs", TabbedContent).get_tab("keybinds-tab").label = label
+
+    def highlighted_keybind(self) -> keybinds.Bind | None:
+        option = self.query_one("#keybinds", OptionList).highlighted_option
+        if not option or not option.id.startswith("bind:"):
+            return None
+        return self.hypr_binds[int(option.id.split(":")[1])]
+
+    @on(OptionList.OptionHighlighted, "#keybinds")
+    def show_keybind(self) -> None:
+        bind = self.highlighted_keybind()
+        detail = self.query_one("#kb-detail", Static)
+        if not bind:
+            detail.update("")
+            return
+        where = f"{escape(display_path(bind.path))}:{bind.line}"
+        lines = [f"{escape(bind.var) + ' · ' if bind.var else ''}{where}"
+                 + (f" · {', '.join(bind.flags)}" if bind.flags else "")
+                 + f"  [dim]e: open {escape(display_path(keybind_file(bind)[0]))}[/]"]
+        if bind.conflict:
+            others = [b for b in self.hypr_binds if b is not bind and b.combo and b.flags.count("release")
+                      == bind.flags.count("release")
+                      and keybinds.combo_key(b.combo) == keybinds.combo_key(bind.combo)]
+            lines.append("[$error]Same combo as:[/] " + escape(" · ".join(o.label for o in others))
+                         + "  [dim](all of them run)[/]")
+        elif bind.disabled:
+            lines.append(f"Removed by {escape(bind.var)} = \"\" in hypr-vars.lua")
+        detail.update("\n".join(lines))
+
+    @on(Input.Changed, "#kb-filter")
+    def keybind_filter_changed(self) -> None:
+        self.refresh_keybinds()
+
+    @on(Input.Submitted, "#kb-filter")
+    def keybind_filter_submitted(self) -> None:
+        self.query_one("#keybinds", OptionList).focus()
 
     @on(OptionList.OptionSelected, "#all-packages")
     def package_selected(self, event: OptionList.OptionSelected) -> None:

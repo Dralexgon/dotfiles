@@ -14,6 +14,13 @@ let
     # nixcfg needs no rebuild. The store copy is only a fallback; a rebuild
     # is still needed when the Python packages change.
     text = ''
+      # Already running in the background: reattach straight away. Starting
+      # Python just to find that out costs ~0.5 s (importing Textual).
+      # Same socket and session name as TMUX_SOCKET in nixcfg.py.
+      if [ $# -eq 0 ] && [ -z "''${NIXCFG_SESSION:-}" ] \
+         && tmux -L nixcfg has-session -t nixcfg 2>/dev/null; then
+        exec tmux -L nixcfg attach-session -t nixcfg
+      fi
       src="''${NIXCFG_DOTFILES:-$HOME/dotfiles}/tools/nixcfg"
       [ -f "$src/nixcfg.py" ] || src=${./.}
       exec ${python}/bin/python "$src/nixcfg.py" "$@"
