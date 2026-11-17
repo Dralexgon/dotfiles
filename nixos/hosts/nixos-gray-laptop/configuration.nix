@@ -33,7 +33,7 @@
     ./../../modules/dev/core.nix
     ./../../modules/nix.nix
     # ./../../modules/nvidia-drivers.nix
-    # ./../../modules/passwordless-rebuild.nix
+    ./../../modules/passwordless-rebuild.nix
     # ./../../modules/quality-of-life.nix
     # ./../../modules/quickshell.nix
     # ./../../modules/razer.nix
