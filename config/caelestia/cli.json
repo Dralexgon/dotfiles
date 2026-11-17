@@ -19,12 +19,18 @@
                     },
                     {
                         "class": "vesktop"
+                    },
+                    {
+                        "class": "Dorion"
+                    },
+                    {
+                        "class": "dorion"
                     }
                 ],
                 "command": [
                     "sh",
                     "-c",
-                    "if command -v discord >/dev/null; then exec discord; elif command -v vesktop >/dev/null; then exec vesktop; else caelestia shell toaster error 'Super + D' 'Neither discord nor vesktop is installed' error; fi"
+                    "if command -v discord >/dev/null; then exec discord; elif command -v vesktop >/dev/null; then exec vesktop; elif command -v Dorion >/dev/null; then exec Dorion; else caelestia shell toaster error 'Super + D' 'None of discord, vesktop or Dorion is installed' error; fi"
                 ],
                 "move": true
             }

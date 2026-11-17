@@ -143,6 +143,7 @@ in
     # 2 discord clients for multiple accounts
     discord
     # vesktop
+    dorion # Discord in a Tauri (Rust + system webview) shell, lighter than Electron
   ];
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
