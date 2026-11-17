@@ -79,7 +79,7 @@ or deleted from nixcfg: each one also has its session in
 `desktop/default.nix`.
 
 Lines keep their place, so you can reorder them, add comments after them or
-edit the files by hand; [`hostfile.py`](hostfile.py) only comments or
+edit the files by hand; [`hostfile.rs`](src/hostfile.rs) only comments or
 uncomments a line, adds a missing line next to the ones of its folder, or
 drops the commented line of a module whose file was deleted.
 
@@ -140,7 +140,7 @@ its module is enabled. This host's packages can be commented out too.
 
 Every Hyprland shortcut of the Caelestia desktop, read-only. `hyprctl binds`
 cannot name them (with the Lua config, every bind's dispatcher is `__lua`), so
-[`keybinds.py`](keybinds.py) reads the Lua files instead, without running them:
+[`keybinds.rs`](src/keybinds.rs) reads the Lua files instead, without running them:
 
 - **default**: Caelestia's `kb*` variables (`~/.config/hypr/variables.lua`),
   in the order and under the headings of `~/.config/hypr/hyprland/keybinds.lua`,
@@ -163,7 +163,8 @@ the tab is shown.
 | `/` | Filter by combo, name, action, variable or source (`override`, `user`, `conflict`…) |
 | `e` | Open the file to change the bind in, in `$EDITOR`: `hypr-vars.lua` for Caelestia's variables (at the override's line), `hypr-user.lua` for your binds, Caelestia's `keybinds.lua` for the rest |
 
-`python3 tools/nixcfg/keybinds.py` prints the same list in the terminal.
+`python3 tools/nixcfg/legacy/keybinds.py` prints the same list in the terminal
+(`nixcfg --dump` has it too, as JSON).
 
 ## Everywhere
 
@@ -177,7 +178,8 @@ the tab is shown.
 | `r` | `nh os switch`, or `sudo nixos-rebuild switch` without `nh` (only for this machine, asks first) |
 | `c` | Delete old system generations of this machine (see below) |
 | `t` | Toggle between nixcfg's colors and the terminal's |
-| `q` | Quit (really stops nixcfg, unlike closing its window) |
+| `q` | Quit (really stops nixcfg, unlike hiding or closing its window) |
+| `Esc` | Hide the window (in a list, under Hyprland: see [Running in the background](#running-in-the-background)) |
 
 Every change is written right away (to the host's `configuration.nix` or to the module file):
 use `git diff` and `git restore` to review or undo.
@@ -186,7 +188,7 @@ use `git diff` and `git restore` to review or undo.
 
 nixcfg never rewrites a module: it only comments, uncomments, adds or
 deletes **one line** of an `environment.systemPackages` list
-([`modfile.py`](modfile.py)), so your comments and formatting stay. A line
+([`modfile.rs`](src/modfile.rs)), so your comments and formatting stay. A line
 counts as a package when it is a single attribute path (`kitty`,
 `kdePackages.kate`, with an optional `# comment`). A commented line counts as
 a disabled package when it is one lowercase word right after the `#`
@@ -229,8 +231,15 @@ the app launcher or `nixcfg`) reattaches to it, right where it was. When a
 command finishes, a desktop notification tells whether it worked. Press `q`
 to really quit.
 
-While it runs, a ❄ icon shows in the bar's tray ([`tray.py`](tray.py), a
-StatusNotifierItem): click it to open or focus the window. Hovering it in
+Under Hyprland, its window is not even closed: a window rule in
+[`hypr-user.lua`](../../config/caelestia/hypr-user.lua) puts it on its own
+special workspace, `special:nixcfg`, like Caelestia's music or communication
+workspaces. `SUPER + I` shows it, and hides it again; `Esc` in nixcfg hides it
+too. Showing it is a workspace switch, with no new kitty or nixcfg to start.
+Closing it still works, it just reopens a bit slower (a new kitty window).
+
+While it runs, a ❄ icon shows in the bar's tray ([`tray.rs`](src/tray.rs), a
+StatusNotifierItem): click it to show or focus the window. Hovering it in
 Caelestia shows its menu, with what is running and **Quit nixcfg** (disabled
 while an update or rebuild runs).
 
@@ -239,28 +248,22 @@ while an update or rebuild runs).
 
 ### Startup speed
 
-Starting nixcfg from scratch takes ~0.5 s of Python just importing Textual,
-plus kitty opening a window. To avoid paying that again, the `nixcfg`
-wrapper in [`default.nix`](default.nix) checks whether the tmux session is
-already running and reattaches to it directly, without starting Python.
+nixcfg was rewritten in Rust (Ratatui) for slow machines: on the gray laptop
+it shows its first screen in about **65 ms**, against **1.3 s** for the Python
+(Textual) version, and uses 9 MB of memory instead of 57 MB. With its window
+hidden instead of closed, opening it again is instant.
 
-If opening it still feels slow, these are the next options, best first:
+If it still feels slow, what is left:
 
-1. **Hide the window instead of closing it.** Put the `nixcfg` window on a
-   Hyprland special workspace (window rule on class `nixcfg`) and make
-   `SUPER + I` and the tray click (`show_window` in `nixcfg.py`) run
-   `togglespecialworkspace` instead of starting kitty. Reopening is then
-   just a workspace switch, nearly instant. Downside: you hide it with a
-   key instead of closing it (closing still works, it just reopens slower).
-2. **`kitty --single-instance`.** New windows open in the kitty process
-   that is already running instead of starting a new one (~0.1–0.2 s
-   saved). Only worth it if every kitty window uses it, and they all then
-   share one process.
-3. **Cold start.** The remaining time is the Textual import, which Python
-   (3.14) cannot load lazily. A Rust rewrite (Ratatui) would make it
-   instant, but Textual's widgets (tabs, modals, inputs, syntax
-   highlighting) would have to be rebuilt by hand. Not worth it as long as
-   nixcfg mostly stays in the tray.
+1. **The first kitty window.** Opening nixcfg the first time after logging in
+   starts a kitty window (about 0.2–0.4 s on the laptop). It could be started
+   hidden at login (an `exec-once` of `kitty --class nixcfg nixcfg`, which the
+   window rule sends to its special workspace), at the cost of keeping kitty
+   and nixcfg in memory all the time (about 100 MB).
+2. **`kitty --single-instance`** is not worth it anymore: it only saves
+   starting a kitty process, which hiding the window already avoids.
+3. **The Nix check** after each change (`checking…`) still takes about 3 s per
+   host that uses the module: that is Nix evaluating the config, not nixcfg.
 
 ## Details
 
@@ -286,8 +289,7 @@ If opening it still feels slow, these are the next options, best first:
 nixcfg uses the colors of your Caelestia shell (the Material You palette in
 `~/.local/state/caelestia/scheme.json`, generated from the wallpaper) and
 follows it live when the wallpaper changes. Without Caelestia it falls back
-to Catppuccin Mocha. `Ctrl+P` → *Change theme* picks another theme for the
-session.
+to Catppuccin Mocha.
 
 The output of an update, build or switch is shown in the same colors: the
 terminal's palette is changed while the command runs (OSC 4/10/11), then put
@@ -295,26 +297,60 @@ back. `t` switches nixcfg to the terminal's own colors instead, for both.
 
 ## Files
 
-- `nixcfg.py`: the app ([Textual](https://textual.textualize.io/)).
-- `modfile.py`: reads and edits the package lists of module files.
-- `hostfile.py`: reads and edits the module imports of host files.
-- `keybinds.py`: reads the Hyprland binds of the Caelestia Lua config (Keybinds tab).
-- `tray.py`: the tray icon (D-Bus, with `dbus-fast`).
-- `default.nix`: packages it with Python, Textual and dbus-fast. It is exposed in
-  `flake.nix` as `apps.x86_64-linux.nixcfg`.
+- `src/main.rs`: the command line (`--foreground`, `--dump`).
+- `src/app.rs`: the app ([Ratatui](https://ratatui.rs/)): tabs, dialogs, keys and mouse.
+- `src/widgets.rs`: its lists and text input.
+- `src/cfg.rs`: the hosts, modules, groups and what each host turns on; the Nix check.
+- `src/modfile.rs`: reads and edits the package lists of module files.
+- `src/hostfile.rs`: reads and edits the module imports and desktops of host files.
+- `src/keybinds.rs`: reads the Hyprland binds of the Caelestia Lua config (Keybinds tab).
+- `src/window.rs`: the tmux session, and showing or hiding the window under Hyprland.
+- `src/tray.rs`: the tray icon (D-Bus, with `ksni`).
+- `src/theme.rs`, `src/nixhl.rs`: the colors, and the Nix highlighting of the preview.
+- `default.nix`: builds it with Cargo. It is exposed in `flake.nix` as
+  `apps.x86_64-linux.nixcfg`, and installed by `core.nix`.
+- `legacy/`: the original Python (Textual) version, see below.
+- `compare.py`: checks that both versions read and edit the files the same way.
+
+## The legacy Python version
+
+The original version is kept in [`legacy/`](legacy), unchanged except for
+its own tmux socket and window class (`nixcfg-legacy`), so it never attaches
+to the Rust one:
+
+```bash
+nix run ~/dotfiles#nixcfg-legacy
+```
+
+It is not installed. It runs `legacy/nixcfg.py` from the checkout, so edits
+to it need no rebuild. The only things it has that the Rust version dropped
+are Textual's command palette (`Ctrl+P`, with its theme picker) and its
+console for debugging.
+
+`compare.py` checks the two against each other. `nixcfg --dump` prints, as
+JSON, everything nixcfg reads (hosts, modules, states, packages, keybinds)
+and the text of **every edit it can make** (each module, submodule, desktop
+and package toggled, each package removed, a package added). `compare.py`
+computes the same with the Python functions and diffs the two. Nothing is
+written:
+
+```bash
+nix develop ~/dotfiles#nixcfg -c python tools/nixcfg/compare.py
+# 4345 values compared, 0 difference(s)
+```
+
+Run it after changing the parsing or editing code of either version
+(`--dotfiles DIR` checks another dotfiles copy, `--rust BIN` another build).
 
 ## Developing
 
-The `nixcfg` command runs `tools/nixcfg/nixcfg.py` from the dotfiles
-checkout (`$NIXCFG_DOTFILES`, or `~/dotfiles`), and only falls back to its
-Nix store copy when there is none. Edits show up on the next launch, with no
-rebuild. Rebuild only when `default.nix` changes (new Python packages, the
-desktop entry...).
-
-For live CSS reload and the Textual console:
-
 ```bash
-nix develop ~/dotfiles#nixcfg
-textual run --dev tools/nixcfg/nixcfg.py   # in one terminal
-textual console                            # in another, for print() and logs
+nix develop ~/dotfiles#nixcfg     # cargo, rustc, clippy, rust-analyzer, and Python for legacy/
+cd tools/nixcfg
+cargo run -- --foreground          # try a change without rebuilding the system
+python compare.py                  # check it still matches the legacy version
 ```
+
+The installed `nixcfg` is the one built by Nix, so a change shows up there
+after a rebuild (`r` in nixcfg). The first build takes a few minutes on the
+laptop; later ones only rebuild the crate.

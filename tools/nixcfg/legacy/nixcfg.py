@@ -1,4 +1,4 @@
-"""nixcfg: a TUI to enable/disable/add/remove modules and packages of the
+"""nixcfg (legacy Python version, see ../README.md): a TUI to enable/disable/add/remove modules and packages of the
 NixOS hosts in ~/dotfiles.
 
 Everything stays Nix code and is toggled by commenting lines out, the way
@@ -71,7 +71,7 @@ TERMINAL_THEMES = {True: "ansi-dark", False: "ansi-light"}
 
 # nixcfg runs in its own tmux server, so closing its window only detaches it:
 # an update or rebuild keeps going, and launching nixcfg again reattaches.
-TMUX_SOCKET = "nixcfg"
+TMUX_SOCKET = "nixcfg-legacy"  # its own server: never attaches to the Rust nixcfg
 TMUX_OPTIONS = [
     # Invisible: no status bar, no prefix key, no delay on Escape.
     "set -g status off",
@@ -83,6 +83,9 @@ TMUX_OPTIONS = [
     "set -s terminal-features[99] '*:RGB'",
     "set -g focus-events on",
 ]
+
+# The kitty window of the legacy version (the Rust one is "nixcfg").
+WINDOW_CLASS = "nixcfg-legacy"
 
 # Each rebuild adds a system-<n>-link here; the profile points to the newest.
 SYSTEM_PROFILE = Path("/nix/var/nix/profiles/system")
@@ -400,17 +403,17 @@ def show_window() -> None:
     except (OSError, ValueError):
         clients = []
     for client in clients:
-        if client.get("class") == "nixcfg":
+        if client.get("class") == WINDOW_CLASS:
             # Same as the SUPER + I bind in config/caelestia/hypr-user.lua.
             subprocess.run(["hyprctl", "eval", "hl.dispatch(hl.dsp.focus("
                             f'{{ window = "address:{client["address"]}" }}))'],
                            capture_output=True)
             return
-    nixcfg = shutil.which("nixcfg")
+    nixcfg = shutil.which("nixcfg-legacy")
     command = [nixcfg] if nixcfg else [sys.executable, str(Path(__file__).resolve())]
     # Without these, the new nixcfg would think it is already in the session.
     env = {k: v for k, v in os.environ.items() if k not in ("NIXCFG_SESSION", "TMUX", "TMUX_PANE")}
-    subprocess.Popen(["kitty", "--class", "nixcfg", "--title", "nixcfg", *command],
+    subprocess.Popen(["kitty", "--class", WINDOW_CLASS, "--title", WINDOW_CLASS, *command],
                      env=env, start_new_session=True, stdin=subprocess.DEVNULL,
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
@@ -1666,7 +1669,7 @@ def attach_or_start() -> None:
     for option in TMUX_OPTIONS:
         args += [*shlex.split(option), ";"]
     # -A attaches to the session when it already exists.
-    args += ["new-session", "-A", "-s", "nixcfg", "-e", "NIXCFG_SESSION=1", *command]
+    args += ["new-session", "-A", "-s", TMUX_SOCKET, "-e", "NIXCFG_SESSION=1", *command]
     os.execvp("tmux", args)
 
 

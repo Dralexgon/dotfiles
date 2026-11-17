@@ -109,7 +109,10 @@ def parse(text: str) -> list[Block]:
             elif (m := DISABLED.match(line)) and m[1] == indent:
                 block.entries.append(Entry(n, m[2], False, True, m[3] or ""))
         blocks.append(block)
-        i += 1
+        # Past its "]" line. A list closed inline already left i on the next
+        # line, which may start another list.
+        if not closed_inline:
+            i += 1
     return blocks
 
 

@@ -138,6 +138,12 @@
         program = "${nixcfg}/bin/nixcfg";
       };
 
+      # The original Python version of nixcfg, kept to fall back on: nix run ~/dotfiles#nixcfg-legacy
+      nixcfg-legacy = {
+        type = "app";
+        program = "${nixcfg.legacy}/bin/nixcfg-legacy";
+      };
+
       # Razer keyboard effects (TUI): nix run ~/dotfiles#razerfx
       razerfx = {
         type = "app";
@@ -146,11 +152,17 @@
     };
 
     devShells.${system} = {
-      # To work on nixcfg: nix develop ~/dotfiles#nixcfg, then
-      # textual run --dev tools/nixcfg/nixcfg.py (live CSS reload, with textual console)
+      # To work on nixcfg: nix develop ~/dotfiles#nixcfg, then in tools/nixcfg
+      # cargo run -- --foreground, and python compare.py to check it against the
+      # legacy Python version (textual run --dev legacy/nixcfg.py runs that one)
       nixcfg = pkgs.mkShell {
         packages = [
-          (pkgs.python3.withPackages (p: nixcfg.pythonPackages p ++ [ p.textual-dev ]))
+          pkgs.cargo
+          pkgs.rustc
+          pkgs.clippy
+          pkgs.rustfmt
+          pkgs.rust-analyzer
+          (pkgs.python3.withPackages (p: nixcfg.legacy.pythonPackages p ++ [ p.textual-dev ]))
           pkgs.git
         ];
       };

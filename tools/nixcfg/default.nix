@@ -1,30 +1,24 @@
 { pkgs }:
 
 let
-  # Also used by the dev shell (flake.nix), which adds textual-dev.
-  pythonPackages = p: [ p.textual p.dbus-fast ];
-  python = pkgs.python3.withPackages pythonPackages;
+  lib = pkgs.lib;
 
-  bin = pkgs.writeShellApplication {
-    name = "nixcfg";
+  bin = pkgs.rustPlatform.buildRustPackage {
+    pname = "nixcfg";
+    version = "2.0.0";
+    # Only the Rust sources: editing legacy/ or the README rebuilds nothing.
+    src = lib.fileset.toSource {
+      root = ./.;
+      fileset = lib.fileset.unions [ ./Cargo.toml ./Cargo.lock ./src ];
+    };
+    cargoLock.lockFile = ./Cargo.lock;
+    nativeBuildInputs = [ pkgs.makeWrapper ];
     # tmux keeps nixcfg running when its window is closed; libnotify tells
     # when an update or rebuild finished.
-    runtimeInputs = [ pkgs.git pkgs.tmux pkgs.libnotify ];
-    # Runs the source in the dotfiles checkout when there is one, so editing
-    # nixcfg needs no rebuild. The store copy is only a fallback; a rebuild
-    # is still needed when the Python packages change.
-    text = ''
-      # Already running in the background: reattach straight away. Starting
-      # Python just to find that out costs ~0.5 s (importing Textual).
-      # Same socket and session name as TMUX_SOCKET in nixcfg.py.
-      if [ $# -eq 0 ] && [ -z "''${NIXCFG_SESSION:-}" ] \
-         && tmux -L nixcfg has-session -t nixcfg 2>/dev/null; then
-        exec tmux -L nixcfg attach-session -t nixcfg
-      fi
-      src="''${NIXCFG_DOTFILES:-$HOME/dotfiles}/tools/nixcfg"
-      [ -f "$src/nixcfg.py" ] || src=${./.}
-      exec ${python}/bin/python "$src/nixcfg.py" "$@"
+    postInstall = ''
+      wrapProgram $out/bin/nixcfg --prefix PATH : ${lib.makeBinPath [ pkgs.git pkgs.tmux pkgs.libnotify ]}
     '';
+    meta.mainProgram = "nixcfg";
   };
 
   # Shows nixcfg in app launchers (Caelestia, rofi...). It opens in kitty
@@ -43,6 +37,8 @@ in
 pkgs.symlinkJoin {
   name = "nixcfg";
   paths = [ bin desktopItem ];
-  passthru = { inherit pythonPackages; };
+  # The original Python version, kept to fall back on (nix run ~/dotfiles#nixcfg-legacy)
+  # and to check this one against (compare.py).
+  passthru.legacy = import ./legacy { inherit pkgs; };
   meta.mainProgram = "nixcfg";
 }

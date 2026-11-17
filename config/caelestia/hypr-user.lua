@@ -82,14 +82,24 @@ hl.window_rule({
 })
 
 -- nixcfg (kitty --class nixcfg) floats centered above windows, like Caelestia settings but a bit smaller
+-- (nixcfg-legacy is its old Python version, nix run ~/dotfiles#nixcfg-legacy)
 hl.window_rule({
     match = {
-        class = "^(nixcfg)$"
+        class = "^(nixcfg|nixcfg-legacy)$"
     },
     float = true,
     size = "(monitor_w*0.75) (monitor_h*0.75)",
     center = true,
     fullscreen_state = 0 -- kitty asks to be maximized, which would override the size
+})
+
+-- nixcfg lives on its own special workspace, so it is hidden and shown again (SUPER + I, its tray
+-- icon, Escape in nixcfg) instead of closed and reopened: showing it is instant, no new kitty
+hl.window_rule({
+    match = {
+        class = "^(nixcfg)$"
+    },
+    workspace = "special:nixcfg"
 })
 
 -- razerfx (kitty --class razerfx, from the app launcher) floats centered like nixcfg
@@ -134,15 +144,24 @@ hl.window_rule({
     center = true
 })
 
--- SUPER + I opens nixcfg, or focuses it if it is already open
+-- SUPER + I shows nixcfg (its special workspace), or hides it when it is shown. Without a window
+-- yet it starts one there, like Caelestia's special workspaces (tools/nixcfg/src/window.rs does the same)
 hl.bind("SUPER + I", function()
+    local active = hl.get_active_special_workspace()
+    if active and active.name == "special:nixcfg" then
+        return hl.dispatch(hl.dsp.workspace.toggle_special("nixcfg"))
+    end
     for _, window in ipairs(hl.get_windows() or {}) do
         if window.class == "nixcfg" then
+            if window.workspace and window.workspace.name == "special:nixcfg" then
+                hl.dispatch(hl.dsp.focus({ workspace = "special:nixcfg" }))
+            end
             return hl.dispatch(hl.dsp.focus({ window = "address:" .. window.address }))
         end
     end
-    hl.dispatch(hl.dsp.exec_cmd("kitty --class nixcfg --title nixcfg nixcfg"))
-end, { description = "nixcfg" })
+    hl.dispatch(hl.dsp.focus({ workspace = "special:nixcfg" }))
+    hl.dispatch(hl.dsp.exec_cmd("kitty --class nixcfg --title nixcfg nixcfg", { workspace = "special:nixcfg" }))
+end, { description = "nixcfg (show / hide)" })
 
 -- Nova (voice AI companion, ~/dev/ai/nova): a Quickshell overlay driven by her own backend
 -- SUPER + A opens Nova, then switches her between full screen and the mini orb (top right)
