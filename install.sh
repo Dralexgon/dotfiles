@@ -9,6 +9,7 @@ FLAKE_FILE="$DOTFILES_DIR/flake.nix"
 
 MODE="tui"
 WANT_CAELESTIA=0
+WANT_LIFE_MANAGER=0
 ASK_USER=1
 CREATED_USER=""
 HARDWARE_CONFIG=""
@@ -25,12 +26,17 @@ Steps:
      repo in its home, the installer re-runs as that user, and the command
      to delete it is printed at the end.
   1. Caelestia (optional): asks whether to install Caelestia. If yes, the
-     caelestia and hyprland modules are preselected for a new host, and
-     'caelestia install' is run with the components you pick.
-  2. NixOS host setup (optional): creates nixos/hosts/<hostname>/ with the
-     hostname and modules you choose (and the target user), generates
-     hardware-configuration.nix, and registers the host in flake.nix.
-  3. Dotfile configuration: symlinks selected config groups from config/
+     caelestia desktop is preselected for a new host, and 'caelestia install'
+     is run with the components you pick.
+  2. Projects (optional): clones the projects that live in their own
+     repos (nova -> ~/dev/ai/nova, life-manager -> ~/dev/apps/life-manager),
+     where these dotfiles expect them. life-manager preselects its module.
+  3. NixOS host setup (optional): creates nixos/hosts/<hostname>/ with the
+     hostname, desktops, modules and tools (from tools/) you choose (and the
+     target user) and the NixOS release this machine was installed with
+     (system.stateVersion), generates hardware-configuration.nix, and registers the host in
+     flake.nix.
+  4. Dotfile configuration: symlinks selected config groups from config/
      into \$HOME (bash -> ~/.bashrc, git -> ~/.gitconfig*, ssh -> ~/.ssh/config,
      clang-format -> ~/.clang-format,
      others -> ~/.config/<name>), offering
@@ -392,8 +398,9 @@ select_modules() {
 	MODULE_CHECKED=()
 
 	mapfile -t defaults < <(default_modules)
-	if (( WANT_CAELESTIA )); then
-		defaults+=("caelestia.nix" "hyprland.nix")
+	if (( WANT_LIFE_MANAGER )); then
+		# its run.sh uses 'tailscale serve'
+		defaults+=("life-manager.nix" "tailscale.nix")
 	fi
 
 	while IFS= read -r module; do
@@ -411,10 +418,169 @@ select_modules() {
 	select_many "Modules to import:" MODULE_OPTIONS MODULE_CHECKED
 }
 
+# Desktops are the files of nixos/modules/desktop (but default.nix, which
+# defines the options), enabled per host with desktop.enabled.
+list_desktops() {
+	find "$MODULES_DIR/desktop" -mindepth 1 -maxdepth 1 -name '*.nix' ! -name default.nix -printf '%f\n' \
+		| sed 's/\.nix$//' | sort
+}
+
+# Desktops enabled (not commented out) in the default host, used as preselection.
+default_desktops() {
+	sed -n '/desktop\.enabled = \[/,/\];/p' "$HOSTS_DIR/default/configuration.nix" \
+		| sed -nE 's/^[[:space:]]*"([a-z0-9_-]+)".*$/\1/p'
+}
+
+select_desktops() {
+	local desktop i
+	local -a defaults chosen=()
+	DESKTOP_OPTIONS=()
+	DESKTOP_CHECKED=()
+	DEFAULT_SESSION=""
+
+	mapfile -t defaults < <(default_desktops)
+	(( WANT_CAELESTIA )) && defaults+=("caelestia")
+
+	while IFS= read -r desktop; do
+		DESKTOP_OPTIONS+=("$desktop")
+		DESKTOP_CHECKED+=(0)
+		for i in "${defaults[@]}"; do
+			[[ "$i" == "$desktop" ]] && DESKTOP_CHECKED[-1]=1
+		done
+	done < <(list_desktops)
+
+	printf '\n'
+	select_many "Desktops (all selectable on the login screen):" DESKTOP_OPTIONS DESKTOP_CHECKED
+
+	for i in "${!DESKTOP_OPTIONS[@]}"; do
+		(( DESKTOP_CHECKED[i] )) && chosen+=("${DESKTOP_OPTIONS[$i]}")
+	done
+	(( ${#chosen[@]} )) || return 0
+
+	# Choosing the caelestia desktop also runs 'caelestia install' afterwards.
+	for i in "${chosen[@]}"; do
+		[[ "$i" == "caelestia" ]] && WANT_CAELESTIA=1
+	done
+
+	DEFAULT_SESSION="${chosen[0]}"
+	if (( ${#chosen[@]} > 1 )); then
+		local current=0
+		for i in "${!chosen[@]}"; do
+			(( WANT_CAELESTIA )) && [[ "${chosen[$i]}" == "caelestia" ]] && current="$i"
+		done
+		printf '\n'
+		select_one "Desktop preselected on the login screen:" "$current" "${chosen[@]}"
+		DEFAULT_SESSION="${chosen[$SELECTED]}"
+	fi
+}
+
+# The desktop.enabled lines, commented out when disabled (as nixcfg writes them).
+desktop_lines() {
+	local i
+	for i in "${!DESKTOP_OPTIONS[@]}"; do
+		if (( DESKTOP_CHECKED[i] )); then
+			printf '    "%s"\n' "${DESKTOP_OPTIONS[$i]}"
+		else
+			printf '    # "%s"\n' "${DESKTOP_OPTIONS[$i]}"
+		fi
+	done
+}
+
+# The NixOS release this machine was installed with: the one in its
+# /etc/nixos/configuration.nix, else the running release.
+detect_state_version() {
+	local version=""
+	if [[ -r /etc/nixos/configuration.nix ]]; then
+		version="$(sed -nE 's/^[[:space:]]*system\.stateVersion[[:space:]]*=[[:space:]]*"([0-9.]+)".*$/\1/p' \
+			/etc/nixos/configuration.nix | head -n1)"
+	fi
+	if [[ -z "$version" ]] && command -v nixos-version >/dev/null 2>&1; then
+		version="$(nixos-version | cut -d. -f1,2)"
+	fi
+	ask_text "NixOS release this machine was installed with (system.stateVersion)" "$version"
+	if ! [[ "$ANSWER" =~ ^[0-9]{2}\.[0-9]{2}$ ]]; then
+		printf 'Expected a release like 25.05, got: %s\n' "$ANSWER" >&2
+		exit 1
+	fi
+	STATE_VERSION="$ANSWER"
+}
+
+# The file under nixos/ that installs a tool (e.g. modules/razer.nix), if any.
+tool_provider() {
+	grep -rlF --include='*.nix' -- "tools/$1 " "$DOTFILES_DIR/nixos" \
+		| head -n1 | sed "s#^$DOTFILES_DIR/nixos/##"
+}
+
+# Whether the selected modules (or core.nix, always imported) already install it.
+tool_installed() {
+	local provider="$1" i
+	[[ "$provider" == "core.nix" ]] && return 0
+	for i in "${!DESKTOP_OPTIONS[@]}"; do
+		(( DESKTOP_CHECKED[i] )) && [[ "modules/desktop/${DESKTOP_OPTIONS[$i]}.nix" == "$provider" ]] && return 0
+	done
+	for i in "${!MODULE_OPTIONS[@]}"; do
+		(( MODULE_CHECKED[i] )) && [[ "modules/${MODULE_OPTIONS[$i]}.nix" == "$provider" ]] && return 0
+	done
+	return 1
+}
+
+# Tools from tools/ that the chosen modules don't install already, to add to
+# the host's packages. Hyprland plugins (hypr-*) are left out: they are loaded
+# by the caelestia desktop, not installed as packages.
+select_tools() {
+	local tool provider
+	local -a included=()
+	TOOL_OPTIONS=()
+	TOOL_LABELS=()
+	TOOL_CHECKED=()
+
+	while IFS= read -r tool; do
+		[[ "$tool" == hypr-* ]] && continue
+		provider="$(tool_provider "$tool")"
+		if [[ -n "$provider" ]] && tool_installed "$provider"; then
+			included+=("$tool")
+			continue
+		fi
+		TOOL_OPTIONS+=("$tool")
+		if [[ -n "$provider" ]]; then
+			TOOL_LABELS+=("$tool (normally from ${provider#modules/})")
+		else
+			TOOL_LABELS+=("$tool")
+		fi
+		TOOL_CHECKED+=(0)
+	done < <(find "$DOTFILES_DIR/tools" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort)
+
+	printf '\n'
+	(( ${#included[@]} )) && printf 'Tools already installed by your modules: %s\n' "${included[*]}"
+	select_many "Extra tools to install:" TOOL_LABELS TOOL_CHECKED
+}
+
+# The package lines of the selected tools, for environment.systemPackages.
+tool_packages() {
+	local i tool
+	for i in "${!TOOL_OPTIONS[@]}"; do
+		(( TOOL_CHECKED[i] )) || continue
+		tool="${TOOL_OPTIONS[$i]}"
+		printf '    # tools/%s\n' "$tool"
+		case "$tool" in
+			bat-swarm)
+				printf '    (import ./../../../tools/bat-swarm {\n'
+				printf '      inherit pkgs;\n'
+				printf '      quickshell = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;\n'
+				printf '    })\n'
+				;;
+			*) printf '    (import ./../../../tools/%s { inherit pkgs; })\n' "$tool" ;;
+		esac
+	done
+}
+
 write_host_config() {
 	local config_file="$1"
 	local hostname="$2"
 	local username="$3"
+	local session_line=""
+
+	[[ -n "$DEFAULT_SESSION" ]] && session_line="  desktop.defaultSession = \"$DEFAULT_SESSION\";"
 
 	cat > "$config_file" <<EOF
 { config, pkgs, lib, inputs, ... }:
@@ -433,14 +599,26 @@ write_host_config() {
 $(module_imports)
   ];
 
+  # Desktops: all selectable on the login screen (or use \`nixcfg\`).
+  # caelestia also turns hyprland on. See nixos/modules/desktop/default.nix
+  desktop.enabled = [
+$(desktop_lines)
+  ];
+$session_line
+
   # Packages for this host only
   environment.systemPackages = with pkgs; [
+$(tool_packages)
   ];
 
   users.users."$username" = {
     isNormalUser = true;
     extraGroups = [ "networkmanager" "wheel" "docker" ];
   };
+
+  # NixOS release this host was installed with: keep it, even after upgrades
+  # (read \`man configuration.nix\` before changing it).
+  system.stateVersion = "$STATE_VERSION";
 }
 EOF
 }
@@ -478,8 +656,11 @@ setup_nixos() {
 		exit 1
 	fi
 
+	select_desktops
 	select_modules
 	ask_risky_modules
+	select_tools
+	detect_state_version
 
 	mkdir -p "$host_dir"
 	config_file="$host_dir/configuration.nix"
@@ -515,6 +696,53 @@ setup_nixos() {
 	fi
 
 	printf 'Apply it with: sudo nixos-rebuild switch --flake %s#%s\n' "$DOTFILES_DIR" "$hostname"
+}
+
+# Projects that live in their own (private) repos, cloned where the dotfiles
+# expect them: "name|repo|path relative to \$HOME".
+PROJECTS=(
+	"nova|Dralexgon/nova|dev/ai/nova"
+	"life-manager|Dralexgon/life-manager|dev/apps/life-manager"
+)
+
+clone_projects() {
+	local i name repo path
+	local -a project_labels=() project_checked=() todo=()
+
+	for i in "${PROJECTS[@]}"; do
+		IFS='|' read -r name repo path <<<"$i"
+		if [[ -e "$HOME/$path" ]]; then
+			printf '%s is already at ~/%s.\n' "$name" "$path"
+			[[ "$name" == "life-manager" ]] && WANT_LIFE_MANAGER=1
+			continue
+		fi
+		todo+=("$i")
+		project_labels+=("$name -> ~/$path")
+		project_checked+=(0)
+	done
+	(( ${#todo[@]} )) || return 0
+
+	printf '\n'
+	select_many "Projects to clone (separate repos):" project_labels project_checked
+
+	for i in "${!todo[@]}"; do
+		(( project_checked[i] )) || continue
+		IFS='|' read -r name repo path <<<"${todo[$i]}"
+		mkdir -p -- "$(dirname -- "$HOME/$path")"
+		printf 'Cloning %s into ~/%s\n' "$repo" "$path"
+		# The repos are private: gh uses its login, git asks for credentials.
+		if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+			gh repo clone "$repo" "$HOME/$path" || true
+		else
+			git clone "https://github.com/$repo.git" "$HOME/$path" || true
+		fi
+		if [[ -d "$HOME/$path/.git" ]]; then
+			[[ "$name" == "life-manager" ]] && WANT_LIFE_MANAGER=1
+		else
+			printf 'Could not clone %s. Retry later with: gh repo clone %s ~/%s\n' "$repo" "$repo" "$path" >&2
+		fi
+	done
+	return 0
 }
 
 install_caelestia() {
@@ -661,6 +889,7 @@ if ask_yes_no "Install Caelestia (Hyprland shell and dots)?" "n"; then
 	WANT_CAELESTIA=1
 fi
 
+clone_projects
 setup_nixos
 install_caelestia
 configure_dotfiles
