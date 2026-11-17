@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 
 # Hyprland, also turned on by caelestia (desktop.enabled, see default.nix).
-# Its login screen (SDDM + the predatoria theme) is in default.nix.
+# Its login screen (SDDM + the rice theme: petals or predatoria) is in default.nix.
 lib.mkIf (lib.elem "hyprland" config.desktop.enabled || lib.elem "caelestia" config.desktop.enabled) {
   programs.hyprland = {
     enable = true;

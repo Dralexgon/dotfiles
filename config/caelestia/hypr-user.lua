@@ -252,6 +252,21 @@ local function apply_rice_plugins(name)
     pcall(hl.config, { plugin = { cursortrail = { color = rice.trail } } })
 end
 
+-- The login screen follows the rice (themes/sddm/rice): it can't read the home folder, so leave an
+-- empty file named after the rice in /var/lib/login-rice (made by nixos/modules/desktop/default.nix)
+local LOGIN_RICE = "/var/lib/login-rice/"
+local function sync_login_rice(name)
+    for _, n in ipairs(RICE_ORDER) do
+        if n ~= name then
+            os.remove(LOGIN_RICE .. n)
+        end
+    end
+    local file = io.open(LOGIN_RICE .. name, "w")
+    if file then
+        file:close()
+    end
+end
+
 -- Global, so `hyprctl eval 'set_rice("petals")'` can call it ("next" cycles)
 function set_rice(name)
     if name == "next" then
@@ -272,6 +287,7 @@ function set_rice(name)
         file:close()
     end
     apply_rice_plugins(name)
+    sync_login_rice(name)
     local cmd = rice.scheme
     if rice.wallpaper then
         -- after the scheme, so it is no longer dynamic; -N: a bright wallpaper must not flip the mode to light
@@ -281,6 +297,7 @@ function set_rice(name)
 end
 
 apply_rice_plugins(read_rice())
+sync_login_rice(read_rice())
 hl.bind("SUPER + SHIFT + R", function()
     set_rice("next")
 end, { description = "Next rice" })

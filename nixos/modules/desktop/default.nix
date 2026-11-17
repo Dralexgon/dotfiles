@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, username, ... }:
 
 # Desktops (desktop environments, window managers, shells), chosen per host:
 #
@@ -25,12 +25,20 @@ let
   };
   names = builtins.attrNames sessions;
 
-  # Custom QML greeter: blood drips, Predatoria crest, bleeding password field, eyelids on login
-  sddm-predatoria = pkgs.runCommand "sddm-predatoria-theme" { } ''
-    mkdir -p $out/share/sddm/themes
-    cp -r ${../../../themes/sddm/predatoria} $out/share/sddm/themes/predatoria
-    chmod u+w $out/share/sddm/themes/predatoria
-    cp ${../../../themes/sddm/vampire.jpg} $out/share/sddm/themes/predatoria/background.jpg
+  # Custom QML greeters, both in the "rice" theme that shows the one of the current rice:
+  # - predatoria (vampire): blood drips, Predatoria crest, bleeding password field, eyelids on login
+  # - petals: falling petals, a flower blooming behind the avatar, blossom password dots, petal
+  #   burst on login (the twin of the petals lock screen, sharing its PetalShape.qml)
+  sddm-rice = pkgs.runCommand "sddm-rice-theme" { } ''
+    t=$out/share/sddm/themes/rice
+    mkdir -p $t
+    cp ${../../../themes/sddm/rice}/* $t/
+    cp -r ${../../../themes/sddm/predatoria} $t/predatoria
+    cp -r ${../../../themes/sddm/petals} $t/petals
+    chmod -R u+w $t
+    cp ${../../../themes/sddm/vampire.jpg} $t/predatoria/background.jpg
+    cp ${../../../themes/sddm/petals.jpg} $t/petals/background.jpg
+    cp ${../../../config/caelestia/lock/PetalShape.qml} $t/petals/PetalShape.qml
   '';
 in
 {
@@ -52,7 +60,7 @@ in
     displayManager = lib.mkOption {
       type = lib.types.enum [ "sddm" "gdm" ];
       default = "sddm";
-      description = "The login screen: SDDM with the predatoria theme, or GNOME's GDM.";
+      description = "The login screen: SDDM with the rice theme (petals or predatoria), or GNOME's GDM.";
     };
   };
 
@@ -70,7 +78,8 @@ in
         (lib.mkForce "${pkgs.kdePackages.ksshaskpass.out}/bin/ksshaskpass");
     }
 
-    # Vampire login screen: custom "predatoria" QML theme (themes/sddm/predatoria)
+    # Login screen following the rice: custom "rice" QML theme (themes/sddm/rice), showing
+    # themes/sddm/petals with the petals rice and themes/sddm/predatoria (vampire) otherwise.
     # Previous tries (see git history): sddm-astronaut recolored with the caelestia
     # "vampire" scheme, and ly with a blood red DOOM fire.
     (lib.mkIf (cfg.displayManager == "sddm") {
@@ -80,7 +89,7 @@ in
         wayland.enable = true;
         # weston (the default) shows no mouse pointer on NVIDIA; kwin does
         wayland.compositor = "kwin";
-        theme = "predatoria";
+        theme = "rice";
         settings.Theme = {
           CursorTheme = "Bibata-Modern-Classic"; # sweet-cursors (Hyprland's) isn't in nixpkgs
           CursorSize = 24; # kwin already scales it by the 4K output scale
@@ -88,11 +97,15 @@ in
       };
 
       environment.systemPackages = with pkgs; [
-        sddm-predatoria
+        sddm-rice
         bibata-cursors # SDDM pointer
       ];
 
-      fonts.packages = [ pkgs.cinzel ];
+      fonts.packages = [ pkgs.cinzel pkgs.quicksand ];
+
+      # set_rice() (config/caelestia/hypr-user.lua) leaves the current rice's name here as an
+      # empty file, for the "rice" theme: the greeter can't read the home folder.
+      systemd.tmpfiles.rules = [ "d /var/lib/login-rice 0755 ${username} - -" ];
     })
   ]);
 }
