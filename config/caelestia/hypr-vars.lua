@@ -18,6 +18,7 @@ return {
     kbTerminal           = "SUPER + Return", -- Change the keybind for opening terminal
     kbMoveWinToWs        = "SUPER + SHIFT",
     kbBrowser            = "SUPER + W",
+    kbEditor             = "", -- SUPER + C opens Claude instead (hypr-user.lua)
     kbCloseWindow        = "SUPER + SHIFT + Q",
     kbResizeWindow       = "SUPER + mouse:273" -- right click
 }

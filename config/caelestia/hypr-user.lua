@@ -139,6 +139,10 @@ hl.bind("F8", hl.dsp.exec_cmd("curl -s -X POST http://127.0.0.1:8765/api/talk-up
 -- SUPER + SHIFT + Return opens kitty with the plain kitty.conf colours (SUPER + Return uses the Caelestia scheme)
 hl.bind("SUPER + SHIFT + Return", hl.dsp.exec_cmd("kitty"), { description = "Kitty (plain colours)" })
 
+-- SUPER + C opens Claude Code in kitty, in ~/dotfiles (trusted, unlike ~, so no trust prompt every time).
+-- A shell stays open after Claude exits. Replaces Caelestia's editor bind (kbEditor = "" in hypr-vars.lua)
+hl.bind("SUPER + C", hl.dsp.exec_cmd([[kitty --directory ~/dotfiles bash -lc 'claude; exec bash']]), { description = "Claude Code" })
+
 -- SUPER + / shows the keyboard with all these shortcuts (tools/keybinds-viewer). The descriptions given
 -- to hl.bind are the names it shows; Caelestia's own binds are named from their kb* variables
 hl.bind("SUPER + Slash", hl.dsp.exec_cmd("keybinds-viewer"), { description = "Keyboard shortcuts" })
