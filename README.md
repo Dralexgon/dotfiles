@@ -20,7 +20,9 @@ Every change to .config should change files in dotfiles. If not create a file he
 
 ### IMPORTANT
 
-Make this abstract or add it in the install srcipt :
+- [x] Done: `flake.nix` now generates `nixosConfigurations` from every directory in `nixos/hosts/` (extra per-host modules go in `hostModules`), and install.sh git-adds the new host dir instead of patching flake.nix
+
+Was: make this abstract or add it in the install script :
 ```
 nixosConfigurations."nixos-tower-RX9070XT" = nixpkgs.lib.nixosSystem {
   # Main pc POWERFUL RX 9070 XT !!!
@@ -41,9 +43,10 @@ nixosConfigurations."nixos-tower-RX9070XT" = nixpkgs.lib.nixosSystem {
 
 ### Keybinds
 
-- [ ] Add a read-only Keybinds tab to nixcfg : read the Caelestia defaults (`~/.config/hypr/variables.lua`) with my overrides from `config/caelestia/hypr-vars.lua` on top, and also list my own binds from `config/caelestia/hypr-user.lua` (`hyprctl binds` is useless here, every bind shows up as `__lua`)
+- [x] Add a read-only Keybinds tab to nixcfg : read the Caelestia defaults (`~/.config/hypr/variables.lua`) with my overrides from `config/caelestia/hypr-vars.lua` on top, and also list my own binds from `config/caelestia/hypr-user.lua` (`hyprctl binds` is useless here, every bind shows up as `__lua`)
 - [ ] Look into a Keybinds page in the Caelestia settings (nexus) to view and edit the `kb*` variables, saving to `hypr-vars.lua` : check upstream for an existing issue/PR first, then propose it as a PR
-- [ ] Fix `Super + D` : it only toggles Vesktop when it's already running, it should launch Vesktop if it isn't open yet
+  - Researched: shell#1679 (read-only page, closed unmerged), shell#1868 + caelestia#503 (cheatsheet, open), shell#1568 (maintainer: cheatsheet planned as an official plugin). Nothing upstream edits `kb*`. Next: ask in caelestia#501 / shell#1568 whether it belongs in core or the plugin before writing the PR
+- [x] Fix `Super + D` : it only toggles Vesktop when it's already running, it should launch Vesktop if it isn't open yet (`chat` toggle in `config/caelestia/cli.json`: matches discord or vesktop windows, launches discord if installed, else vesktop)
 
 ### OneDrive
 
@@ -74,21 +77,26 @@ nixosConfigurations."nixos-tower-RX9070XT" = nixpkgs.lib.nixosSystem {
 - [ ] Try hy3 (i3-style tiling), with i3 as the default layout
 - [ ] Try a parallax wallpaper effect: no Hyprland plugin for it, but `hyprlax` (daemon, in nixpkgs) does workspace parallax and `shiftpaper` (experimental) does cursor-driven depth parallax. Caelestia draws its own wallpaper, so it would need to be turned off
 
-### Login screen (vampire style)
-
-Currently SDDM + the custom `predatoria` QML theme (`themes/sddm/predatoria`), set in `nixos/modules/desktop/default.nix` (ly and sddm-astronaut configs kept there, disabled). Try each option:
-
-- [x] ly with a red doom fire: `services.displayManager.ly.settings` with `animation = "doom"`, `doom_top_color = "0x00300000"` (flame tips), `doom_middle_color = "0x00A00000"`, `doom_bottom_color = "0x00FF2020"` (fire base), `border_fg = "0x00B00000"`, `bigclock = "en"`
-- [x] SDDM with `sddm-astronaut`, recolored through its `embeddedTheme` / `themeConfig` overrides: Predatoria art or a gothic video loop as the background, Cinzel or UnifrakturMaguntia font, palette `#0b0507` / `#8a0303` / `#ff2a2a` / bone-white text
-- [x] Custom greeter in QML (SDDM QML theme, or Quickshell + greetd like Caelestia): blood drips from the top edge that splat (same idea as windowfx/cursorfx), password field bleeds and shakes on a wrong password, red eyelid vignette on login, Predatoria crest above the clock, "Speak the word, mortal…" placeholder
-  - Match hyprlock with the same palette, and maybe switch Plymouth to `red_loader` / `hexagon_red`, so boot → login → lock looks like one theme
-
 ### Rice switching
 
 - [x] Vampire: bats fly across the screen when switching to the vampire rice
 - [ ] Petals: make a rice switching animation (falling petals) when switching to the petals rice
+- [ ] Petals: use a cute catgirl cursor with cute animations for the petals rice (vampire and adaptive keep bibata)
 
 ### Nix config cleanup
 
-- [ ] Use bibata-cursors everywhere, in its own nix file
-- [ ] Move fonts into their own nix file
+- [x] Use bibata-cursors everywhere, in its own nix file
+- [x] Move fonts into their own nix file
+
+### Useable repo
+
+The repo is already public I want to make it easy to use for other people (example : nixcfg, install.sh)
+
+- [ ] make a AGENTS.md to store the todo and other infos instead of this README then make a clear and readable README
+- [ ] add a GUI to install.sh (maybe gtk ? or quickshell ?)
+- [ ] add a setting for the differents rices (petals, vampire) so we can tweaks the settings like the wallpaper, fonts, cursors, animations settings, etc... and create a new rice
+- [ ] move the old rices to another repo
+
+### Notif grouper
+
+- [ ] clone the notif grouper repo, fix bugs if there are some and ask me to plug my phone so I can test it
