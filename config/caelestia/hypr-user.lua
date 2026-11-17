@@ -45,11 +45,25 @@ hl.config({
 -- Keyboard layouts: en, en_international, fr. SUPER + Space rolls between them (bind below).
 -- Not the xkb option grp:win_space_toggle: xkb fires it on top of the Hyprland binds,
 -- and binds made by xkb are invisible to `hyprctl binds` (and keybinds-viewer)
+-- The first layout is the default: fr on the laptop (AZERTY keyboard), us elsewhere
+local function read_hostname()
+    local file = io.open("/etc/hostname", "r")
+    if not file then return "" end
+    local name = file:read("*l") or ""
+    file:close()
+    return name
+end
+
+local kb_layout, kb_variant = "us,us,fr", ",intl,"
+if read_hostname() == "nixos-gray-laptop" then
+    kb_layout, kb_variant = "fr,us,us", ",,intl"
+end
+
 hl.config({
     input = {
         sensitivity = -0.1, -- -0.3, -- -0.1,
-        kb_layout = "us,us,fr",
-        kb_variant = ",intl,",
+        kb_layout = kb_layout,
+        kb_variant = kb_variant,
         kb_options = ""
     }
 })
