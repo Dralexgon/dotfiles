@@ -146,8 +146,8 @@ in
     xkill
 
     # 2 discord clients for multiple accounts
-    # discord
-    vesktop
+    discord
+    # vesktop
   ];
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
