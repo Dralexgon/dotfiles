@@ -16,7 +16,7 @@ let
   # (the list lives in nixpkgs: pkgs/by-name/ad/adi1090x-plymouth-themes/shas.nix)
   # Or one of ours (themes/plymouth): "petals", a cherry blossom blooming with the boot, the twin
   # of the petals login screen.
-  theme = "petals"; # old ones : "glowing", "red_loader";
+  theme = "sphere"; # old ones : "glowing", "red_loader";
 
   petals = pkgs.runCommand "plymouth-theme-petals" { nativeBuildInputs = [ pkgs.librsvg ]; } ''
     t=$out/share/plymouth/themes/petals
