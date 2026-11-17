@@ -5,7 +5,6 @@ set -euo pipefail
 DOTFILES_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 HOSTS_DIR="$DOTFILES_DIR/nixos/hosts"
 MODULES_DIR="$DOTFILES_DIR/nixos/modules"
-FLAKE_FILE="$DOTFILES_DIR/flake.nix"
 
 MODE="tui"
 WANT_CAELESTIA=0
@@ -34,8 +33,8 @@ Steps:
   3. NixOS host setup (optional): creates nixos/hosts/<hostname>/ with the
      hostname, desktops, modules and tools (from tools/) you choose (and the
      target user) and the NixOS release this machine was installed with
-     (system.stateVersion), generates hardware-configuration.nix, and registers the host in
-     flake.nix.
+     (system.stateVersion), generates hardware-configuration.nix, and git-adds
+     the host directory (flake.nix picks up every host in nixos/hosts/).
   4. Dotfile configuration: symlinks selected config groups from config/
      into \$HOME (bash -> ~/.bashrc, git -> ~/.gitconfig*, ssh -> ~/.ssh/config,
      clang-format -> ~/.clang-format,
@@ -624,7 +623,7 @@ EOF
 }
 
 setup_nixos() {
-	local hostname username host_dir config_file hardware_file temp_file
+	local hostname username host_dir config_file hardware_file
 
 	printf '\n'
 	if ! ask_yes_no "Create a new NixOS host configuration?" "y"; then
@@ -675,24 +674,13 @@ setup_nixos() {
 		sudo nixos-generate-config --show-hardware-config > "$hardware_file"
 	fi
 
-	if grep -q "nixosConfigurations\.\"$hostname\"" "$FLAKE_FILE"; then
-		printf 'A flake configuration for %s already exists; leaving flake.nix unchanged.\n' "$hostname"
+	# flake.nix builds one configuration per directory in nixos/hosts/, but a
+	# flake only sees files tracked by git: add the new host so it is picked up.
+	if git -C "$DOTFILES_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+		git -C "$DOTFILES_DIR" add -- "$host_dir"
+		printf 'Added %s to git (flake.nix picks up every host in nixos/hosts/).\n' "$host_dir"
 	else
-		temp_file="$(mktemp)"
-		awk -v hostname="$hostname" -v host_dir="./nixos/hosts/$hostname/configuration.nix" '
-			/    packages\.\$\{system\}\.default = \(/ {
-				printf "    nixosConfigurations.\"%s\" = nixpkgs.lib.nixosSystem {\n", hostname
-				print "      specialArgs = {inherit inputs;};"
-				print "      modules = ["
-				printf "        %s\n", host_dir
-				print "      ];"
-				print "    };"
-				print ""
-			}
-			{ print }
-		' "$FLAKE_FILE" > "$temp_file"
-		mv -- "$temp_file" "$FLAKE_FILE"
-		printf 'Registered %s in flake.nix.\n' "$hostname"
+		printf 'Warning: %s is not a git repository; the flake may not see the new host.\n' "$DOTFILES_DIR" >&2
 	fi
 
 	printf 'Apply it with: sudo nixos-rebuild switch --flake %s#%s\n' "$DOTFILES_DIR" "$hostname"

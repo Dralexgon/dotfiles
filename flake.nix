@@ -91,42 +91,38 @@
     };
   in
   {
-    nixosConfigurations."nixos" = self.nixosConfigurations."default";
+    # One configuration per directory in nixos/hosts/ (named after it), built from
+    # nixos/hosts/<name>/configuration.nix: a new host needs no entry here.
+    # (New host directories must be git-added for the flake to see them.)
+    #   default                    : generic install, uses /etc/nixos/hardware-configuration.nix
+    #   nixos-tower-RX9070XT       : main pc POWERFUL RX 9070 XT !!!
+    #   nixos-tower-RX9070XT-4Tssd : main pc POWERFUL RX 9070 XT !!! (with a 4T SSD)
+    #   nixos-gray-laptop          : work laptop, nixos-gray-laptop: 50 nuance...
+    # Per-host extra modules go in hostModules below.
+    nixosConfigurations =
+      let
+        lib = nixpkgs.lib;
+        hostsDir = ./nixos/hosts;
+        hostNames = builtins.attrNames
+          (lib.filterAttrs (_: type: type == "directory") (builtins.readDir hostsDir));
 
-    nixosConfigurations."default" = nixpkgs.lib.nixosSystem {
-      inherit specialArgs;
-      modules = [
-        ./nixos/hosts/default/configuration.nix
-      ];
-    };
+        # Extra modules for some hosts, next to their configuration.nix
+        hostModules = {
+          # "nixos-tower-RX9070XT" = [ inputs.boot-animation.nixosModules.default ];
+        };
 
-    nixosConfigurations."nixos-tower-RX9070XT" = nixpkgs.lib.nixosSystem {
-      # Main pc POWERFUL RX 9070 XT !!!
-      inherit specialArgs;
-      modules = [
-        ./nixos/hosts/nixos-tower-RX9070XT/configuration.nix
-        # inputs.boot-animation.nixosModules.default
-      ];
-    };
+        mkHost = name: lib.nixosSystem {
+          inherit specialArgs;
+          modules = [ (hostsDir + "/${name}/configuration.nix") ]
+            ++ (hostModules.${name} or [ ]);
+        };
 
-    nixosConfigurations."nixos-tower-RX9070XT-4Tssd" = nixpkgs.lib.nixosSystem {
-      # Main pc POWERFUL RX 9070 XT !!! (with a 4T SSD)
-      inherit specialArgs;
-      modules = [
-        ./nixos/hosts/nixos-tower-RX9070XT-4Tssd/configuration.nix
-        # inputs.boot-animation.nixosModules.default
-      ];
-    };
-
-    nixosConfigurations."nixos-gray-laptop" = nixpkgs.lib.nixosSystem {
-      # Work laptop, nixos-gray-laptop: 50 nuance...
-      inherit specialArgs;
-      modules = [
-        ./nixos/hosts/nixos-gray-laptop/configuration.nix
-
-        # inputs.boot-animation.nixosModules.default
-      ];
-    };
+        hosts = lib.genAttrs hostNames mkHost;
+      in
+      hosts // {
+        # "nixos" is the hostname of a fresh install
+        nixos = hosts.default;
+      };
 
     # packages.${system}.default = (
     #   nvf.lib.neovimConfiguration {
