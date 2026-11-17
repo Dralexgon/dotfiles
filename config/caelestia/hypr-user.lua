@@ -252,7 +252,8 @@ local RICES = {
         wallpaper = "Konachan.com - 228944 blood close collar fang krul_tepes long_hair owari_no_seraph pink_eyes pink_hair pointed_ears rinfiora vampire_upscayl_4x_upscayl-standard-4x.png",
         windowfx = "blood",
         cursorfx = "blood",
-        trail = 0xFF8A0012
+        trail = 0xFF8A0012,
+        transition = "bat-swarm" -- bats flying across the screen (tools/bat-swarm)
     }
 }
 
@@ -306,6 +307,11 @@ function set_rice(name)
     if file then
         file:write(name, "\n")
         file:close()
+    end
+    -- The rice's transition effect over the screen while the colours and the wallpaper change
+    -- behind it; first, so it is already playing when the scheme switches
+    if rice.transition then
+        hl.dispatch(hl.dsp.exec_cmd(rice.transition))
     end
     apply_rice_plugins(name)
     sync_login_rice(name)

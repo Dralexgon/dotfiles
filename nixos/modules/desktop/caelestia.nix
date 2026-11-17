@@ -108,6 +108,12 @@ lib.mkIf (lib.elem "caelestia" config.desktop.enabled) {
     # "Rices" in the app launcher: pick adaptive / petals / vampire (tools/rice-picker)
     (import ../../../tools/rice-picker { inherit pkgs; })
 
+    # Bats flying across the screen on a switch to the vampire rice, started by set_rice() (tools/bat-swarm)
+    (import ../../../tools/bat-swarm {
+      inherit pkgs;
+      quickshell = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
+    })
+
     # Recolours Yaru folders to the exact scheme primary, called by apply-scheme.sh
     (writers.writePython3Bin "caelestia-recolor-folders" {
       libraries = with python3Packages; [ pillow numpy ];
