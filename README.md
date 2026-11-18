@@ -99,4 +99,4 @@ The repo is already public I want to make it easy to use for other people (examp
 
 ### Notif grouper
 
-- [ ] clone the notif grouper repo, fix bugs if there are some and ask me to plug my phone so I can test it
+- [x] clone the notif grouper repo, fix bugs if there are some and ask me to plug my phone so I can test it (merged in notifgrouper `main`: bug fixes, full-colour logos through helper apps, new app picker with search; tested on the Galaxy A16)
