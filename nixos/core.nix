@@ -141,9 +141,16 @@ in
     xkill
 
     # 2 discord clients for multiple accounts
-    discord
+    # discord
     # vesktop
-    dorion # Discord in a Tauri (Rust + system webview) shell, lighter than Electron
+    # Discord in a Tauri (Rust + system webview) shell, lighter than Electron.
+    # nixpkgs' webkitgtk 2.54.1 enables USE_VULKAN without volk and fails to configure,
+    # so give dorion's own webkitgtk the missing dep. Drop the override once nixpkgs fixes it.
+    (dorion.override {
+      webkitgtk_4_1 = webkitgtk_4_1.overrideAttrs (old: {
+        buildInputs = (old.buildInputs or [ ]) ++ [ vulkan-volk ];
+      });
+    })
   ];
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
