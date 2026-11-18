@@ -183,10 +183,17 @@ Item {
         }
     }
 
-    onActiveChanged: if (active && sim.length === 0) init()
-    Component.onCompleted: {
-        if (active)
+    // Only once the item has its real size, else every petal starts at (0, 0)
+    function tryInit(): void {
+        if (active && width > 0 && height > 0 && sim.length === 0)
             init();
+    }
+
+    onActiveChanged: tryInit()
+    onWidthChanged: tryInit()
+    onHeightChanged: tryInit()
+    Component.onCompleted: {
+        tryInit();
         fadeIn.start();
     }
 
