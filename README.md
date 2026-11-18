@@ -87,6 +87,8 @@ nixosConfigurations."nixos-tower-RX9070XT" = nixpkgs.lib.nixosSystem {
 
 - [x] Use bibata-cursors everywhere, in its own nix file
 - [x] Move fonts into their own nix file
+- [ ] Think about how nixcfg could let the user switch a package between `pkgs` (unstable) and `pkgs-stable`, e.g. a toggle per package (today it's hand-written, like `pkgs-stable.vscode` in `nixos/core.nix`)
+- [ ] When updating the flake, test whether each `pkgs-stable.*` package now builds from unstable, so it can be moved back (e.g. `nix build` each one against the new unstable and report which ones pass)
 
 ### Useable repo
 
