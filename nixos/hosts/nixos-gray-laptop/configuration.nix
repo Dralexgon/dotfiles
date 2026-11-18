@@ -50,6 +50,7 @@
     # ./../../modules/vm.nix
     # ./../../modules/windows.nix
     ./../../modules/browsers.nix
+    # ./../../modules/amd-drivers.nix
   ];
 
   # Desktops: all selectable on the login screen (or use `nixcfg`).
