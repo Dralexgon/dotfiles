@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "spaces": [
+    {
+      "name": "Space",
+      "essentials": [
+        {
+          "title": "ITZY \"Girls Will Be Girls\" M/V - YouTube",
+          "url": "https://www.youtube.com/watch?v=1KhOhW_O8-k"
+        }
+      ],
+      "pinned": [
+        {
+          "title": "Life manager",
+          "url": "http://life-manager.localhost/"
+        },
+        {
+          "title": "My Websites",
+          "url": "http://localhost/"
+        },
+        {
+          "folder": "Mail",
+          "tabs": [
+            {
+              "title": "Gmail",
+              "url": "https://mail.google.com/mail/u/0/#inbox"
+            },
+            {
+              "title": "Outlook",
+              "url": "https://outlook.cloud.microsoft/mail/"
+            }
+          ]
+        },
+        {
+          "folder": "IA",
+          "tabs": [
+            {
+              "title": "Open WebUI",
+              "url": "http://localhost:8080/"
+            },
+            {
+              "title": "Gemini",
+              "url": "https://gemini.google.com/app"
+            },
+            {
+              "title": "Claude",
+              "url": "https://claude.ai/new"
+            },
+            {
+              "title": "Vibe",
+              "url": "https://chat.mistral.ai/"
+            }
+          ]
+        },
+        {
+          "folder": "Epita",
+          "tabs": [
+            {
+              "title": "Google Agenda",
+              "url": "https://calendar.google.com/calendar/u/0/r"
+            },
+            {
+              "title": "Cours : 2028_CCMP | EPITA",
+              "url": "https://moodle.epita.fr/course/view.php?id=5382"
+            },
+            {
+              "title": "Intranet - Tutorial: C++ Workshop D3 Afternoon",
+              "url": "https://intra.forge.epita.fr/epita-ing-assistants-yaka/cpp-workshop-2027/root/tutorials/d3_afternoon"
+            },
+            {
+              "title": "Zeus",
+              "url": "https://zeus.ionis-it.com/home"
+            },
+            {
+              "title": "Google Sheets",
+              "url": "https://docs.google.com/spreadsheets/"
+            }
+          ]
+        },
+        {
+          "folder": "Fun",
+          "tabs": [
+            {
+              "title": "Wallpaper Search: pink - wallhaven.cc",
+              "url": "https://wallhaven.cc/search?q=pink&categories=110&purity=100&atleast=3840x2160&sorting=relevance&order=desc&page=14"
+            }
+          ]
+        },
+        {
+          "title": "[OC] Desktop audio visualizer : r/unixporn",
+          "url": "https://www.reddit.com/r/unixporn/comments/1rpt692/oc_desktop_audio_visualizer/"
+        }
+      ],
+      "theme": {
+        "type": "gradient",
+        "gradientColors": [],
+        "opacity": 0.5,
+        "texture": 0
+      }
+    }
+  ]
+}

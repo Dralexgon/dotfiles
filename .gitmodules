@@ -1,0 +1,4 @@
+[submodule "legacy-rices"]
+	path = legacy-rices
+	url = https://github.com/Dralexgon/legacy-rices.git
+	shallow = true

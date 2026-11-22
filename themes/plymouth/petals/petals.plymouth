@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Petals
+Description=A cherry blossom blooming with the boot, petals falling around it
+ModuleName=script
+
+[script]
+ImageDir=@out@/share/plymouth/themes/petals
+ScriptFile=@out@/share/plymouth/themes/petals/petals.script

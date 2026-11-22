@@ -1,0 +1,33 @@
+{
+    "order": 1,
+    "title": "Adaptive",
+    "icon": "🎨",
+    "tagline": "Colours follow the wallpaper",
+    "effects": "default windows · adaptive trail",
+    "scheme": null,
+    "wallpaper": null,
+    "windowfx": "off",
+    "cursorfx": "off",
+    "trail": null,
+    "transition": null,
+    "cursor": {
+        "theme": "Bibata-Modern-Classic",
+        "size": 24
+    },
+    "font": {
+        "sans": null,
+        "mono": null
+    },
+    "animations": {
+        "windowsIn": {
+            "speed": 4.5,
+            "bezier": "windowPop",
+            "style": "popin 50%"
+        },
+        "windowsOut": {
+            "speed": 1.49,
+            "bezier": "linear",
+            "style": "popin 55%"
+        }
+    }
+}

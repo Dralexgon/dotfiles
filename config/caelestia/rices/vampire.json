@@ -1,0 +1,37 @@
+{
+    "order": 3,
+    "title": "Vampire",
+    "icon": "🩸",
+    "tagline": "Bright red and bloody — for the Empress",
+    "effects": "bleeding windows · blood cursor · red trail",
+    "scheme": {
+        "name": "vampire",
+        "flavour": "hard",
+        "mode": "dark"
+    },
+    "wallpaper": "../../../legacy-rices/wallpapers/vampire.png",
+    "windowfx": "blood",
+    "cursorfx": "blood",
+    "trail": "#8A0012",
+    "transition": "bat-swarm",
+    "cursor": {
+        "theme": "Bibata-Modern-Classic",
+        "size": 24
+    },
+    "font": {
+        "sans": null,
+        "mono": null
+    },
+    "animations": {
+        "windowsIn": {
+            "speed": 4.5,
+            "bezier": "windowPop",
+            "style": "popin 50%"
+        },
+        "windowsOut": {
+            "speed": 1.49,
+            "bezier": "linear",
+            "style": "popin 55%"
+        }
+    }
+}

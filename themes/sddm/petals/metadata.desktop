@@ -1,0 +1,12 @@
+[SddmGreeterTheme]
+Name=petals
+Description=Soft pink login screen with falling cherry blossom petals
+Author=Dralexgon
+License=MIT
+Type=sddm-theme
+Version=1.0
+ConfigFile=theme.conf
+MainScript=Main.qml
+Theme-Id=petals
+Theme-API=2.0
+QtVersion=6

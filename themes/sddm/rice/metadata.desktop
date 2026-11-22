@@ -1,0 +1,12 @@
+[SddmGreeterTheme]
+Name=rice
+Description=Login screen following the current rice: petals or predatoria (vampire)
+Author=Dralexgon
+License=MIT
+Type=sddm-theme
+Version=1.0
+ConfigFile=theme.conf
+MainScript=Main.qml
+Theme-Id=rice
+Theme-API=2.0
+QtVersion=6

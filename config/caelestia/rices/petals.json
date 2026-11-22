@@ -1,0 +1,37 @@
+{
+    "order": 2,
+    "title": "Petals",
+    "icon": "🌸",
+    "tagline": "Pink and soft",
+    "effects": "petal windows · petal cursor",
+    "scheme": {
+        "name": "petals",
+        "flavour": "soft",
+        "mode": "dark"
+    },
+    "wallpaper": "../../../legacy-rices/wallpapers/petals.png",
+    "windowfx": "petals",
+    "cursorfx": "petals",
+    "trail": null,
+    "transition": null,
+    "cursor": {
+        "theme": "Bibata-Modern-Classic",
+        "size": 24
+    },
+    "font": {
+        "sans": null,
+        "mono": null
+    },
+    "animations": {
+        "windowsIn": {
+            "speed": 4.5,
+            "bezier": "windowPop",
+            "style": "popin 50%"
+        },
+        "windowsOut": {
+            "speed": 1.49,
+            "bezier": "linear",
+            "style": "popin 55%"
+        }
+    }
+}

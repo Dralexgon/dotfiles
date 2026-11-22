@@ -1,0 +1,33 @@
+{ pkgs, ... }:
+
+{
+  imports = [
+    ./albion.nix
+    ./minecraft.nix
+  ];
+
+  # hardware.graphics.enable = true;
+
+  programs.steam = {
+    enable = true;
+    gamescopeSession.enable = true;
+    # package = pkgs.steam.override {
+    #   extraPkgs = p: with p; [ e2fsprogs ];
+    # };
+  };
+
+  programs.gamemode.enable = true;
+  programs.gamescope.enable = true;
+
+  environment.systemPackages = with pkgs; [
+    # steam # Steam is already installed with the above option
+    adwsteamgtk # GTK wrapper for Steam (gtk theme + better ui beacause steam is ugly)
+
+    # osu-lazer
+
+    protonplus # or protonup
+    # lutris
+    # heroic
+    # bottles
+  ];
+}

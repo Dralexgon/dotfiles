@@ -1,0 +1,7 @@
+# Host git.forge.epita.fr
+    # IdentityFile ~/.ssh/id_ed25519
+
+Host ssh.cri.epita.fr
+    # GSSAPIAuthentication yes
+    # GSSAPIDelegateCredentials yes
+    # IdentitiesOnly yes

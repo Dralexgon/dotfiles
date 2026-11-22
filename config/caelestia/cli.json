@@ -1,0 +1,39 @@
+{
+    "theme": {
+        "enableGtk": true,
+        "enableQt": true,
+        "iconThemeLight": "Caelestia",
+        "iconThemeDark": "Caelestia-dark",
+        "postHook": "~/.config/caelestia/apply-scheme.sh"
+    },
+    "toggles": {
+        "communication": {
+            "discord": {
+                "enable": false
+            },
+            "chat": {
+                "enable": true,
+                "match": [
+                    {
+                        "class": "discord"
+                    },
+                    {
+                        "class": "vesktop"
+                    },
+                    {
+                        "class": "Dorion"
+                    },
+                    {
+                        "class": "dorion"
+                    }
+                ],
+                "command": [
+                    "sh",
+                    "-c",
+                    "if command -v discord >/dev/null; then exec discord; elif command -v vesktop >/dev/null; then exec vesktop; elif command -v Dorion >/dev/null; then exec Dorion; else caelestia shell toaster error 'Super + D' 'None of discord, vesktop or Dorion is installed' error; fi"
+                ],
+                "move": true
+            }
+        }
+    }
+}

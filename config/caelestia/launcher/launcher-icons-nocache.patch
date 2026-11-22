@@ -1,0 +1,12 @@
+diff -ru a/modules/launcher/items/AppItem.qml b/modules/launcher/items/AppItem.qml
+--- a/modules/launcher/items/AppItem.qml	2026-11-09 22:59:09.935603880 +0100
++++ b/modules/launcher/items/AppItem.qml	2026-11-09 23:00:19.159792492 +0100
+@@ -36,6 +36,8 @@
+             id: icon
+ 
+             asynchronous: true
++            // Not kept in the QML image cache, so a new icon theme shows at once (see apply-scheme.sh)
++            backer.cache: false
+             source: Quickshell.iconPath(root.modelData?.icon, "image-missing")
+             implicitSize: parent.height * 0.8
+ 

@@ -1,0 +1,133 @@
+{
+    "appearance": {
+        "transparency": {
+            "enabled": true
+        }
+    },
+    "background": {
+        "visualiser": {
+            "autoHide": true,
+            "blur": false,
+            "enabled": false,
+            "rounding": 1,
+            "spacing": 1
+        }
+    },
+    "bar": {
+        "activeWindow": {
+            "inverted": true,
+            "showOnHover": false
+        },
+        "popouts": {
+            "activeWindow": false
+        },
+        "statusIcons": [
+            {
+                "enabled": true,
+                "id": "lockStatus"
+            },
+            {
+                "enabled": false,
+                "id": "audio"
+            },
+            {
+                "enabled": false,
+                "id": "microphone"
+            },
+            {
+                "enabled": true,
+                "id": "kbLayout"
+            },
+            {
+                "enabled": true,
+                "id": "network"
+            },
+            {
+                "enabled": true,
+                "id": "bluetooth"
+            },
+            {
+                "enabled": true,
+                "id": "battery"
+            }
+        ],
+        "tray": {
+            "background": false,
+            "compact": true,
+            "recolour": true
+        },
+        "workspaces": {
+            "occupiedBg": false,
+            "shown": 5
+        }
+    },
+    "general": {
+        "apps": {
+            "explorer": [
+                "nautilus",
+                "--new-window"
+            ],
+            "terminal": [
+                "kitty"
+            ]
+        },
+        "idle": {
+            "inhibitWhenAudio": true,
+            "inhibitWhenCharging": false,
+            "lockBeforeSleep": true,
+            "timeouts": [
+                {
+                    "enabled": true,
+                    "idleAction": "lock",
+                    "inhibitWhenAudio": false,
+                    "inhibitWhenCharging": false,
+                    "respectInhibitors": true,
+                    "timeout": 300
+                },
+                {
+                    "enabled": true,
+                    "idleAction": "dpms off",
+                    "inhibitWhenAudio": false,
+                    "inhibitWhenCharging": false,
+                    "respectInhibitors": true,
+                    "returnAction": "dpms on",
+                    "timeout": 600
+                },
+                {
+                    "enabled": true,
+                    "idleAction": [
+                        ""
+                    ],
+                    "inhibitWhenAudio": false,
+                    "inhibitWhenCharging": false,
+                    "respectInhibitors": true,
+                    "timeout": 1200
+                }
+            ]
+        }
+    },
+    "launcher": {
+        "favouriteApps": [
+            "zen-beta"
+        ],
+        "hiddenApps": [
+            "xterm",
+            "footclient",
+            "foot-server",
+            "rofi"
+        ],
+        "showOnHover": true
+    },
+    "services": {
+        "clockFormat": "TwentyFourHour",
+        "weatherUnits": "Celsius"
+    },
+    "session": {
+        "commands": {
+            "logout": [
+                "uwsm",
+                "stop"
+            ]
+        }
+    }
+}

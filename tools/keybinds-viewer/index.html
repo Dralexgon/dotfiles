@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keybinds</title>
+<style>
+/* Colours are replaced by the live Caelestia scheme (see applyScheme); these are the vampire fallbacks */
+:root {
+  --bg: #140c10; --surface: #1f141a; --surface-hi: #2a1c23; --surface-top: #35242c;
+  --text: #f3e4ea; --muted: #c9b1bb; --outline: #4a3540; --primary: #ff5c7a; --on-primary: #3d0010;
+  --error: #ffb4ab;
+  --c-apps: #b8d8b0; --c-workspaces: #b8b8f5; --c-windows: #d8a8f0; --c-shell: #ffa8cf;
+  --c-utilities: #f8c0a8; --c-media: #a8dce0; --c-system: #f28aa8; --c-custom: #f5d2a8; --c-other: #9f8a95;
+  --radius: 10px;
+  --mono: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body { font: 14px/1.4 system-ui, "Inter", sans-serif; padding: 20px clamp(16px, 3vw, 40px) 60px; }
+button { font: inherit; color: inherit; }
+kbd { font-family: var(--mono); }
+
+header { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; margin-bottom: 16px; }
+h1 { margin: 0; font-size: 22px; font-weight: 650; letter-spacing: -0.01em; }
+h1 small { font-size: 13px; font-weight: 400; color: var(--muted); margin-left: 8px; }
+.spacer { flex: 1; }
+#search {
+  width: min(320px, 100%); padding: 8px 12px; border-radius: 999px; border: 1px solid var(--outline);
+  background: var(--surface); color: var(--text); font: inherit; outline: none;
+}
+#search:focus { border-color: var(--primary); }
+.seg { display: inline-flex; border: 1px solid var(--outline); border-radius: 999px; overflow: hidden; }
+.seg button { border: 0; background: transparent; padding: 6px 14px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); font-weight: 600; }
+
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.bar .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-right: 4px; }
+.chip {
+  border: 1px solid var(--outline); background: var(--surface); border-radius: 999px; padding: 5px 12px;
+  cursor: pointer; display: inline-flex; gap: 6px; align-items: center; white-space: nowrap;
+}
+.chip:hover { border-color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); border-color: var(--primary); font-weight: 600; }
+.chip .n { font-size: 11px; opacity: .7; font-family: var(--mono); }
+.chip.dim { opacity: .45; }
+.chip .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--cat); }
+.chip.cat[aria-pressed="true"] { background: color-mix(in srgb, var(--cat) 22%, var(--surface)); color: var(--text); border-color: var(--cat); font-weight: 500; }
+.chip.cat[aria-pressed="false"] { opacity: .4; }
+.chip.hit { box-shadow: 0 0 0 2px var(--primary) inset; }
+
+.note { color: var(--muted); font-size: 13px; margin: 4px 0 12px; }
+.note b { color: var(--text); }
+
+/* Keyboard: positioned in key units (u), 18.5u wide for a tenkeyless board */
+.kb-wrap { container-type: inline-size; margin: 14px 0 20px; }
+.kb {
+  --u: calc(100cqw / 18.6);
+  position: relative; width: 100%; height: calc(var(--u) * 6.65);
+  background: var(--surface); border-radius: calc(var(--u) * .25); border: 1px solid var(--outline);
+}
+.key {
+  position: absolute; left: calc(var(--x) * var(--u) + var(--u) * .2); top: calc(var(--y) * var(--u) + var(--u) * .2);
+  width: calc(var(--w) * var(--u) - var(--u) * .08); height: calc(var(--u) * .92);
+  border-radius: calc(var(--u) * .12); background: var(--surface-hi); border: 1px solid var(--outline);
+  border-bottom-width: calc(var(--u) * .06);
+  padding: calc(var(--u) * .07) calc(var(--u) * .09); cursor: pointer; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: space-between; text-align: left;
+  transition: transform .08s, background .15s, border-color .15s;
+}
+.key .leg { font-family: var(--mono); font-size: calc(var(--u) * .2); color: var(--muted); line-height: 1.1; display: flex; justify-content: space-between; gap: 2px; }
+.key .leg .sub { opacity: .6; }
+.key .act {
+  font-size: calc(var(--u) * .125); line-height: 1.15; font-weight: 600; color: var(--cat, var(--text));
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  overflow-wrap: break-word; hyphens: auto;
+}
+.key.bound { background: color-mix(in srgb, var(--cat) 16%, var(--surface-hi)); border-color: color-mix(in srgb, var(--cat) 55%, var(--outline)); }
+.key.bound .leg { color: var(--text); }
+.key.empty { opacity: .45; }
+.key.mod-on { background: var(--primary); border-color: var(--primary); opacity: 1; }
+.key.mod-on .leg { color: var(--on-primary); font-weight: 700; }
+.key.mod-on .act { color: var(--on-primary); }
+.key.sel { outline: 2px solid var(--text); outline-offset: 2px; }
+.key.down { transform: translateY(calc(var(--u) * .04)); }
+.key.miss { opacity: .2; }
+.key.match { box-shadow: 0 0 0 2px var(--primary); opacity: 1; }
+.key .warn { position: absolute; top: calc(var(--u) * .05); right: calc(var(--u) * .08); color: var(--error); font-size: calc(var(--u) * .2); font-weight: 800; }
+.key.mod-on .warn { color: var(--on-primary); }
+.key .more { font-size: calc(var(--u) * .12); opacity: .75; font-weight: 500; }
+
+.cols { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+#extra { max-height: 460px; overflow-y: auto; }
+@media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
+.panel { background: var(--surface); border: 1px solid var(--outline); border-radius: var(--radius); padding: 16px 18px; min-width: 0; }
+.panel h2 { margin: 0 0 10px; font-size: 15px; font-weight: 650; display: flex; align-items: baseline; gap: 8px; }
+.panel h2 .hint { font-size: 12px; font-weight: 400; color: var(--muted); }
+.empty-msg { color: var(--muted); font-size: 13px; }
+
+.row { display: grid; grid-template-columns: minmax(150px, max-content) 1fr; gap: 4px 14px; align-items: baseline; padding: 7px 8px; border-radius: 8px; cursor: pointer; }
+.row:hover { background: var(--surface-hi); }
+.row.cur { background: color-mix(in srgb, var(--primary) 14%, transparent); }
+.combo { display: inline-flex; flex-wrap: wrap; gap: 3px; align-items: center; }
+.combo kbd {
+  font-size: 12px; padding: 1px 7px; border-radius: 5px; background: var(--surface-top);
+  border: 1px solid var(--outline); border-bottom-width: 2px; white-space: nowrap;
+}
+.combo .plus { color: var(--muted); font-size: 11px; }
+.what { min-width: 0; }
+.what .name { font-weight: 600; }
+.what .name::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--cat); margin-right: 8px; vertical-align: 1px; }
+.what .meta { color: var(--muted); font-size: 12px; font-family: var(--mono); overflow-wrap: anywhere; }
+.what .conflict { color: var(--error); font-size: 12px; }
+.tag { font-size: 11px; color: var(--muted); border: 1px solid var(--outline); border-radius: 4px; padding: 0 5px; margin-left: 6px; font-weight: 400; }
+
+section.all { margin-top: 20px; }
+.group h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--cat); margin: 18px 8px 6px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr)); gap: 0 20px; }
+#conf-btn { border-color: var(--error); color: var(--error); font-weight: 600; }
+#conf-btn[aria-pressed="true"] { background: var(--error); color: var(--bg); }
+#conf-btn.ok { border-color: var(--outline); color: var(--muted); font-weight: 400; cursor: default; }
+.chip .bang { color: var(--error); font-weight: 800; }
+.chip[aria-pressed="true"] .bang { color: inherit; }
+#conflicts { margin-bottom: 20px; border-color: color-mix(in srgb, var(--error) 55%, var(--outline)); }
+#conflicts h2 { color: var(--error); }
+.cgroup { padding: 10px 8px; border-top: 1px solid var(--outline); }
+.cgroup:first-of-type { border-top: 0; }
+.cgroup .keys { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px; }
+.cgroup .src { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.cgroup .fix { font-size: 12px; color: var(--muted); margin: 4px 8px 0; }
+.cgroup .fix code { color: var(--text); }
+footer { margin-top: 30px; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Keybinds <small id="scheme"></small></h1>
+  <button class="chip" id="conf-btn" hidden></button>
+  <div class="spacer"></div>
+  <input id="search" type="search" placeholder="Search a shortcut… ( / )" autocomplete="off">
+  <div class="seg" role="group" aria-label="Keyboard layout">
+    <button data-layout="us">US</button><button data-layout="fr">FR</button>
+  </div>
+</header>
+
+<div class="bar" id="mods"><span class="label">Hold</span></div>
+<div class="bar" id="combos"><span class="label">Combos</span></div>
+<div class="bar" id="cats"><span class="label">Show</span></div>
+<p class="note" id="fr-note" hidden>Hyprland reads binds on the <b>US</b> layout (the first in <code>kb_layout</code>), so on AZERTY
+  press the key at the same place: <b>Super + A</b> is the key labelled <b>Q</b>. Keys here show AZERTY labels at the US places.</p>
+
+<section class="panel" id="conflicts" hidden></section>
+
+<div class="kb-wrap"><div class="kb" id="kb"></div></div>
+
+<div class="cols">
+  <div class="panel" id="detail"></div>
+  <div class="panel" id="extra"></div>
+</div>
+
+<section class="all panel" id="all"></section>
+
+<footer>Read live from <code>hyprctl binds</code>. Click a modifier (or hold Ctrl / Alt / Shift) to see what it unlocks; press or click a key for every bind on it.
+  Names come from <code>hl.bind</code> descriptions and Caelestia's <code>kb*</code> variables.</footer>
+
+<script>
+const DATA = /*__DATA__*/null || { binds: [], layout: "us", colours: {}, scheme: "" };
+
+const CATS = {
+  apps: "Apps", workspaces: "Workspaces", windows: "Windows", shell: "Shell", utilities: "Utilities",
+  media: "Media", system: "System", custom: "Yours", other: "Other",
+};
+const MOD_ORDER = ["SUPER", "CTRL", "ALT", "SHIFT"];
+const MOD_NAMES = { SUPER: "Super", CTRL: "Ctrl", ALT: "Alt", SHIFT: "Shift" };
+const ALIAS = { prior: "page_up", next: "page_down", enter: "return", esc: "escape" };
+
+/* Tenkeyless layout: [code, width, US legend, US keysym, FR legend, FR sub-legend], rows in key units */
+const GAP = null;
+const ROWS = [
+  { y: 0, keys: [["Escape",1,"Esc","escape"], GAP, ...[1,2,3,4].map(n => [`F${n}`,1,`F${n}`,`f${n}`]), [GAP,.5],
+    ...[5,6,7,8].map(n => [`F${n}`,1,`F${n}`,`f${n}`]), [GAP,.5], ...[9,10,11,12].map(n => [`F${n}`,1,`F${n}`,`f${n}`]),
+    [GAP,.25], ["PrintScreen",1,"PrtSc","print"], ["ScrollLock",1,"ScrLk","scroll_lock"], ["Pause",1,"Pause","pause"]] },
+  { y: 1.25, keys: [["Backquote",1,"`","grave","²"], ...[1,2,3,4,5,6,7,8,9,0].map((n, i) =>
+      [`Digit${n}`,1,`${n}`,`${n}`, "&é\"'(-è_çà"[i], `${n}`]),
+    ["Minus",1,"-","minus",")","°"], ["Equal",1,"=","equal","=","+"], ["Backspace",2,"Backspace","backspace","⌫"],
+    [GAP,.25], ["Insert",1,"Ins","insert"], ["Home",1,"Home","home"], ["PageUp",1,"PgUp","page_up"]] },
+  { y: 2.25, keys: [["Tab",1.5,"Tab","tab"], ...[..."QWERTYUIOP"].map(c => [`Key${c}`,1,c,c.toLowerCase(), ({Q:"A",W:"Z"})[c] || c]),
+    ["BracketLeft",1,"[","bracketleft","^","¨"], ["BracketRight",1,"]","bracketright","$","£"], ["Backslash",1.5,"\\","backslash","*","µ"],
+    [GAP,.25], ["Delete",1,"Del","delete"], ["End",1,"End","end"], ["PageDown",1,"PgDn","page_down"]] },
+  { y: 3.25, keys: [["CapsLock",1.75,"Caps","caps_lock","Verr. Maj"], ...[..."ASDFGHJKL"].map(c => [`Key${c}`,1,c,c.toLowerCase(), c === "A" ? "Q" : c]),
+    ["Semicolon",1,";","semicolon","M"], ["Quote",1,"'","apostrophe","ù","%"], ["Enter",2.25,"Enter","return","Entrée"]] },
+  { y: 4.25, keys: [["ShiftLeft",2.25,"Shift","shift_l","Maj"], ...[..."ZXCVBNM"].map(c => [`Key${c}`,1,c,c.toLowerCase(), ({Z:"W",M:","})[c] || c, c === "M" ? "?" : undefined]),
+    ["Comma",1,",","comma",";","."], ["Period",1,".","period",":","/"], ["Slash",1,"/","slash","!","§"], ["ShiftRight",2.75,"Shift","shift_r","Maj"],
+    [GAP,1.25], ["ArrowUp",1,"↑","up"]] },
+  { y: 5.25, keys: [["ControlLeft",1.25,"Ctrl","control_l"], ["MetaLeft",1.25,"Super","super_l"], ["AltLeft",1.25,"Alt","alt_l"],
+    ["Space",6.25,"Space","space","Espace"], ["AltRight",1.25,"Alt","alt_r","AltGr"], ["MetaRight",1.25,"Super","super_r"],
+    ["ContextMenu",1.25,"Menu","menu"], ["ControlRight",1.25,"Ctrl","control_r"],
+    [GAP,.25], ["ArrowLeft",1,"←","left"], ["ArrowDown",1,"↓","down"], ["ArrowRight",1,"→","right"]] },
+];
+const MOD_KEYS = { ControlLeft: "CTRL", ControlRight: "CTRL", MetaLeft: "SUPER", MetaRight: "SUPER",
+  AltLeft: "ALT", AltRight: "ALT", ShiftLeft: "SHIFT", ShiftRight: "SHIFT" };
+
+/* Keys that are not on the keyboard drawing */
+const OFF_BOARD = {
+  "mouse:272": "Left click", "mouse:273": "Right click", "mouse:274": "Middle click",
+  mouse_down: "Scroll down", mouse_up: "Scroll up", mouse_left: "Scroll left", mouse_right: "Scroll right",
+  xf86audioplay: "Play", xf86audiopause: "Pause", xf86audionext: "Next", xf86audioprev: "Previous",
+  xf86audiostop: "Stop", xf86audiomute: "Mute", xf86audiomicmute: "Mic mute",
+  xf86audioraisevolume: "Volume +", xf86audiolowervolume: "Volume −",
+  xf86monbrightnessup: "Brightness +", xf86monbrightnessdown: "Brightness −",
+};
+
+/* ---------- state ---------- */
+const store = {
+  get(k, d) { try { return localStorage.getItem("kbv:" + k) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("kbv:" + k, v); } catch {} },
+};
+const state = {
+  mods: new Set(["SUPER"]),
+  held: new Set(),             // modifiers physically held in the page
+  layout: store.get("layout", DATA.layout || "us"),
+  query: "",
+  showConflicts: false,
+  hidden: new Set(JSON.parse(store.get("hidden", "[]"))),
+  selected: null,              // key code (or off-board key name) shown in the details panel
+  hover: null,
+};
+
+/* ---------- data ---------- */
+const binds = DATA.binds.map((b, i) => ({ ...b, id: i, key: ALIAS[b.key] || b.key, mods: MOD_ORDER.filter(m => b.mods.includes(m)) }));
+const symToCode = {};
+const keyByCode = {};
+for (const row of ROWS) for (const k of row.keys) if (k && k[0]) {
+  keyByCode[k[0]] = k;
+  symToCode[k[3]] = symToCode[k[3]] || k[0];
+}
+const codeOf = b => symToCode[b.key];
+const comboKey = mods => mods.join("+");
+const comboName = mods => mods.length ? mods.map(m => MOD_NAMES[m]).join(" + ") : "No modifier";
+const prettyKey = key => {
+  if (OFF_BOARD[key]) return OFF_BOARD[key];
+  const k = keyByCode[symToCode[key]];
+  if (k) return legendOf(k).main;
+  return key.length === 1 ? key.toUpperCase() : key.replace(/_/g, " ");
+};
+function legendOf(k) {
+  const [, , us, , fr, frSub] = k;
+  if (state.layout === "fr" && fr !== undefined) return { main: fr, sub: frSub };
+  return { main: us, sub: undefined };
+}
+function activeMods() {
+  return MOD_ORDER.filter(m => state.mods.has(m) || state.held.has(m));
+}
+function visible(b) { return !state.hidden.has(b.category); }
+function matches(b) {
+  if (!state.query) return true;
+  const q = state.query;
+  return [b.label, b.detail, b.dispatcher, CATS[b.category], comboName(b.mods), prettyKey(b.key), b.key]
+    .some(s => s && s.toLowerCase().includes(q));
+}
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+/* ---------- scheme ---------- */
+function applyScheme() {
+  const c = DATA.colours || {};
+  const set = (v, ...names) => {
+    const hex = names.map(n => c[n]).find(Boolean);
+    if (hex) document.documentElement.style.setProperty(v, "#" + hex.replace(/^#/, ""));
+  };
+  set("--bg", "background"); set("--surface", "surfaceContainer"); set("--surface-hi", "surfaceContainerHigh");
+  set("--surface-top", "surfaceContainerHighest"); set("--text", "onSurface"); set("--muted", "onSurfaceVariant");
+  set("--outline", "outlineVariant"); set("--primary", "primary"); set("--on-primary", "onPrimary"); set("--error", "error");
+  set("--c-apps", "green"); set("--c-workspaces", "blue"); set("--c-windows", "mauve"); set("--c-shell", "primary");
+  set("--c-utilities", "peach"); set("--c-media", "teal"); set("--c-system", "red"); set("--c-custom", "yellow");
+  set("--c-other", "outline");
+  document.getElementById("scheme").textContent = DATA.scheme ? `${binds.length} binds · ${DATA.scheme} scheme` : `${binds.length} binds`;
+}
+const catVar = cat => `var(--c-${CATS[cat] ? cat : "other"})`;
+
+/* ---------- rendering ---------- */
+function comboHTML(mods, key) {
+  const parts = [...mods.map(m => MOD_NAMES[m]), prettyKey(key)];
+  return `<span class="combo">${parts.map(p => `<kbd>${esc(p)}</kbd>`).join('<span class="plus">+</span>')}</span>`;
+}
+const FLAG_NAMES = { locked: "also on the lock screen", release: "on key release", repeat: "repeats while held",
+  mouse: "hold and move the mouse", non_consuming: "key still reaches the app" };
+/* Shorter names on the key caps (the full name is in the tooltip and the panels) */
+const capLabel = l => l.replace(/^Workspace (group )?/, (m, g) => g ? "WS group " : "WS ").replace(/ workspace\b/g, " ws")
+  .replace(/^Move window to (next |previous )?ws/, "Move win to $1ws").replace(/\bwindow\b/g, "win");
+function bindRow(b, cur) {
+  const meta = [b.detail, b.flags.map(f => FLAG_NAMES[f] || f).join(" · ")].filter(Boolean).join("  —  ");
+  return `<div class="row${cur ? " cur" : ""}" data-bind="${b.id}" style="--cat:${catVar(b.category)}">
+    ${comboHTML(b.mods, b.key)}
+    <div class="what"><div class="name">${esc(b.label)}<span class="tag">${esc(CATS[b.category] || b.category)}</span></div>
+      ${meta ? `<div class="meta">${esc(meta)}</div>` : ""}
+      ${b.conflict ? `<div class="conflict">⚠ Another bind on this combo runs too</div>` : ""}</div></div>`;
+}
+
+function renderMods() {
+  const el = document.getElementById("mods");
+  const active = activeMods();
+  el.innerHTML = '<span class="label">Hold</span>' + MOD_ORDER.map(m =>
+    `<button class="chip" data-mod="${m}" aria-pressed="${active.includes(m)}">${MOD_NAMES[m]}</button>`).join("");
+}
+
+function renderCombos() {
+  const counts = new Map();
+  for (const b of binds) {
+    if (!visible(b)) continue;
+    const k = comboKey(b.mods);
+    const e = counts.get(k) || { mods: b.mods, n: 0, hits: 0, conflict: false };
+    e.n++; if (state.query && matches(b)) e.hits++;
+    if (b.conflict) e.conflict = true;
+    counts.set(k, e);
+  }
+  const cur = comboKey(activeMods());
+  const list = [...counts.values()].sort((a, b) => b.n - a.n);
+  document.getElementById("combos").innerHTML = '<span class="label">Combos</span>' + list.map(e =>
+    `<button class="chip${state.query && !e.hits ? " dim" : ""}${e.hits ? " hit" : ""}" data-combo="${comboKey(e.mods)}" aria-pressed="${comboKey(e.mods) === cur}">
+      ${e.conflict ? '<span class="bang" title="Has conflicting binds">!</span>' : ""}${esc(comboName(e.mods))}<span class="n">${state.query ? `${e.hits}/` : ""}${e.n}</span></button>`).join("");
+}
+
+function renderCats() {
+  const present = new Set(binds.map(b => b.category));
+  document.getElementById("cats").innerHTML = '<span class="label">Show</span>' + Object.entries(CATS)
+    .filter(([c]) => present.has(c)).map(([c, name]) =>
+      `<button class="chip cat" data-cat="${c}" style="--cat:${catVar(c)}" aria-pressed="${!state.hidden.has(c)}"><span class="dot"></span>${name}</button>`).join("");
+}
+
+function renderKeyboard() {
+  const kb = document.getElementById("kb");
+  const mods = activeMods();
+  const cur = comboKey(mods);
+  const onKey = {};
+  for (const b of binds) {
+    const code = codeOf(b);
+    if (!code || comboKey(b.mods) !== cur || !visible(b)) continue;
+    (onKey[code] = onKey[code] || []).push(b);
+  }
+  let html = "";
+  for (const row of ROWS) {
+    let x = 0;
+    for (const k of row.keys) {
+      if (!k) { x += 1; continue; }
+      if (k[0] === null) { x += k[1]; continue; }
+      const [code, w] = k;
+      const leg = legendOf(k);
+      const here = onKey[code] || [];
+      const b = here[0];
+      const isMod = MOD_KEYS[code] && mods.includes(MOD_KEYS[code]) && !b;
+      const cls = ["key"];
+      if (isMod) cls.push("mod-on"); else if (b) cls.push("bound"); else cls.push("empty");
+      if (state.selected === code) cls.push("sel");
+      if (state.query && !isMod) cls.push(here.some(matches) ? "match" : "miss");
+      const more = here.length > 1 ? `<span class="more"> +${here.length - 1}</span>` : "";
+      html += `<button class="${cls.join(" ")}" data-code="${code}" style="--x:${x};--y:${row.y};--w:${w};${b ? `--cat:${catVar(b.category)}` : ""}"
+        title="${esc(here.map(h => h.label).join("\n"))}">
+        <span class="leg"><span>${esc(leg.main)}</span>${leg.sub ? `<span class="sub">${esc(leg.sub)}</span>` : ""}</span>
+        ${b ? `<span class="act">${esc(capLabel(b.label))}${more}</span>` : ""}
+        ${here.some(h => h.conflict) ? '<span class="warn" title="Several binds on this combo">!</span>' : ""}</button>`;
+      x += w;
+    }
+  }
+  kb.innerHTML = html;
+}
+
+function renderDetail() {
+  const el = document.getElementById("detail");
+  const target = state.hover || state.selected;
+  if (!target) {
+    el.innerHTML = `<h2>Key details</h2><p class="empty-msg">Hover, click or press a key to see every shortcut that uses it.</p>`;
+    return;
+  }
+  const k = keyByCode[target];
+  const syms = k ? Object.keys(symToCode).filter(s => symToCode[s] === target) : [target];
+  const list = binds.filter(b => syms.includes(b.key) || (k && codeOf(b) === target));
+  const cur = comboKey(activeMods());
+  const name = k ? legendOf(k).main : prettyKey(target);
+  const modNote = k && MOD_KEYS[k[0]] ? `<p class="empty-msg">This is a modifier: click it to see what ${MOD_NAMES[MOD_KEYS[k[0]]]} unlocks.</p>` : "";
+  el.innerHTML = `<h2>${esc(name)} <span class="hint">${list.length} shortcut${list.length === 1 ? "" : "s"}${state.selected === target && !state.hover ? " · pinned" : ""}</span></h2>` +
+    (list.length ? list.sort((a, b) => a.mods.length - b.mods.length).map(b => bindRow(b, comboKey(b.mods) === cur)).join("") :
+      modNote || `<p class="empty-msg">Nothing is bound to this key.</p>`);
+}
+
+function renderExtra() {
+  const el = document.getElementById("extra");
+  const list = binds.filter(b => !codeOf(b) && visible(b) && matches(b));
+  el.innerHTML = `<h2>Mouse &amp; media keys <span class="hint">not on the drawing</span></h2>` +
+    (list.length ? list.map(b => bindRow(b, comboKey(b.mods) === comboKey(activeMods()))).join("") : `<p class="empty-msg">None match.</p>`);
+}
+
+function renderAll() {
+  const el = document.getElementById("all");
+  const groups = {};
+  for (const b of binds) if (visible(b) && matches(b)) (groups[b.category] = groups[b.category] || []).push(b);
+  const n = Object.values(groups).reduce((a, g) => a + g.length, 0);
+  el.innerHTML = `<h2>All shortcuts <span class="hint">${n} shown${state.query ? ` for “${esc(state.query)}”` : ""}</span></h2>` +
+    Object.keys(CATS).filter(c => groups[c]).map(c => `<div class="group" style="--cat:${catVar(c)}"><h3>${CATS[c]}</h3>
+      <div class="grid2">${groups[c].map(b => bindRow(b, false)).join("")}</div></div>`).join("") +
+    (n ? "" : `<p class="empty-msg">No shortcut matches.</p>`);
+}
+
+/* Conflicts: combos with several different binds. Combos with the same cause (same variables or
+   descriptions, like Super + Shift + 1…0) are grouped into one entry. */
+function conflictGroups() {
+  const byCombo = new Map();
+  for (const b of binds) if (b.conflict) {
+    const k = comboKey(b.mods) + "|" + b.key;
+    (byCombo.get(k) || byCombo.set(k, []).get(k)).push(b);
+  }
+  const groups = new Map();
+  for (const list of byCombo.values()) {
+    const cause = comboKey(list[0].mods) + "|" + list.map(b => b.source === "description" || b.source === "dispatcher"
+      ? `${b.source}:${b.label}` : b.source).sort().join(",");
+    const g = groups.get(cause) || groups.set(cause, { mods: list[0].mods, combos: [] }).get(cause);
+    g.combos.push(list);
+  }
+  return [...groups.values()];
+}
+const CONFLICTS = conflictGroups();
+const conflictCombos = CONFLICTS.reduce((n, g) => n + g.combos.length, 0);
+
+function sourceHint(b) {
+  if (b.source === "description") return "hl.bind with a description (config/caelestia/hypr-user.lua)";
+  if (b.source === "dispatcher") return `unnamed ${b.dispatcher} bind`;
+  if (b.source === "caelestia") return "Caelestia's keybinds.lua";
+  if (b.source === "xkb") return `${b.detail} (xkb option, set in hypr-user.lua)`;
+  return `${b.source} (Caelestia variable, override it in hypr-vars.lua)`;
+}
+
+function renderConflicts() {
+  const btn = document.getElementById("conf-btn");
+  btn.hidden = false;
+  if (!conflictCombos) {
+    btn.className = "chip ok"; btn.textContent = "✓ No conflicts"; btn.removeAttribute("aria-pressed");
+  } else {
+    btn.className = "chip";
+    btn.textContent = `⚠ ${conflictCombos} conflict${conflictCombos === 1 ? "" : "s"}`;
+    btn.setAttribute("aria-pressed", state.showConflicts);
+  }
+  const el = document.getElementById("conflicts");
+  el.hidden = !state.showConflicts || !conflictCombos;
+  if (el.hidden) return;
+  el.innerHTML = `<h2>⚠ Conflicting shortcuts <span class="hint">every bind on one of these combos runs on the same key press</span></h2>` +
+    CONFLICTS.map(g => {
+      const first = g.combos[0];
+      const keys = g.combos.map(list => list[0].key);
+      const shown = keys.length > 1
+        ? `<span class="combo">${[...g.mods.map(m => MOD_NAMES[m]), keys.map(prettyKey).join(" · ")].map(p => `<kbd>${esc(p)}</kbd>`).join('<span class="plus">+</span>')}</span>`
+        : comboHTML(g.mods, keys[0]);
+      const labels = first.map(b => `<div class="row" data-bind="${b.id}" style="--cat:${catVar(b.category)}">
+          <span class="src">${esc(sourceHint(b))}</span>
+          <div class="what"><div class="name">${esc(keys.length > 1 ? b.label.replace(/\d+(?=\D*$)/, "N") : b.label)}</div></div></div>`).join("");
+      return `<div class="cgroup"><div class="keys">${shown}${keys.length > 1 ? `<span class="tag">${keys.length} combos</span>` : ""}</div>
+        ${labels}<p class="fix">Fix: give one of them another combo, or remove it.</p></div>`;
+    }).join("");
+}
+
+function render() {
+  document.querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.layout === state.layout));
+  document.getElementById("fr-note").hidden = state.layout !== "fr";
+  renderConflicts(); renderMods(); renderCombos(); renderCats(); renderKeyboard(); renderDetail(); renderExtra(); renderAll();
+}
+
+/* ---------- interaction ---------- */
+function setMods(mods) { state.mods = new Set(mods); state.held.clear(); render(); }
+function selectKey(code) { state.selected = state.selected === code ? null : code; state.hover = null; render(); }
+function flashBind(b) {
+  setMods(b.mods);
+  const code = codeOf(b);
+  state.selected = code || b.key;
+  render();
+  if (code) document.getElementById("kb").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+document.getElementById("conf-btn").addEventListener("click", () => {
+  if (!conflictCombos) return;
+  state.showConflicts = !state.showConflicts;
+  render();
+  if (state.showConflicts) document.getElementById("conflicts").scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
+
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-mod],[data-combo],[data-cat],[data-layout],[data-code],[data-bind]");
+  if (!t) return;
+  if (t.dataset.mod) {
+    const m = t.dataset.mod;
+    state.mods.has(m) ? state.mods.delete(m) : state.mods.add(m);
+    render();
+  } else if (t.dataset.combo !== undefined) {
+    setMods(t.dataset.combo ? t.dataset.combo.split("+") : []);
+  } else if (t.dataset.cat) {
+    const c = t.dataset.cat;
+    state.hidden.has(c) ? state.hidden.delete(c) : state.hidden.add(c);
+    store.set("hidden", JSON.stringify([...state.hidden]));
+    render();
+  } else if (t.dataset.layout) {
+    state.layout = t.dataset.layout; store.set("layout", state.layout); render();
+  } else if (t.dataset.code) {
+    const code = t.dataset.code;
+    if (MOD_KEYS[code]) {  // modifiers toggle, and still show their own binds (Super alone: launcher)
+      const m = MOD_KEYS[code];
+      state.mods.has(m) ? state.mods.delete(m) : state.mods.add(m);
+      state.selected = code; state.hover = null;
+      render();
+    } else selectKey(code);
+  } else if (t.dataset.bind) {
+    flashBind(binds[+t.dataset.bind]);
+  }
+});
+
+const kbEl = document.getElementById("kb");
+kbEl.addEventListener("mouseover", e => {
+  const k = e.target.closest("[data-code]");
+  const code = k ? k.dataset.code : null;
+  if (code !== state.hover) { state.hover = code; renderDetail(); }
+});
+kbEl.addEventListener("mouseleave", () => { state.hover = null; renderDetail(); });
+
+const search = document.getElementById("search");
+search.addEventListener("input", () => { state.query = search.value.trim().toLowerCase(); render(); });
+
+const MOD_OF_EVENT = { Control: "CTRL", Alt: "ALT", Shift: "SHIFT", Meta: "SUPER", OS: "SUPER" };
+function keyEl(code) { return kbEl.querySelector(`[data-code="${code}"]`); }
+document.addEventListener("keydown", e => {
+  if (e.target === search) {
+    if (e.key === "Escape") { search.value = ""; state.query = ""; search.blur(); render(); }
+    return;
+  }
+  if (e.key === "/" && !e.ctrlKey && !e.altKey && !e.metaKey) { e.preventDefault(); search.focus(); return; }
+  if (e.key === "Escape") {
+    // nothing left to clear: close the window (only in the GTK window, see window.py)
+    const idle = !state.selected && comboKey(activeMods()) === "SUPER";
+    if (idle && window.webkit?.messageHandlers?.kbv) { window.webkit.messageHandlers.kbv.postMessage("close"); return; }
+    state.selected = null; setMods(["SUPER"]); return;
+  }
+  const m = MOD_OF_EVENT[e.key];
+  if (m) {
+    if (!state.held.has(m)) { state.held.add(m); renderMods(); renderCombos(); renderKeyboard(); renderDetail(); }
+  } else if (keyByCode[e.code]) {
+    e.preventDefault();
+    if (state.held.size) state.mods = new Set(activeMods());
+    state.held.clear();
+    state.selected = e.code; state.hover = null; render();
+  }
+  keyEl(e.code)?.classList.add("down");
+});
+document.addEventListener("keyup", e => {
+  const m = MOD_OF_EVENT[e.key];
+  if (m && state.held.delete(m)) { renderMods(); renderCombos(); renderKeyboard(); renderDetail(); }
+  keyEl(e.code)?.classList.remove("down");
+});
+window.addEventListener("blur", () => { if (state.held.size) { state.held.clear(); render(); } });
+
+applyScheme();
+render();
+</script>
+</body>
+</html>
