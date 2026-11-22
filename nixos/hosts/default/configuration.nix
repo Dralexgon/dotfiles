@@ -4,8 +4,12 @@
   networking.hostName = "nixos";
 
   imports = [
-    # Include the results of the hardware scan.
-    /etc/nixos/hardware-configuration.nix
+    # Include the results of the hardware scan. Pure evaluation (nix flake check)
+    # can't read /etc, so it gets a placeholder that refuses to be switched to;
+    # builtins.currentSystem only exists with --impure.
+    (if builtins ? currentSystem
+     then /etc/nixos/hardware-configuration.nix
+     else ./check-hardware.nix)
 
 
     # You probably shouldn't remove it

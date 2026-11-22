@@ -102,6 +102,7 @@
     # nixos/hosts/<name>/configuration.nix: a new host needs no entry here.
     # (New host directories must be git-added for the flake to see them.)
     #   default                    : generic install, uses /etc/nixos/hardware-configuration.nix
+    #                                (needs --impure; pure eval gets a placeholder, see check-hardware.nix)
     #   nixos-tower-RX9070XT       : main pc POWERFUL RX 9070 XT !!!
     #   nixos-tower-RX9070XT-4Tssd : main pc POWERFUL RX 9070 XT !!! (with a 4T SSD)
     #   nixos-gray-laptop          : work laptop, nixos-gray-laptop: 50 nuance...

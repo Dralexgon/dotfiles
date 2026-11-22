@@ -44,6 +44,8 @@ The installer (arrow-key menus by default, `./install.sh --input` to type the an
 3. **NixOS host**: a hostname, the desktops, modules and tools you want. It creates `nixos/hosts/<hostname>/` and generates its `hardware-configuration.nix`.
 4. **Dotfiles**: which configs from `config/` to symlink into your home (existing files can be backed up first).
 
+My own personal files (git identity...) are in a private repo that only I can clone. If you aren't logged in to GitHub, the installer's last question asks whether to set it up: just answer no. My git config isn't in `config/`, so set your own name and email with `git config --global`.
+
 Then apply it:
 
 ```bash

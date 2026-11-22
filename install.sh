@@ -3,8 +3,10 @@
 set -euo pipefail
 
 DOTFILES_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-# Optional private companion repo (Dralexgon/dotfiles-private): files with personal info
+# Optional private repo with the personal files (git identity, notes...), see setup_private
+PRIVATE_REPO="${DOTFILES_PRIVATE_REPO:-Dralexgon/dotfiles-private}"
 PRIVATE_DIR="${DOTFILES_PRIVATE_DIR:-$HOME/dotfiles-private}"
+PRIVATE_ONLY=0
 HOSTS_DIR="$DOTFILES_DIR/nixos/hosts"
 MODULES_DIR="$DOTFILES_DIR/nixos/modules"
 
@@ -17,7 +19,7 @@ HARDWARE_CONFIG=""
 
 usage() {
 	cat <<EOF
-Usage: $(basename -- "$0") [-t|--tui] [-i|--input] [-g|--gui] [--current-user] [--hardware-config FILE] [-h|--help]
+Usage: $(basename -- "$0") [-t|--tui] [-i|--input] [-g|--gui] [--current-user] [--hardware-config FILE] [--private] [-h|--help]
 
 Interactive installer for these dotfiles.
 
@@ -38,10 +40,15 @@ Steps:
      (system.stateVersion), generates hardware-configuration.nix, and git-adds
      the host directory (flake.nix picks up every host in nixos/hosts/).
   4. Dotfile configuration: symlinks selected config groups from config/
-     into \$HOME (bash -> ~/.bashrc, git -> ~/.gitconfig*, ssh -> ~/.ssh/config,
+     into \$HOME (bash -> ~/.bashrc, ssh -> ~/.ssh/config,
      clang-format -> ~/.clang-format,
      others -> ~/.config/<name>), offering
      to back up existing files first.
+  5. Private dotfiles (only for the owner of \$PRIVATE_REPO, default
+     Dralexgon/dotfiles-private): clones it into ~/dotfiles-private and links
+     the files its 'links' file lists (git identity...). Silent when this
+     machine is logged in to GitHub with another account; when it isn't
+     logged in at all, asks whether to log in first.
 
 Options:
   -t, --tui     Pick choices with the arrow keys (default).
@@ -55,6 +62,9 @@ Options:
                 Use FILE as hardware-configuration.nix instead of running
                 'sudo nixos-generate-config' (used for a new user, so it
                 does not need sudo during the install).
+  --private     Only run step 5 (e.g. after 'gh auth login').
+                DOTFILES_PRIVATE_REPO=owner/repo and DOTFILES_PRIVATE_DIR=path
+                use another private repo / folder.
   -h, --help    Show this help and exit.
 
 TUI keys: Up/Down or k/j to move, Space to toggle, a to toggle all,
@@ -401,6 +411,11 @@ backup_and_link() {
 	local source="$1"
 	local target="$2"
 	local parent backup
+
+	if [[ -L "$target" && "$(readlink -- "$target")" == "$source" ]]; then
+		printf 'Already linked: %s\n' "$target"
+		return 0
+	fi
 
 	parent="$(dirname -- "$target")"
 	mkdir -p "$parent"
@@ -897,9 +912,7 @@ configure_dotfiles() {
 		for link in "${DOTFILE_LINKS[@]}"; do
 			source="${link%%|*}"
 			target="${link#*|}"
-			# absolute sources (from the private repo) are used as they are
-			[[ "$source" == /* ]] || source="$DOTFILES_DIR/config/$source"
-			backup_and_link "$source" "$target"
+			backup_and_link "$DOTFILES_DIR/config/$source" "$target"
 		done
 	done
 	[[ -d "$HOME/.ssh" ]] && chmod 700 "$HOME/.ssh"
@@ -907,23 +920,126 @@ configure_dotfiles() {
 }
 
 # Fills DOTFILE_LINKS with "source|target" pairs for a config group: source is
-# relative to config/, or absolute for files from $PRIVATE_DIR. Groups not listed here link to ~/.config/<group>.
+# relative to config/. Groups not listed here link to ~/.config/<group>.
 dotfile_links() {
 	case "$1" in
 		bash) DOTFILE_LINKS=("bash/bashrc|$HOME/.bashrc") ;;
-		git)
-			DOTFILE_LINKS=(
-				"git/gitconfig|$HOME/.gitconfig"
-				"git/gitconfig-public|$HOME/.gitconfig-public"
-			)
-			# work identity only when the private repo is cloned
-			[[ -f "$PRIVATE_DIR/git/gitconfig-work" ]] &&
-				DOTFILE_LINKS+=("$PRIVATE_DIR/git/gitconfig-work|$HOME/.gitconfig-work")
-			;;
 		ssh) DOTFILE_LINKS=("ssh/config|$HOME/.ssh/config") ;; # never the keys
 		clang-format) DOTFILE_LINKS=("clang-format/clang-format|$HOME/.clang-format") ;;
 		*) DOTFILE_LINKS=("$1|$HOME/.config/$1") ;;
 	esac
+}
+
+# ---------------------------------------------------------------------------
+# Private dotfiles: a private GitHub repo with the personal files (git
+# identity, notes...), cloned into $PRIVATE_DIR. Its `links` file lists what to
+# link, one "source target" pair per line (source relative to the repo, ~ for
+# $HOME). Only its owner can read it, so:
+#   - already cloned, or readable with the current credentials: clone and link
+#   - logged in to GitHub but no access: someone else's install, say nothing
+#   - not logged in at all (e.g. a new PC): ask whether to log in now
+# ---------------------------------------------------------------------------
+
+# gh, through nix run when it isn't installed yet (fresh system)
+gh_cmd() {
+	if command -v gh >/dev/null 2>&1; then
+		gh "$@"
+	else
+		nix --extra-experimental-features 'nix-command flakes' run nixpkgs#gh -- "$@"
+	fi
+}
+
+gh_logged_in() {
+	if command -v gh >/dev/null 2>&1; then
+		gh auth status >/dev/null 2>&1
+	elif [[ -n "${GH_TOKEN:-}${GITHUB_TOKEN:-}" || -f "${XDG_CONFIG_HOME:-$HOME/.config}/gh/hosts.yml" ]]; then
+		gh_cmd auth status >/dev/null 2>&1
+	else
+		return 1
+	fi
+}
+
+# Can the current credentials (gh, ssh agent, git credential helper) read it?
+# Never prompts.
+private_readable() {
+	GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=true SSH_ASKPASS=true \
+		git ls-remote "https://github.com/$PRIVATE_REPO.git" </dev/null >/dev/null 2>&1
+}
+
+clone_private() {
+	printf 'Cloning %s into %s\n' "$PRIVATE_REPO" "$PRIVATE_DIR"
+	mkdir -p -- "$(dirname -- "$PRIVATE_DIR")"
+	if gh_logged_in; then
+		gh_cmd repo clone "$PRIVATE_REPO" "$PRIVATE_DIR" </dev/null
+	else
+		GIT_TERMINAL_PROMPT=0 git clone "https://github.com/$PRIVATE_REPO.git" "$PRIVATE_DIR" </dev/null
+	fi
+}
+
+# Device-code login in the browser. Run without a terminal on stdin, gh asks
+# nothing: it prints the code and waits, and skips the `gh auth setup-git`
+# question (see nixos/core.nix for why that one must be answered no).
+gh_login() {
+	printf '\nGitHub login: enter the one-time code below on https://github.com/login/device\n'
+	(sleep 2; xdg-open https://github.com/login/device >/dev/null 2>&1 || true) &
+	gh_cmd auth login --hostname github.com --git-protocol https --web </dev/null
+}
+
+link_private() {
+	local links="$PRIVATE_DIR/links" source target
+
+	if [[ ! -f "$links" ]]; then
+		printf 'No links file in %s, nothing to link.\n' "$PRIVATE_DIR"
+		return 0
+	fi
+	printf '\nLinking the private dotfiles from %s\n' "$PRIVATE_DIR"
+	# fd 3: stdin stays free for backup_and_link's questions
+	while read -r -u 3 source target; do
+		[[ -z "$source" || "$source" == \#* ]] && continue
+		target="${target/#\~/$HOME}"
+		if [[ ! -e "$PRIVATE_DIR/$source" ]]; then
+			printf 'Skipping %s: not in %s\n' "$source" "$PRIVATE_DIR" >&2
+			continue
+		fi
+		backup_and_link "$PRIVATE_DIR/$source" "$target"
+	done 3<"$links"
+}
+
+setup_private() {
+	local retry="$DOTFILES_DIR/install.sh --private"
+
+	if [[ -d "$PRIVATE_DIR/.git" ]]; then
+		link_private
+		return 0
+	fi
+
+	if private_readable; then
+		printf '\n'
+		if clone_private; then
+			link_private
+		else
+			printf 'Could not clone %s. Retry with: %s\n' "$PRIVATE_REPO" "$retry" >&2
+		fi
+		return 0
+	fi
+
+	if gh_logged_in; then
+		# Logged in, but this account can't read it: not its owner
+		(( PRIVATE_ONLY )) && printf 'This GitHub account cannot read %s.\n' "$PRIVATE_REPO" >&2
+		return 0
+	fi
+
+	printf '\nPrivate dotfiles (%s) are not linked.\n' "$PRIVATE_REPO"
+	if ! ask_yes_no "Set them up now? It opens a GitHub login." "n"; then
+		printf 'Later: gh auth login, then %s\n' "$retry"
+		return 0
+	fi
+	if gh_login && clone_private; then
+		link_private
+	else
+		printf 'Could not log in or clone %s. Retry with: %s\n' "$PRIVATE_REPO" "$retry" >&2
+	fi
+	return 0
 }
 
 while (( $# > 0 )); do
@@ -943,6 +1059,9 @@ while (( $# > 0 )); do
 			;;
 		--current-user)
 			ASK_USER=0
+			;;
+		--private)
+			PRIVATE_ONLY=1
 			;;
 		--hardware-config)
 			if (( $# < 2 )); then
@@ -969,6 +1088,7 @@ done
 if [[ "$MODE" == "gui-launch" ]]; then
 	gui_args=("$DOTFILES_DIR")
 	(( ASK_USER )) || gui_args+=(--current-user)
+	(( PRIVATE_ONLY )) && gui_args+=(--private)
 	[[ -n "$HARDWARE_CONFIG" ]] && gui_args+=(--hardware-config "$HARDWARE_CONFIG")
 	if command -v installer-gui >/dev/null 2>&1; then
 		exec installer-gui "${gui_args[@]}"
@@ -989,6 +1109,11 @@ if [[ "$MODE" == "gui" ]]; then
 fi
 trap on_exit EXIT
 
+if (( PRIVATE_ONLY )); then
+	setup_private
+	exit 0
+fi
+
 if (( ASK_USER )); then
 	choose_user
 fi
@@ -1001,4 +1126,5 @@ clone_projects
 setup_nixos
 install_caelestia
 configure_dotfiles
+setup_private
 printf '\nInstallation complete.\n'

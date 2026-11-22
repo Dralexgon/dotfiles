@@ -10,7 +10,7 @@ Who I am and how to address me: `~/AGENTS.md`.
 - `nixos/hosts/<host>/configuration.nix`: per-host config. Modules are toggled by commenting their import line out (that's also what `nixcfg` edits, so keep that format).
 - `nixos/modules/`: optional modules (`desktop/`, `dev/`, `gaming/`, `epita/` are groups).
 - `nixos/home/`: user config (nvf Neovim).
-- `config/`: dotfiles, symlinked into `$HOME` by `install.sh` (`bash` -> `~/.bashrc`, `git` -> `~/.gitconfig*`, `ssh` -> `~/.ssh/config`, `clang-format` -> `~/.clang-format`, the rest -> `~/.config/<name>`).
+- `config/`: dotfiles, symlinked into `$HOME` by `install.sh` (`bash` -> `~/.bashrc`, `ssh` -> `~/.ssh/config`, `clang-format` -> `~/.clang-format`, the rest -> `~/.config/<name>`).
 - `config/caelestia/`: the Caelestia + Hyprland setup. `hypr-user.lua` holds my binds, window rules, plugin loading and the **Rices** (`RICES` / `RICE_ORDER` / `set_rice`). `hypr-vars.lua` overrides Caelestia's `kb*` variables. `schemes/` holds the fixed colour schemes.
 - `tools/`: my own programs and Hyprland plugins (each has a `default.nix`, most have a README).
 - `themes/`, `icons/`: GRUB / Plymouth / SDDM / GTK themes and assets.
@@ -24,7 +24,7 @@ Who I am and how to address me: `~/AGENTS.md`.
 - Python tools (rice-picker, bat-swarm, keybinds-viewer, rgbfx...) run from the checkout when there is one, so editing them needs no rebuild; only `default.nix` changes do.
 - Hyprland plugins in `tools/hypr-*` are built against `pkgs.hyprland`: rebuild after a Hyprland update.
 - Rices are one JSON file each in `config/caelestia/rices/` (see its README): `set_rice()` in `hypr-user.lua` does the Hyprland side, `rice-picker --apply` the rest. The rices' wallpapers live in `config/caelestia/rices/wallpapers/`, referenced relative to the rices folder (`wallpapers/<rice>.png`); credit the author in the rices README.
-- Nothing personal goes in this public repo (real name, work/school email...): put it in the private `~/dotfiles-private` (install.sh links from it when it's there). Git identity here is `Dralexgon <dral3xgon@gmail.com>`, the only public email.
+- Nothing personal goes in this public repo (real name, work/school email...): put it in the private `~/dotfiles-private` ([Dralexgon/dotfiles-private](https://github.com/Dralexgon/dotfiles-private)) and list it in its `links` file. `install.sh` (last step, or `./install.sh --private` alone) clones it and links those files: quietly when the current credentials can read it, after a yes/no + GitHub login when the machine isn't logged in, and not at all when logged in with another account. The git configs live there too. Git identity is `Dralexgon <dral3xgon@gmail.com>`, the only public email.
 - `username = "alex"` is hardcoded in `flake.nix` `specialArgs`.
 - Commits: conventional style, e.g. `feat(rgbfx): ...`, `docs(todo): ...`. Mark a TODO item `[x]` with a short note of what was done.
 
@@ -114,7 +114,7 @@ The repo is already public I want to make it easy to use for other people (examp
 - [x] add a setting for the differents rices (petals, vampire) so we can tweaks the settings like the wallpaper, fonts, cursors, animations settings, etc... and create a new rice (one JSON file per rice in `config/caelestia/rices/`, read by `set_rice()` and rice-picker; the ⚙ button on a card unfolds its settings, "New rice" copies one under a new name, `rice-picker --apply` sets scheme / wallpaper / cursor / fonts)
 - [x] move the old rices to another repo (`legacy/` is now [Dralexgon/legacy-rices](https://github.com/Dralexgon/legacy-rices), history kept; `recover.sh` stays here at the root)
 - [x] add the wallpapers for the rices (moved back from legacy-rices into `config/caelestia/rices/wallpapers/`, authors credited in the rices README, unknown when not found)
-- [x] create a dotfiles-private wich store all privates informations about me (true name etc...) which could be in this repo and which save the git history. Once done, clear the history of this repo (private [Dralexgon/dotfiles-private](https://github.com/Dralexgon/dotfiles-private) at `~/dotfiles-private`: `AGENTS.md` (symlinked to `~/AGENTS.md`), `git/gitconfig-work`, and the old 423-commit history on its `dotfiles-history` branch; this repo was squashed into one commit)
+- [x] create a dotfiles-private wich store all privates informations about me (true name etc...) which could be in this repo and which save the git history. Once done, clear the history of this repo (private [Dralexgon/dotfiles-private](https://github.com/Dralexgon/dotfiles-private) at `~/dotfiles-private`: `AGENTS.md` (symlinked to `~/AGENTS.md`), the git configs (`config/git/` moved there), a `links` file read by `install.sh` (private step, `./install.sh --private`), and the old 423-commit history on its `dotfiles-history` branch; this repo was squashed into one commit)
 
 ### Notif grouper
 
