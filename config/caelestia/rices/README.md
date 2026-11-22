@@ -21,3 +21,16 @@ The Rices app can edit them (the ⚙ button on a card) and create new ones.
 Hyprland-side settings (windowfx, cursorfx, trail, animations, transition) are applied by
 `set_rice()`; the rest (scheme, wallpaper, cursor, fonts) by `rice-picker --apply <name>`, which
 `set_rice()` runs.
+
+## Wallpapers
+
+One wallpaper per rice in `wallpapers/`. The `adaptive` rice has none: it keeps the current
+wallpaper and takes its colours from it.
+
+| Rice | File | Author | Source |
+|---|---|---|---|
+| petals | `wallpapers/petals.png` | Unknown | Unknown |
+| vampire | `wallpapers/vampire.png` | rinfiora (Krul Tepes, *Owari no Seraph*) | Konachan post 228944, upscaled 4x with Upscayl |
+
+The wallpapers belong to their authors. If you are one of them and want yours credited differently
+or removed, open an issue.

@@ -19,20 +19,20 @@ Switch rices with any of:
 - `rice adaptive|petals|vampire|next` in fish
 - the **Rices** app in the launcher
 
-Each rice is one file in [`config/caelestia/rices/`](config/caelestia/rices): colour scheme, wallpaper, fonts, cursor, window and cursor effects, animations. Edit them from the **⚙ Settings** button on a card in the Rices app, or create your own with **New rice**. The wallpapers of the fixed rices come from [Dralexgon/legacy-rices](https://github.com/Dralexgon/legacy-rices/tree/main/wallpapers), a git submodule at `legacy-rices/` (`install.sh` downloads it if you cloned without `--recurse-submodules`).
+Each rice is one file in [`config/caelestia/rices/`](config/caelestia/rices): colour scheme, wallpaper, fonts, cursor, window and cursor effects, animations. Edit them from the **⚙ Settings** button on a card in the Rices app, or create your own with **New rice**. Their wallpapers are in [`config/caelestia/rices/wallpapers/`](config/caelestia/rices/wallpapers) (authors credited in [its README](config/caelestia/rices/README.md#wallpapers)).
 
 The keyboard and case fan lights (`rgbfx`) follow the current colours.
 
 ### Legacy rices
 
-Before Caelestia, this repo had GNOME rices (Catppuccin purple, uwu, with their GTK themes, icons and cursors) and an early hand-made Hyprland setup ([demo video](https://youtu.be/rfYjSGmUcBk)). They now live in [Dralexgon/legacy-rices](https://github.com/Dralexgon/legacy-rices), with their history. They are not maintained, but you can still borrow from them. That repo also holds one wallpaper per current rice, with the authors credited.
+Before Caelestia, this repo had GNOME rices (Catppuccin purple, uwu, with their GTK themes, icons and cursors) and an early hand-made Hyprland setup ([demo video](https://youtu.be/rfYjSGmUcBk)). They now live in [Dralexgon/legacy-rices](https://github.com/Dralexgon/legacy-rices), with their history. They are not maintained, but you can still borrow from them.
 
 ## Install
 
 You need NixOS with flakes enabled.
 
 ```bash
-git clone --recurse-submodules --shallow-submodules https://github.com/Dralexgon/dotfiles ~/dotfiles
+git clone https://github.com/Dralexgon/dotfiles ~/dotfiles
 cd ~/dotfiles
 ./install.sh
 ```

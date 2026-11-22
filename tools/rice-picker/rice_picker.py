@@ -437,7 +437,7 @@ def run_gui():
                     return
                 rices, dotfiles = RICES_DIR.resolve(), DOTFILES.resolve()
                 if path.is_relative_to(rices) or path.is_relative_to(dotfiles):
-                    # inside the dotfiles (e.g. legacy-rices/wallpapers): relative, so it works in any clone
+                    # inside the dotfiles (e.g. rices/wallpapers): relative, so it works in any clone
                     text = os.path.relpath(path, rices)
                 elif path.is_relative_to(HOME):
                     text = "~/" + str(path.relative_to(HOME))

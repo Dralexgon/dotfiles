@@ -966,17 +966,6 @@ while (( $# > 0 )); do
 	shift
 done
 
-# The rices' wallpapers are in the legacy-rices submodule (github:Dralexgon/legacy-rices),
-# shallow: only its current files, not the history. A plain `git clone` leaves it empty.
-fetch_wallpapers() {
-	[[ -f "$DOTFILES_DIR/legacy-rices/wallpapers/petals.png" ]] && return 0
-	printf 'Downloading the rice wallpapers (legacy-rices submodule)...\n'
-	if ! git -C "$DOTFILES_DIR" submodule update --init --depth 1 legacy-rices; then
-		printf '\e[1;33mWarning:\e[0m could not download the wallpapers; the rices will keep the current one.\n'
-		printf 'Retry with: git -C %q submodule update --init --depth 1 legacy-rices\n' "$DOTFILES_DIR"
-	fi
-}
-
 if [[ "$MODE" == "gui-launch" ]]; then
 	gui_args=("$DOTFILES_DIR")
 	(( ASK_USER )) || gui_args+=(--current-user)
@@ -1008,7 +997,6 @@ if ask_yes_no "Install Caelestia (Hyprland shell and dots)?" "n"; then
 	WANT_CAELESTIA=1
 fi
 
-fetch_wallpapers
 clone_projects
 setup_nixos
 install_caelestia

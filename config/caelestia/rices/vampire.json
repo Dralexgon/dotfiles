@@ -9,7 +9,7 @@
         "flavour": "hard",
         "mode": "dark"
     },
-    "wallpaper": "../../../legacy-rices/wallpapers/vampire.png",
+    "wallpaper": "wallpapers/vampire.png",
     "windowfx": "blood",
     "cursorfx": "blood",
     "trail": "#8A0012",

@@ -9,7 +9,7 @@
         "flavour": "soft",
         "mode": "dark"
     },
-    "wallpaper": "../../../legacy-rices/wallpapers/petals.png",
+    "wallpaper": "wallpapers/petals.png",
     "windowfx": "petals",
     "cursorfx": "petals",
     "trail": null,
