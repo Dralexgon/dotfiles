@@ -41,8 +41,9 @@ The installer (arrow-key menus by default, `./install.sh --input` to type the an
 
 1. **Which user**: the current one, or a new user, to try the dotfiles without touching yours (it prints how to delete it at the end).
 2. **Caelestia**: whether to install the Caelestia desktop.
-3. **NixOS host**: a hostname, the desktops, modules and tools you want. It creates `nixos/hosts/<hostname>/` and generates its `hardware-configuration.nix`.
-4. **Dotfiles**: which configs from `config/` to symlink into your home (existing files can be backed up first).
+3. **Projects**: whether to clone the apps that live in their own repos, like [Nova](#tools) (into `~/dev/ai/nova`, where the shortcuts expect it). life-manager is private, so skip it.
+4. **NixOS host**: a hostname, the desktops, modules and tools you want. It creates `nixos/hosts/<hostname>/` and generates its `hardware-configuration.nix`.
+5. **Dotfiles**: which configs from `config/` to symlink into your home (existing files can be backed up first).
 
 My own personal files (git identity...) are in a private repo that only I can clone. If you aren't logged in to GitHub, the installer's last question asks whether to set it up: just answer no. My git config isn't in `config/`, so set your own name and email with `git config --global`.
 
@@ -73,6 +74,8 @@ You can also edit `nixos/hosts/<hostname>/configuration.nix` by hand: every modu
 | `SUPER + SHIFT + R` | Next rice |
 | `SUPER + Tab` | Workspace overview |
 | `SUPER + Space` | Next keyboard layout |
+| `SUPER + A` | Open [Nova](#tools), then switch her between full screen and the mini orb |
+| `F8` | Talk to Nova from anywhere (tap or hold) |
 
 The rest are Caelestia's defaults, with my changes in `config/caelestia/hypr-vars.lua` and `config/caelestia/hypr-user.lua`.
 
@@ -106,6 +109,7 @@ The rest are Caelestia's defaults, with my changes in `config/caelestia/hypr-var
 | [`zen-sidebar`](tools/zen-sidebar/README.md) | Save and restore the Zen browser sidebar |
 | [`installer-gui`](tools/installer-gui/README.md) | `install.sh` in a window (`./install.sh --gui`) |
 | [`voice-changer-tray`](tools/voice-changer-tray/README.md) | Tray icon for the [voice changer](https://github.com/Dralexgon/nix-voice-changer) |
+| [Nova](https://github.com/Dralexgon/nova) | Voice AI companion with a shader orb face (`SUPER + A`, `F8`). In its own repo: the installer clones it into `~/dev/ai/nova` |
 
 ## License
 
