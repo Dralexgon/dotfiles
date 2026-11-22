@@ -12,7 +12,6 @@ MODULES_DIR="$DOTFILES_DIR/nixos/modules"
 
 MODE="tui"
 WANT_CAELESTIA=0
-WANT_LIFE_MANAGER=0
 ASK_USER=1
 CREATED_USER=""
 HARDWARE_CONFIG=""
@@ -32,8 +31,9 @@ Steps:
      caelestia desktop is preselected for a new host, and 'caelestia install'
      is run with the components you pick.
   2. Projects (optional): clones the projects that live in their own
-     repos (nova -> ~/dev/ai/nova, life-manager -> ~/dev/apps/life-manager),
-     where these dotfiles expect them. life-manager preselects its module.
+     repos (nova -> ~/dev/ai/nova), where these dotfiles expect them.
+     (life-manager is cloned by the private install.sh, step 5; when it is
+     already at ~/dev/apps/life-manager, its module is preselected.)
   3. NixOS host setup (optional): creates nixos/hosts/<hostname>/ with the
      hostname, desktops, modules and tools (from tools/) you choose (and the
      target user) and the NixOS release this machine was installed with
@@ -45,8 +45,8 @@ Steps:
      others -> ~/.config/<name>), offering
      to back up existing files first.
   5. Private dotfiles (only for the owner of \$PRIVATE_REPO, default
-     Dralexgon/dotfiles-private): clones it into ~/dotfiles-private and links
-     the files its 'links' file lists (git identity...). Silent when this
+     Dralexgon/dotfiles-private): clones it into ~/dotfiles-private and runs
+     its own install.sh (links the git identity...). Silent when this
      machine is logged in to GitHub with another account; when it isn't
      logged in at all, asks whether to log in first.
 
@@ -491,8 +491,8 @@ select_modules() {
 	MODULE_CHECKED=()
 
 	mapfile -t defaults < <(default_modules)
-	if (( WANT_LIFE_MANAGER )); then
-		# its run.sh uses 'tailscale serve'
+	if [[ -d "$HOME/dev/apps/life-manager" ]]; then
+		# cloned by the private install.sh; its run.sh uses 'tailscale serve'
 		defaults+=("life-manager.nix" "tailscale.nix")
 	fi
 
@@ -786,7 +786,6 @@ setup_nixos() {
 # expect them: "name|repo|path relative to \$HOME".
 PROJECTS=(
 	"nova|Dralexgon/nova|dev/ai/nova"
-	"life-manager|Dralexgon/life-manager|dev/apps/life-manager"
 )
 
 clone_projects() {
@@ -797,7 +796,6 @@ clone_projects() {
 		IFS='|' read -r name repo path <<<"$i"
 		if [[ -e "$HOME/$path" ]]; then
 			printf '%s is already at ~/%s.\n' "$name" "$path"
-			[[ "$name" == "life-manager" ]] && WANT_LIFE_MANAGER=1
 			continue
 		fi
 		todo+=("$i")
@@ -820,9 +818,7 @@ clone_projects() {
 		else
 			git clone "https://github.com/$repo.git" "$HOME/$path" || true
 		fi
-		if [[ -d "$HOME/$path/.git" ]]; then
-			[[ "$name" == "life-manager" ]] && WANT_LIFE_MANAGER=1
-		else
+		if [[ ! -d "$HOME/$path/.git" ]]; then
 			printf 'Could not clone %s. Retry later with: gh repo clone %s ~/%s\n' "$repo" "$repo" "$path" >&2
 		fi
 	done
@@ -932,9 +928,8 @@ dotfile_links() {
 
 # ---------------------------------------------------------------------------
 # Private dotfiles: a private GitHub repo with the personal files (git
-# identity, notes...), cloned into $PRIVATE_DIR. Its `links` file lists what to
-# link, one "source target" pair per line (source relative to the repo, ~ for
-# $HOME). Only its owner can read it, so:
+# identity, notes...), cloned into $PRIVATE_DIR, then set up by its own
+# install.sh (see install_private). Only its owner can read it, so:
 #   - already cloned, or readable with the current credentials: clone and link
 #   - logged in to GitHub but no access: someone else's install, say nothing
 #   - not logged in at all (e.g. a new PC): ask whether to log in now
@@ -985,11 +980,24 @@ gh_login() {
 	gh_cmd auth login --hostname github.com --git-protocol https --web </dev/null
 }
 
-link_private() {
-	local links="$PRIVATE_DIR/links" source target
+# The private repo's own install.sh does its setup (linking, and anything else
+# it needs). It is sourced in a subshell so it can use ask_yes_no and
+# backup_and_link, which follow the installer mode. Repos without one: link the
+# pairs of its `links` file ("source target", source relative to the repo, ~ for
+# $HOME).
+install_private() {
+	local script="$PRIVATE_DIR/install.sh" links="$PRIVATE_DIR/links" source target
+
+	if [[ -f "$script" ]]; then
+		printf '\nRunning %s\n' "$script"
+		if ! (source "$script"); then
+			printf '%s failed. Retry with: %s\n' "$script" "$DOTFILES_DIR/install.sh --private" >&2
+		fi
+		return 0
+	fi
 
 	if [[ ! -f "$links" ]]; then
-		printf 'No links file in %s, nothing to link.\n' "$PRIVATE_DIR"
+		printf 'No install.sh or links file in %s, nothing to do.\n' "$PRIVATE_DIR"
 		return 0
 	fi
 	printf '\nLinking the private dotfiles from %s\n' "$PRIVATE_DIR"
@@ -1009,14 +1017,14 @@ setup_private() {
 	local retry="$DOTFILES_DIR/install.sh --private"
 
 	if [[ -d "$PRIVATE_DIR/.git" ]]; then
-		link_private
+		install_private
 		return 0
 	fi
 
 	if private_readable; then
 		printf '\n'
 		if clone_private; then
-			link_private
+			install_private
 		else
 			printf 'Could not clone %s. Retry with: %s\n' "$PRIVATE_REPO" "$retry" >&2
 		fi
@@ -1035,7 +1043,7 @@ setup_private() {
 		return 0
 	fi
 	if gh_login && clone_private; then
-		link_private
+		install_private
 	else
 		printf 'Could not log in or clone %s. Retry with: %s\n' "$PRIVATE_REPO" "$retry" >&2
 	fi

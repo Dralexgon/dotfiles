@@ -41,7 +41,7 @@ The installer (arrow-key menus by default, `./install.sh --input` to type the an
 
 1. **Which user**: the current one, or a new user, to try the dotfiles without touching yours (it prints how to delete it at the end).
 2. **Caelestia**: whether to install the Caelestia desktop.
-3. **Projects**: whether to clone the apps that live in their own repos, like [Nova](#tools) (into `~/dev/ai/nova`, where the shortcuts expect it). life-manager is private, so skip it.
+3. **Projects**: whether to clone the apps that live in their own repos, like [Nova](#tools) (into `~/dev/ai/nova`, where the shortcuts expect it).
 4. **NixOS host**: a hostname, the desktops, modules and tools you want. It creates `nixos/hosts/<hostname>/` and generates its `hardware-configuration.nix`.
 5. **Dotfiles**: which configs from `config/` to symlink into your home (existing files can be backed up first).
 
