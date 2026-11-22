@@ -32,23 +32,23 @@ Steps:
      is run with the components you pick.
   2. Projects (optional): clones the projects that live in their own
      repos (nova -> ~/dev/ai/nova), where these dotfiles expect them.
-     (life-manager is cloned by the private install.sh, step 5; when it is
-     already at ~/dev/apps/life-manager, its module is preselected.)
-  3. NixOS host setup (optional): creates nixos/hosts/<hostname>/ with the
+  3. Private dotfiles (only for the owner of \$PRIVATE_REPO, default
+     Dralexgon/dotfiles-private): clones it into ~/dotfiles-private and runs
+     its own install.sh (links the git identity, offers to clone
+     life-manager...). Silent when this machine is logged in to GitHub with
+     another account; when it isn't logged in at all, asks whether to log in
+     first. Runs before the host setup so that a cloned
+     ~/dev/apps/life-manager preselects its module.
+  4. NixOS host setup (optional): creates nixos/hosts/<hostname>/ with the
      hostname, desktops, modules and tools (from tools/) you choose (and the
      target user) and the NixOS release this machine was installed with
      (system.stateVersion), generates hardware-configuration.nix, and git-adds
      the host directory (flake.nix picks up every host in nixos/hosts/).
-  4. Dotfile configuration: symlinks selected config groups from config/
+  5. Dotfile configuration: symlinks selected config groups from config/
      into \$HOME (bash -> ~/.bashrc, ssh -> ~/.ssh/config,
      clang-format -> ~/.clang-format,
      others -> ~/.config/<name>), offering
      to back up existing files first.
-  5. Private dotfiles (only for the owner of \$PRIVATE_REPO, default
-     Dralexgon/dotfiles-private): clones it into ~/dotfiles-private and runs
-     its own install.sh (links the git identity...). Silent when this
-     machine is logged in to GitHub with another account; when it isn't
-     logged in at all, asks whether to log in first.
 
 Options:
   -t, --tui     Pick choices with the arrow keys (default).
@@ -62,7 +62,7 @@ Options:
                 Use FILE as hardware-configuration.nix instead of running
                 'sudo nixos-generate-config' (used for a new user, so it
                 does not need sudo during the install).
-  --private     Only run step 5 (e.g. after 'gh auth login').
+  --private     Only run step 3 (e.g. after 'gh auth login').
                 DOTFILES_PRIVATE_REPO=owner/repo and DOTFILES_PRIVATE_DIR=path
                 use another private repo / folder.
   -h, --help    Show this help and exit.
@@ -1131,8 +1131,8 @@ if ask_yes_no "Install Caelestia (Hyprland shell and dots)?" "n"; then
 fi
 
 clone_projects
+setup_private
 setup_nixos
 install_caelestia
 configure_dotfiles
-setup_private
 printf '\nInstallation complete.\n'
