@@ -1,11 +1,13 @@
 """The rgbfx window (GTK4 + libadwaita): pick an effect, toggle overlays, tune brightness and speed.
 
 Like the CLI it only edits state.json; the daemon picks changes up within a frame.
-The keyboard at the top is a live preview: while the window is open, the daemon
-writes every frame it sends to $XDG_RUNTIME_DIR/rgbfx/frame (see state.py).
+The keyboard and the case at the top are a live preview: while the window is open,
+the daemon writes every frame it sends to $XDG_RUNTIME_DIR/rgbfx (see state.py).
+The case layout (which LED is where) is in case.py.
 The colours come from Caelestia's GTK theme (~/.config/gtk-4.0/gtk.css).
 """
 
+import json
 import math
 import subprocess
 import sys
@@ -17,6 +19,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
+import case  # noqa: E402
 import effects  # noqa: E402
 import keymap  # noqa: E402
 import state  # noqa: E402
@@ -53,6 +56,9 @@ class Preview(Gtk.DrawingArea):
         self.frame = None  # bytes, ROWS*COLS*3
         self.mtime = None
         self.fresh = False
+        self.case = CaseView(self)
+        self.fans = {}  # zone name -> bytes (RGB per LED)
+        self.fans_mtime = None
         self.set_draw_func(self.draw)
 
     def poll(self) -> None:
@@ -70,7 +76,15 @@ class Preview(Gtk.DrawingArea):
                 return
             if len(data) == ROWS * COLS * 3:
                 self.frame = data
+        try:
+            st = state.PREVIEW_FANS.stat()
+            if st.st_mtime_ns != self.fans_mtime:
+                self.fans_mtime = st.st_mtime_ns
+                self.fans = {z: bytes.fromhex(h) for z, h in json.loads(state.PREVIEW_FANS.read_text()).items()}
+        except (OSError, ValueError, AttributeError):
+            pass
         self.queue_draw()
+        self.case.queue_draw()
 
     def draw(self, _area, cr, width, height):
         used = range(1, COLS)  # column 0 has no keys
@@ -120,6 +134,71 @@ class Preview(Gtk.DrawingArea):
             cr.show_text(text)
 
 
+class CaseView(Gtk.DrawingArea):
+    """The PC case, seen through its glass side, with each fan's LEDs (layout in case.py)."""
+
+    def __init__(self, preview):
+        super().__init__(content_width=int(200 * case.ASPECT), content_height=200)
+        self.preview = preview
+        self.set_draw_func(self.draw)
+
+    def led(self, zone, i):
+        data = self.preview.fans.get(zone, b"") if self.preview.fresh else b""
+        if len(data) < (i + 1) * 3:
+            return (0.0, 0.0, 0.0)
+        return tuple(v / 255 for v in data[i * 3:i * 3 + 3])
+
+    def draw(self, _area, cr, width, height):
+        h = min(height, width / case.ASPECT) - 4
+        w = h * case.ASPECT
+        ox, oy = (width - w) / 2, (height - h) / 2
+
+        # The case and what's inside, faintly
+        cr.set_source_rgba(1, 1, 1, 0.12)
+        cr.set_line_width(2)
+        _rect(cr, ox, oy, w, h, h * 0.04)
+        cr.stroke()
+        for x, y, bw, bh in (case.BOARD, case.GPU):
+            cr.set_source_rgba(1, 1, 1, 0.05)
+            _rect(cr, ox + x * w, oy + y * h, bw * w, bh * h, h * 0.015)
+            cr.fill()
+
+        for ring in case.RINGS:
+            cx, cy, r = ox + ring.x * w, oy + ring.y * h, ring.r * h
+            colours = [self.led(ring.zone, ring.first + i) for i in range(ring.count)]
+            # The fan's frame and blades area
+            cr.set_source_rgba(1, 1, 1, 0.06)
+            cr.arc(cx, cy, r * (1.25 if ring.kind == "fan" else 1.15), 0, 2 * math.pi)
+            cr.fill()
+            # A soft glow of the average colour
+            avg = [sum(c[k] for c in colours) / len(colours) for k in range(3)]
+            if max(avg) > 0.03:
+                cr.set_source_rgba(*avg, 0.18 * max(avg))
+                cr.arc(cx, cy, r * 1.7, 0, 2 * math.pi)
+                cr.fill()
+            # Each LED as an arc of the ring
+            step = 2 * math.pi / ring.count
+            cr.set_line_width(r * (0.32 if ring.kind == "fan" else 0.45))
+            for i, rgb in enumerate(colours):
+                a = math.radians(ring.start) - math.pi / 2 + i * step
+                cr.set_source_rgb(*[0.12 + 0.88 * v for v in rgb])
+                cr.arc(cx, cy, r, a, a + step * 1.02)
+                cr.stroke()
+            # Hub
+            cr.set_source_rgba(0, 0, 0, 0.35)
+            cr.arc(cx, cy, r * 0.38, 0, 2 * math.pi)
+            cr.fill()
+
+
+def _rect(cr, x, y, w, h, r):
+    cr.new_sub_path()
+    cr.arc(x + w - r, y + r, r, -math.pi / 2, 0)
+    cr.arc(x + w - r, y + h - r, r, 0, math.pi / 2)
+    cr.arc(x + r, y + h - r, r, math.pi / 2, math.pi)
+    cr.arc(x + r, y + r, r, math.pi, 3 * math.pi / 2)
+    cr.close_path()
+
+
 def _rounded(cr, x, y, size, r):
     cr.new_sub_path()
     cr.arc(x + size - r, y + r, r, -math.pi / 2, 0)
@@ -156,6 +235,10 @@ class Window(Adw.ApplicationWindow):
         self.preview.set_margin_start(12)
         self.preview.set_margin_end(12)
         card.append(self.preview)
+        self.preview.case.set_margin_top(12)
+        self.preview.case.set_margin_bottom(12)
+        self.preview.case.set_margin_end(12)
+        card.append(self.preview.case)
 
         # Left: effects, by category
         left = Adw.PreferencesPage(hexpand=True)

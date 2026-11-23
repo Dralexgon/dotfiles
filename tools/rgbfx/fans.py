@@ -27,6 +27,7 @@ class Fans:
         self.client = None
         self.devices = []  # (device, [per-zone sampling positions or None])
         self.next_try = 0.0
+        self.shown = {}  # zone name -> the uint8 RGB colours last sent (for the preview)
 
     def _connect(self) -> None:
         from openrgb import OpenRGBClient
@@ -71,12 +72,14 @@ class Fans:
         try:
             for dev, zones in self.devices:
                 colours = []
-                for pos in zones:
+                for zone, pos in zip(dev.zones, zones):
                     if pos is None:
                         rgb = average[None, :]
                     else:
                         rgb = np.stack([np.interp(pos, cols, strip[:, ch], period=1) for ch in range(3)], axis=1)
-                    colours += [RGBColor(*(int(v) for v in np.round(c))) for c in rgb]
+                    rgb = np.round(rgb).astype(np.uint8)
+                    self.shown[zone.name] = rgb
+                    colours += [RGBColor(*(int(v) for v in c)) for c in rgb]
                 dev.set_colors(colours, fast=True)
         except Exception as e:  # noqa: BLE001 - server restarted, device gone...
             log.warning("openrgb: draw failed (%s), reconnecting", e)

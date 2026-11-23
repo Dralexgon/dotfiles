@@ -13,9 +13,11 @@ STATE_DIR = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state"))
 STATE = STATE_DIR / "state.json"
 
 # Live preview for the GUI: while it keeps touching PREVIEW_WANTED, the daemon
-# writes each frame it sends (6x18x3 bytes, RGB) to PREVIEW_FRAME. Both in tmpfs.
+# writes each frame it sends (6x18x3 bytes, RGB) to PREVIEW_FRAME, and the case
+# fan colours to PREVIEW_FANS ({zone name: "rrggbb..."}). All in tmpfs.
 RUNTIME_DIR = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "rgbfx"
 PREVIEW_FRAME = RUNTIME_DIR / "frame"
+PREVIEW_FANS = RUNTIME_DIR / "fans.json"
 PREVIEW_WANTED = RUNTIME_DIR / "preview-wanted"
 
 DEFAULTS = {
@@ -64,11 +66,15 @@ def preview_wanted() -> bool:
         return False
 
 
-def write_preview(frame: bytes) -> None:
+def write_preview(frame: bytes, fans: dict | None = None) -> None:
     RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
     tmp = PREVIEW_FRAME.with_suffix(".tmp")
     tmp.write_bytes(frame)
     tmp.replace(PREVIEW_FRAME)
+    if fans is not None:
+        tmp = PREVIEW_FANS.with_suffix(".tmp")
+        tmp.write_text(json.dumps({zone: bytes(rgb).hex() for zone, rgb in fans.items()}))
+        tmp.replace(PREVIEW_FANS)
 
 
 def flash(colour: str | None = None) -> None:

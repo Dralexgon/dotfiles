@@ -146,7 +146,7 @@ def run():
         if now - preview_checked > 1:  # is the GUI open?
             preview, preview_checked = state.preview_wanted(), now
         if preview:
-            state.write_preview(out.tobytes())
+            state.write_preview(out.tobytes(), {z: c.tobytes() for z, c in fans.shown.items()})
 
         t += dt_real * speed
         last = now

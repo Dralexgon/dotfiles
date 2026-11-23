@@ -132,10 +132,18 @@ A GTK4 + libadwaita window, coloured by Caelestia's GTK theme
 (`~/.config/gtk-4.0/gtk.css`), so it follows the wallpaper like the keyboard.
 
 - **Live preview** at the top: the keyboard as the daemon draws it, overlays
-  and brightness included. While the window is open it touches
-  `$XDG_RUNTIME_DIR/rgbfx/preview-wanted`, and the daemon then writes each
-  frame to `$XDG_RUNTIME_DIR/rgbfx/frame` (324 bytes, in tmpfs). When the
+  and brightness included, and next to it **the PC case** seen through its
+  glass side, each fan's LEDs in the colour the daemon sent them. While the
+  window is open it touches `$XDG_RUNTIME_DIR/rgbfx/preview-wanted`, and the
+  daemon then writes each frame to `$XDG_RUNTIME_DIR/rgbfx/frame` (324
+  bytes) and the fan colours to `fans.json` next to it (tmpfs). When the
   window closes, the daemon stops writing within 3 s.
+- The case layout is in `case.py`: which zone and LED range each fan and the
+  pump use, and where they sit. It was measured by lighting blocks of LEDs
+  and looking through the webcam: everything is on **D_LED2**, the pump
+  (LEDs 0–11) then the 3 top fans, front to rear (12–23, 24–35, 36–47), in
+  one daisy chain, and the 4 ring fans (3 front, 1 rear) on a splitter (all
+  four show LEDs 0–19).
 - **Effects** on the left, by category (click one to apply it).
 - **Settings** on the right: brightness, animation speed, and a pomodoro
   (minutes, Start / Stop, time left).
@@ -213,6 +221,7 @@ Logs: `journalctl --user -u rgbfx -f`.
 | `gui.py` | The GTK4 + libadwaita window and its live keyboard preview |
 | `daemon.py` | The render loop and the openrazer output |
 | `fans.py` | The OpenRGB output (case fans) |
+| `case.py` | Where each case LED is, for the case preview |
 | `effects.py` | Every effect and overlay |
 | `inputs.py` | Background readers: keyboard (evdev), audio and mic (`pw-record`), screen (`gpu-screen-recorder` + `ffmpeg`), Hyprland (IPC sockets), CPU/temperature/mic, notifications (D-Bus) |
 | `keymap.py` | Key → LED position on the 6×18 TKL matrix, and Hyprland key names → keys |
