@@ -158,7 +158,7 @@
         program = "${installer-gui}/bin/installer-gui";
       };
 
-      # Razer keyboard effects (TUI): nix run ~/dotfiles#rgbfx
+      # Razer keyboard effects (GTK window): nix run ~/dotfiles#rgbfx
       rgbfx = {
         type = "app";
         program = "${rgbfx}/bin/rgbfx";
@@ -184,7 +184,8 @@
       # To work on rgbfx: nix develop ~/dotfiles#rgbfx, then
       # python tools/rgbfx/rgbfx.py (stop the service first to run the daemon)
       rgbfx = pkgs.mkShell {
-        packages = [ (pkgs.python3.withPackages (p: rgbfx.pythonPackages p ++ [ p.textual-dev ])) ];
+        packages = [ (pkgs.python3.withPackages rgbfx.pythonPackages) pkgs.gobject-introspection ];
+        buildInputs = [ pkgs.gtk4 pkgs.libadwaita ];
       };
     };
   };

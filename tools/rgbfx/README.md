@@ -1,11 +1,11 @@
 # rgbfx
 
 Lighting effects for the Razer keyboard (BlackWidow V3 Tenkeyless) and the
-case fans, picked from a terminal UI or the command line. Everything follows
+case fans, picked from a GTK window or the command line. Everything follows
 the Caelestia colour scheme, so the lights change with the wallpaper (or rice).
 
 ```bash
-rgbfx                    # the TUI (also in the app launcher)
+rgbfx                    # the window (also in the app launcher)
 nix run ~/dotfiles#rgbfx # same, without installing
 ```
 
@@ -14,7 +14,7 @@ It's two parts:
 - **the daemon** (`rgbfx daemon`, run by the `rgbfx` systemd user service)
   draws the keyboard about 30 times a second through openrazer, and the case
   fans (any non-keyboard OpenRGB device) through the OpenRGB SDK server;
-- **the TUI and the CLI**, which only edit
+- **the window and the CLI**, which only edit
   `~/.local/state/rgbfx/state.json`. The daemon picks changes up within a
   frame.
 
@@ -47,6 +47,7 @@ in software so that overlays work on top of them.
 | Screen mirror | `screen` | The keyboard **mimics the screen**, like an ambilight: each key takes the colour of the part of the focused monitor it sits under (the screen is split into 6 rows × 18 columns). Colours are saturated and darks stay dark so it reads well on LEDs, and it fades smoothly between frames. The capture runs **on the GPU**: `gpu-screen-recorder` grabs the monitor through KMS, scales it to 256×144 and encodes it with the GPU's hardware encoder (VA-API on AMD), then `ffmpeg` decodes that tiny stream down to 18×6. Up to 20 frames a second, and none while the screen doesn't change. |
 | Typing ripples | `ripple` | Each key press sends a ring outward from that key. Each new ring takes the next colour of the scheme gradient. |
 | Live status | `status` | **Number keys 1–0** are Hyprland workspaces 1–10: bright primary = current, dim secondary = has windows, very dim = exists but empty. **The F-row** is a CPU load bar (F1 → F12) that goes from green to red as the CPU heats up (45 °C → 85 °C). |
+| Typing heatmap | `heatmap` | Each key glows from **cold blue** through cyan, green and yellow to **hot red** with how much you've typed it lately. Presses cool down by half every 5 minutes (real time, not the speed setting), and a square-root scale keeps rarely used keys visible. Your most used keys, at a glance. |
 
 ### Themed
 
@@ -56,6 +57,27 @@ in software so that overlays work on top of them.
 | Fire | `fire` | Flames rising from the bottom row (the demoscene fire). Typing stokes the flames under the keys you press. |
 | Plasma | `plasma` | Smooth flowing blobs in the scheme colours (the demoscene plasma). |
 | Game of Life | `life` | Conway's Game of Life on the 6×18 keys, wrapping around the edges. Newborn cells are **tertiary**, older ones **primary**, dying cells leave a **secondary** ghost. Pressing a key brings cells to life around it. It reseeds itself when it dies out or loops. |
+| Thunderstorm | `storm` | Blue **rain** streaks falling down the keys, and every few seconds a **lightning bolt** forks down from the top row while the whole keyboard flickers white. **Enter** calls one down. |
+| Fireworks | `fireworks` | **Rockets** climb from the bottom row and **burst into sparks** in the scheme colours, which fall under gravity and fade. Pressing a key launches a rocket that bursts right on that key. |
+
+### Ambient
+
+Slow and calm, for when you're not typing much.
+
+| Effect | Name | What it does |
+|---|---|---|
+| Aurora | `aurora` | **Northern lights**: curtains of light hang from the top of the keyboard and ripple sideways, their lower edge waving, in the scheme gradient. Stars twinkle in the dark parts below. |
+| Digital rain | `matrix` | Streams of light **fall down the columns** in the primary colour, with near-white heads and flickering trails, like the code rain from the films. Typing sends a stream down from the key you pressed. |
+| Meteor shower | `meteors` | **Shooting stars** streak diagonally across the keys with a white-hot head and a scheme-coloured tail that cools down. They move between keys smoothly (each one lights the 4 nearest keys). |
+| Lava lamp | `lava` | Soft **blobs** (metaballs) slowly rise, sink, drift and merge, each with its own colour of the scheme gradient. |
+
+### Games
+
+They play themselves.
+
+| Effect | Name | What it does |
+|---|---|---|
+| Snake | `snake` | A **snake that plays by itself**: it finds the shortest path to the pulsing **tertiary** food (only over keys that have an LED) and grows each time it eats. Its head is near-white and its body fades along the scheme gradient. **Press a key to drop the food there.** When it traps itself it turns red, fades and starts over. |
 
 ## Overlays
 
@@ -64,7 +86,7 @@ Drawn on top of the effect, always in this order (so the Super hints win):
 | Overlay | Name | What it does |
 |---|---|---|
 | App context | `context` | Highlights the keys that matter in the focused window and dims the rest. **Neovim** (a kitty/foot/Alacritty window whose title has `nvim` or `vim`, or Neovide): `hjkl` in primary; Esc, `:`, `/`, `i`, `v` in secondary; `w b e u p y d` in tertiary. **Games** (`steam_app_*`, Albion Online, Minecraft, gamescope, `*.exe`): WASD in primary; Space, Shift, Ctrl, E, Q, R, F in secondary; 1–5, Tab, Esc in tertiary. Rules are in `Context_.RULES` in `effects.py`. |
-| Pomodoro timer | `pomodoro` | While a timer runs, the **F-row** is a tertiary bar that drains from F12 to F1. When time's up it **blinks green** for 8 seconds. Start it with `p` in the TUI or `rgbfx pomodoro 25` (this also turns the overlay on). |
+| Pomodoro timer | `pomodoro` | While a timer runs, the **F-row** is a tertiary bar that drains from F12 to F1. When time's up it **blinks green** for 8 seconds. Start it from the window or with `rgbfx pomodoro 25` (this also turns the overlay on). |
 | Caps Lock glow | `caps-lock` | Caps Lock pulses white while it's on (read from the keyboard LED). |
 | Mic muted | `mic-mute` | **Esc** pulses red while the default microphone is muted (`wpctl`). |
 | Notification flash | `notifications` | The whole keyboard pulses twice on each desktop notification: **Discord blurple** for Discord/Vesktop/WebCord, primary otherwise. It watches the `Notify` calls on the session D-Bus. |
@@ -104,22 +126,25 @@ game mode only lives in the shell's memory. The mouse pointer trail
 (`tools/hypr-cursortrail`) disappears too: it hides while Hyprland animations
 are off, which is what game mode turns off.
 
-## TUI
+## Window
 
-Effects on the left (Enter to apply, `●` marks the current one), overlays on
-the right (Space to toggle), and a description of whatever is highlighted.
+A GTK4 + libadwaita window, coloured by Caelestia's GTK theme
+(`~/.config/gtk-4.0/gtk.css`), so it follows the wallpaper like the keyboard.
 
-| Key | Action |
-|---|---|
-| Enter | Apply the highlighted effect |
-| Space | Toggle the highlighted overlay |
-| Tab | Switch between effects and overlays |
-| `+` / `-` | Brightness up / down (10 % steps) |
-| `]` / `[` | Faster / slower animations |
-| `p` | Start a 25-minute pomodoro, or stop the running one |
-| `f` | Test flash |
-| `r` | Restart the daemon (after editing the code) |
-| `q` | Quit |
+- **Live preview** at the top: the keyboard as the daemon draws it, overlays
+  and brightness included. While the window is open it touches
+  `$XDG_RUNTIME_DIR/rgbfx/preview-wanted`, and the daemon then writes each
+  frame to `$XDG_RUNTIME_DIR/rgbfx/frame` (324 bytes, in tmpfs). When the
+  window closes, the daemon stops writing within 3 s.
+- **Effects** on the left, by category (click one to apply it).
+- **Settings** on the right: brightness, animation speed, and a pomodoro
+  (minutes, Start / Stop, time left).
+- **Overlays** below them, one switch each.
+- Header bar: ☀ test flash, ⟳ restart the daemon (after editing the code).
+  Ctrl+Q / Ctrl+W close it.
+
+It floats centred (window rule on `dev.dralexgon.rgbfx` in
+`config/caelestia/hypr-user.lua`).
 
 ## Command line
 
@@ -174,9 +199,9 @@ All of it is in [`nixos/modules/razer.nix`](../../nixos/modules/razer.nix)
 
 Like nixcfg, the `rgbfx` command runs the code from the checkout
 (`~/dotfiles/tools/rgbfx`, or `$RGBFX_DOTFILES/tools/rgbfx`), so code
-edits need no rebuild, only a daemon restart (`r` in the TUI, or
+edits need no rebuild, only a daemon restart (⟳ in the window, or
 `systemctl --user restart rgbfx`). A rebuild is only needed when
-`default.nix` changes (Python packages, launcher).
+`default.nix` changes (Python packages, launcher, GTK libraries).
 
 Logs: `journalctl --user -u rgbfx -f`.
 
@@ -184,8 +209,8 @@ Logs: `journalctl --user -u rgbfx -f`.
 
 | File | What's in it |
 |---|---|
-| `rgbfx.py` | Entry point: the CLI, opens the TUI without arguments |
-| `tui.py` | The Textual TUI |
+| `rgbfx.py` | Entry point: the CLI, opens the window without arguments |
+| `gui.py` | The GTK4 + libadwaita window and its live keyboard preview |
 | `daemon.py` | The render loop and the openrazer output |
 | `fans.py` | The OpenRGB output (case fans) |
 | `effects.py` | Every effect and overlay |
@@ -198,7 +223,7 @@ Logs: `journalctl --user -u rgbfx -f`.
 `title`, `category`, `description` and a `render(ctx)` that returns a 6×18×3
 array of RGB floats in [0, 1]. Set `needs` to the inputs it uses. For an
 overlay, use `@overlay` and `apply(frame, ctx)`, and add it to `ORDER`. Both
-show up in the TUI and `rgbfx list` by themselves. **Then add it to this
+show up in the window and `rgbfx list` by themselves. **Then add it to this
 README.**
 
 To work on it: `nix develop ~/dotfiles#rgbfx`, then

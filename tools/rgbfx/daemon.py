@@ -89,6 +89,7 @@ def run():
     last_frame = last_fan_frame = None
     t = 0.0
     last = time.monotonic()
+    preview, preview_checked = False, 0.0
 
     while not stop:
         now = time.monotonic()
@@ -141,6 +142,11 @@ def run():
                 time.sleep(2)
                 keyboards.connect()
                 last_frame = None
+
+        if now - preview_checked > 1:  # is the GUI open?
+            preview, preview_checked = state.preview_wanted(), now
+        if preview:
+            state.write_preview(out.tobytes())
 
         t += dt_real * speed
         last = now

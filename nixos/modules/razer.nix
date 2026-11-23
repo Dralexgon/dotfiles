@@ -16,7 +16,7 @@ in
       pyaudio
     ]))
 
-    # TUI + daemon for the keyboard and case fan effects (tools/rgbfx)
+    # GTK window + daemon for the keyboard and case fan effects (tools/rgbfx)
     rgbfx
   ];
 

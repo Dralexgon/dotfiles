@@ -42,6 +42,8 @@ CAPS_LOCK = 58
 PAUSE = 119
 LSHIFT, RSHIFT, LCTRL, RCTRL, LALT, RALT, LSUPER, RSUPER = 42, 54, 29, 97, 56, 100, 125, 126
 SPACE = 57
+ENTER = 28
+FN_POS = (5, 12)  # Fn has an LED but no evdev code
 
 # Hyprland modmask bits for each modifier key
 MOD_BITS = {

@@ -1,6 +1,6 @@
-"""rgbfx: effects for the Razer keyboard and the case fans, picked from a TUI or the command line.
+"""rgbfx: effects for the Razer keyboard and the case fans, picked from a GTK window or the command line.
 
-    rgbfx                     open the TUI
+    rgbfx                     open the window
     rgbfx daemon              run the render loop (the rgbfx systemd user service)
     rgbfx list                list effects and overlays
     rgbfx status              show the current settings
@@ -46,9 +46,9 @@ def cmd_status():
 
 def main(argv):
     if not argv:
-        import tui
+        import gui
 
-        return tui.main()
+        return gui.main()
     cmd, args = argv[0], argv[1:]
     if cmd in ("-h", "--help", "help"):
         usage(0)

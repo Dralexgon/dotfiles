@@ -1,6 +1,6 @@
 """The settings the daemon follows: ~/.local/state/rgbfx/state.json.
 
-The TUI and the CLI write it, the daemon reloads it when it changes. Writes
+The window and the CLI write it, the daemon reloads it when it changes. Writes
 are atomic (temp file + rename), so the daemon never reads half a file.
 """
 
@@ -11,6 +11,12 @@ from pathlib import Path
 
 STATE_DIR = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "rgbfx"
 STATE = STATE_DIR / "state.json"
+
+# Live preview for the GUI: while it keeps touching PREVIEW_WANTED, the daemon
+# writes each frame it sends (6x18x3 bytes, RGB) to PREVIEW_FRAME. Both in tmpfs.
+RUNTIME_DIR = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "rgbfx"
+PREVIEW_FRAME = RUNTIME_DIR / "frame"
+PREVIEW_WANTED = RUNTIME_DIR / "preview-wanted"
 
 DEFAULTS = {
     "effect": "static",
@@ -49,6 +55,20 @@ def mtime() -> float | None:
         return STATE.stat().st_mtime_ns
     except OSError:
         return None
+
+
+def preview_wanted() -> bool:
+    try:
+        return time.time() - PREVIEW_WANTED.stat().st_mtime < 3
+    except OSError:
+        return False
+
+
+def write_preview(frame: bytes) -> None:
+    RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
+    tmp = PREVIEW_FRAME.with_suffix(".tmp")
+    tmp.write_bytes(frame)
+    tmp.replace(PREVIEW_FRAME)
 
 
 def flash(colour: str | None = None) -> None:

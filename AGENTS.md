@@ -72,7 +72,7 @@ nixosConfigurations."nixos-tower-RX9070XT" = nixpkgs.lib.nixosSystem {
 
 - [ ] Try `FPS = 60` in `tools/rgbfx/daemon.py` (smoother wave, plasma, audio visualiser) and measure the CPU cost of rgbfx + openrazer-daemon
 - [ ] Draw frames straight through the kernel driver (`/sys/.../matrix_custom_frame` then `matrix_effect_custom`) instead of D-Bus through openrazer-daemon : less CPU, a few ms less latency, makes 60 fps cheap (the USB link caps it around ~100 fps anyway). Write a whole row at once instead of the per-key Python loop. Watch out for openrazer-daemon / Polychromatic overriding it
-- [ ] Rust rewrite : only if the above isn't enough (would save ~2% CPU and ~45 MB RAM, but loses the run-from-checkout setup and the Textual TUI)
+- [ ] Rust rewrite : only if the above isn't enough (would save ~2% CPU and ~45 MB RAM, but loses the run-from-checkout setup, and the GTK window would need gtk4-rs)
 
 ### Cursor trail
 

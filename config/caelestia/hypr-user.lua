@@ -102,10 +102,10 @@ hl.window_rule({
     workspace = "special:nixcfg"
 })
 
--- rgbfx (kitty --class rgbfx, from the app launcher) floats centered like nixcfg
+-- rgbfx (its GTK window) floats centered like nixcfg
 hl.window_rule({
     match = {
-        class = "^(rgbfx)$"
+        class = "^(dev\\.dralexgon\\.rgbfx)$"
     },
     float = true,
     size = "(monitor_w*0.6) (monitor_h*0.6)",
