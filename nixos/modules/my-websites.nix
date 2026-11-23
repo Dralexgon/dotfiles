@@ -1,8 +1,10 @@
-{ lib, pkgs, username, ... }:
+{ config, lib, pkgs, username, ... }:
 
 # Serves my websites hub (~/dev/web/my-websites) on http://localhost.
 # Only reachable from this PC. Edits to the folder show up on refresh, no rebuild needed.
-# /api/ports lists the local ports that answer HTTP (server/ports.py, runs as me on 127.0.0.1:7420).
+# The hub API (server/ports.py, runs as me on 127.0.0.1:7420):
+#   /api/ports lists the local ports that answer HTTP, /api/tailscale their `tailscale serve` URLs,
+#   /api/sites adds / removes sites (it rewrites sites.js, so it needs write access to the folder).
 # Logs: journalctl -u nginx -f / journalctl -u my-websites-ports -f
 let
   # Short names for my local sites: http://<name>.localhost -> localhost:<port>.
@@ -57,7 +59,7 @@ in
   systemd.services.my-websites-ports = {
     description = "Ports API for the websites hub";
     wantedBy = [ "multi-user.target" ];
-    path = [ pkgs.iproute2 ];
+    path = [ pkgs.iproute2 ] ++ lib.optional config.services.tailscale.enable config.services.tailscale.package;
     # Skip (not fail) when the project isn't there, so rebuilds don't error out.
     unitConfig.ConditionPathExists = "/home/${username}/dev/web/my-websites/server/ports.py";
     serviceConfig = {
