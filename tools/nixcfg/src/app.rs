@@ -1221,10 +1221,20 @@ impl App {
     fn ask_update(&mut self) {
         // With nh, updating this machine also switches to the updated config.
         let switch = cfg::has_nh() && self.host == self.hostname;
-        let cmd: Vec<String> = if switch {
+        let update: Vec<String> = if switch {
             ["nh", "os", "switch", "--update"].map(String::from).into_iter().chain(cfg::nh_args(&self.host)).collect()
         } else {
             vec!["nix".into(), "flake".into(), "update".into(), "--flake".into(), posix(&DOTFILES)]
+        };
+        // Pinned release downloads that aren't flake inputs (the Horizon launcher) are bumped
+        // first by their own script; a failed lookup (offline, rate limit) doesn't stop the update.
+        let horizon = DOTFILES.join("nixos/modules/gaming/update-horizon-launcher.sh");
+        let cmd = if horizon.exists() {
+            let quoted: Vec<String> = update.iter().map(|a| format!("'{}'", a.replace('\'', r"'\''"))).collect();
+            let script = format!("'{}' || true; exec {}", posix(&horizon).replace('\'', r"'\''"), quoted.join(" "));
+            vec!["sh".into(), "-c".into(), script]
+        } else {
+            update
         };
         // flake.lock is shared, so this updates every host, not just this one.
         let mut question = "Update every flake input (flake.lock, all hosts)".to_string();
