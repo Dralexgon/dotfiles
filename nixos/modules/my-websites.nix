@@ -1,53 +1,43 @@
 { config, lib, pkgs, username, ... }:
 
-# Serves my websites hub (~/dev/web/my-websites) on http://localhost.
-# Only reachable from this PC. Edits to the folder show up on refresh, no rebuild needed.
-# The hub API (server/ports.py, runs as me on 127.0.0.1:7420):
-#   /api/ports lists the local ports that answer HTTP, /api/tailscale their `tailscale serve` URLs,
-#   /api/sites adds / removes sites (it rewrites sites.js, so it needs write access to the folder).
+# My websites hub (~/dev/web/my-websites), shared with Tailscale Funnel:
+#   https://<machine>.<tailnet>.ts.net (`tailscale funnel status` shows it).
+# Edits to the folder show up on refresh, no rebuild needed.
+#
+# Who can do what is decided by the hub API (server/ports.py, runs as me on 127.0.0.1:7420)
+# from the identity tailscaled adds to each request:
+#   - tailnet visitors whose login is in ~/.config/my-websites/allowed-users (from
+#     ~/dotfiles-private) see everything and can add / remove / start / stop sites;
+#   - everyone else (the internet through Funnel, other tailnet users) gets a read-only hub
+#     without the "private" sites, the run / stop / path fields and the unshared local ports.
 # Logs: journalctl -u nginx -f / journalctl -u my-websites-ports -f
 let
-  # Short names for my local sites: http://<name>.localhost -> localhost:<port>.
-  # Browsers and Linux send every *.localhost name to this PC, so no DNS setup is needed.
-  # The hub reads this list (/domains.json) to link to the short names.
-  domains = {
-    life-manager = 5173;
-    wholmund = 3001;
-    webui = 3000;
-    flask = 5000;
-  };
+  hubPort = 8090; # local nginx port behind the Funnel (loopback only)
+  funnelPort = 443; # the plain URL. Funnel only allows 443, 8443 (the wiki) and 10000.
+  # Life Manager stays tailnet-only on 8447 (its run.sh).
+  tailscale = config.services.tailscale.package;
 
-  localOnly = [
-    { addr = "127.0.0.1"; port = 80; }
-    { addr = "[::1]"; port = 80; }
-  ];
-
-  domainsJson = pkgs.writeText "domains.json" (builtins.toJSON domains);
+  # To the API. nginx passes tailscaled's headers as-is: Tailscale-User-* / Tailscale-Funnel-Request
+  # (who is looking) and X-Forwarded-Host (the public host:port, for the API's Origin check).
+  toApi = path: { proxyPass = "http://127.0.0.1:7420${path}"; };
 in
 {
   services.nginx = {
     enable = true;
 
-    virtualHosts = {
-      "localhost" = {
-        default = true;
-        listen = localOnly;
-        root = "/var/www/my-websites";
-        locations."/api/".proxyPass = "http://127.0.0.1:7420";
-        locations."= /domains.json".alias = domainsJson;
-        extraConfig = ''
-          # Files change often: always revalidate
-          add_header Cache-Control "no-cache";
-        '';
-      };
-    } // lib.mapAttrs' (name: port: lib.nameValuePair "${name}.localhost" {
-      listen = localOnly;
-      locations."/" = {
-        proxyPass = "http://localhost:${toString port}"; # tries 127.0.0.1 and ::1 (Vite only listens on ::1)
-        proxyWebsockets = true; # live reload (Vite, Next.js)
-        recommendedProxySettings = true; # keeps the Host header, so the app sees <name>.localhost
-      };
-    }) domains;
+    virtualHosts."my-websites" = {
+      listen = [ { addr = "127.0.0.1"; port = hubPort; } ];
+      root = "/var/www/my-websites";
+      locations."/api/" = toApi "";
+      # The raw sites.js has the private sites and the run commands: the API filters it per visitor
+      locations."= /sites.js" = toApi "/api/sites.js";
+      locations."/server/".return = "404";
+      locations."~ /\\.".return = "404"; # .git, .gitignore, the API's temp files
+      extraConfig = ''
+        # Files change often: always revalidate
+        add_header Cache-Control "no-cache";
+      '';
+    };
   };
 
   # nginx can't enter my home (chmod 700), so mount the site folder (read-only) where it can read it.
@@ -56,10 +46,27 @@ in
     "-/home/${username}/dev/web/my-websites:/var/www/my-websites"
   ];
 
-  systemd.services.my-websites-ports = {
-    description = "Ports API for the websites hub";
+  # Puts the hub on the internet (and the tailnet) at the machine's plain URL.
+  systemd.services.my-websites-funnel = lib.mkIf config.services.tailscale.enable {
+    description = "Tailscale Funnel for the websites hub";
     wantedBy = [ "multi-user.target" ];
-    path = [ pkgs.iproute2 ] ++ lib.optional config.services.tailscale.enable config.services.tailscale.package;
+    after = [ "tailscaled.service" "network-online.target" ];
+    wants = [ "network-online.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      # tailscaled may not be logged in yet right after boot: retry
+      Restart = "on-failure";
+      RestartSec = 15;
+      ExecStart = "${tailscale}/bin/tailscale funnel --bg --yes --https=${toString funnelPort} http://127.0.0.1:${toString hubPort}";
+      ExecStop = "${tailscale}/bin/tailscale funnel --https=${toString funnelPort} off";
+    };
+  };
+
+  systemd.services.my-websites-ports = {
+    description = "API for the websites hub";
+    wantedBy = [ "multi-user.target" ];
+    path = [ pkgs.iproute2 ] ++ lib.optional config.services.tailscale.enable tailscale;
     # Skip (not fail) when the project isn't there, so rebuilds don't error out.
     unitConfig.ConditionPathExists = "/home/${username}/dev/web/my-websites/server/ports.py";
     serviceConfig = {
