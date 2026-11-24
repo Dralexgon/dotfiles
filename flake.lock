@@ -326,6 +326,22 @@
         "type": "github"
       }
     },
+    "private": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1795557091,
+        "narHash": "sha256-SNKqCVQT3+IN4lBnj+Fgb9eB0Ht/fWE6udWGlynUy7s=",
+        "ref": "refs/heads/main",
+        "rev": "dc50d5d17be5917933bd92faaa88dcec98fbd620",
+        "revCount": 11,
+        "type": "git",
+        "url": "file:///home/alex/dotfiles-private"
+      },
+      "original": {
+        "type": "git",
+        "url": "file:///home/alex/dotfiles-private"
+      }
+    },
     "quickshell": {
       "inputs": {
         "nixpkgs": [
@@ -398,6 +414,7 @@
         "nixpkgs": "nixpkgs",
         "nixpkgs-stable": "nixpkgs-stable",
         "nixpkgs23": "nixpkgs23",
+        "private": "private",
         "quickshell": "quickshell_3",
         "rust-overlay": "rust-overlay",
         "voice-changer": "voice-changer",

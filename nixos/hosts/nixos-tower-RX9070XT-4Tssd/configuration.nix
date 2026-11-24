@@ -31,10 +31,8 @@
 
     ./../../modules/hyprland-utils.nix
     ./../../modules/latest-kernel.nix
-    ./../../modules/life-manager.nix
     ./../../modules/llm.nix
     inputs.voice-changer.nixosModules.default # Applio voice changer + virtual mic
-    ./../../modules/my-websites.nix
     ./../../modules/dev/core.nix
     ./../../modules/nix.nix
     ./../../modules/openrgb.nix

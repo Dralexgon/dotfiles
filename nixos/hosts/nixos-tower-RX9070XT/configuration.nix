@@ -31,9 +31,7 @@
 
     ./../../modules/hyprland-utils.nix
     ./../../modules/latest-kernel.nix
-    ./../../modules/life-manager.nix
     ./../../modules/llm.nix
-    ./../../modules/my-websites.nix
     ./../../modules/dev/core.nix
     ./../../modules/nix.nix
     # ./../../modules/nvidia-drivers.nix

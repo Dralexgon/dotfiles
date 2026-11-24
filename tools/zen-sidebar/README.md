@@ -1,12 +1,12 @@
 # zen-sidebar
 
 Keeps the Zen browser sidebar (spaces, essentials, folders, pinned tabs) in the
-dotfiles, in `config/zen/sidebar.json`.
+private dotfiles (`~/dotfiles-private/zen/sidebar.json`: the tabs are personal).
 
 ```bash
-zen-sidebar export   # Zen profile -> config/zen/sidebar.json (Zen can be open)
+zen-sidebar export   # Zen profile -> sidebar.json (Zen can be open)
 zen-sidebar show     # print the saved layout
-zen-sidebar apply    # config/zen/sidebar.json -> Zen profile (close Zen first)
+zen-sidebar apply    # sidebar.json -> Zen profile (close Zen first)
 ```
 
 - Zen's own files (`zen-sessions.jsonlz4`, the session store) are binary and
@@ -21,5 +21,5 @@ zen-sidebar apply    # config/zen/sidebar.json -> Zen profile (close Zen first)
   `<profile>/zen-sidebar-backup-<date>/` first.
 - Options: `--profile DIR` (default: the default profile in
   `~/.config/zen/profiles.ini`), `--file FILE` (default:
-  `$ZEN_SIDEBAR_FILE` or `~/dotfiles/config/zen/sidebar.json`).
+  `$ZEN_SIDEBAR_FILE` or `~/dotfiles-private/zen/sidebar.json`).
 - Export by hand after changing the sidebar, then commit.

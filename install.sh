@@ -38,7 +38,8 @@ Steps:
      life-manager...). Silent when this machine is logged in to GitHub with
      another account; when it isn't logged in at all, asks whether to log in
      first. Runs before the host setup so that a cloned
-     ~/dev/apps/life-manager preselects its module.
+     ~/dev/apps/life-manager preselects tailscale (its own module is in the
+     private repo, added to a host in flake.nix hostModules).
   4. NixOS host setup (optional): creates nixos/hosts/<hostname>/ with the
      hostname, desktops, modules and tools (from tools/) you choose (and the
      target user) and the NixOS release this machine was installed with
@@ -493,7 +494,7 @@ select_modules() {
 	mapfile -t defaults < <(default_modules)
 	if [[ -d "$HOME/dev/apps/life-manager" ]]; then
 		# cloned by the private install.sh; its run.sh uses 'tailscale serve'
-		defaults+=("life-manager.nix" "tailscale.nix")
+		defaults+=("tailscale.nix")
 	fi
 
 	while IFS= read -r module; do
@@ -763,6 +764,8 @@ setup_nixos() {
 
 	write_host_config "$config_file" "$hostname" "$username"
 	printf 'Wrote %s\n' "$config_file"
+	# flake.nix gives it to every module as `username` (alex when the file is missing)
+	printf '%s\n' "$username" > "$host_dir/username"
 
 	if [[ -n "$HARDWARE_CONFIG" ]]; then
 		cp -- "$HARDWARE_CONFIG" "$hardware_file"
@@ -888,8 +891,6 @@ configure_dotfiles() {
 
 	while IFS= read -r config_name; do
 		[[ "$config_name" == "bash" ]] && continue
-		# config/zen is not linked: it's the Zen sidebar layout, restored with `zen-sidebar apply`
-		[[ "$config_name" == "zen" ]] && continue
 		DOTFILE_OPTIONS+=("$config_name")
 		if (( WANT_CAELESTIA )) && [[ "$config_name" == "caelestia" ]]; then
 			DOTFILE_CHECKED+=(1)

@@ -343,6 +343,26 @@ pub fn hostname() -> String {
     String::from_utf8_lossy(&buf[..end]).into_owned()
 }
 
+/// The flake's direct inputs when some of them point to a local repo that isn't on
+/// this machine (`git+file://`, like my private dotfiles), None when all can be fetched.
+pub fn reachable_inputs() -> Option<Vec<String>> {
+    let lock: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(DOTFILES.join("flake.lock")).ok()?).ok()?;
+    let nodes = lock.get("nodes")?;
+    let root = nodes.get(lock.get("root")?.as_str()?)?.get("inputs")?.as_object()?;
+    let mut missing = false;
+    let mut names = Vec::new();
+    for (name, node) in root {
+        let local = node.as_str().and_then(|n| nodes.get(n)).and_then(|n| n.get("original")).and_then(|o| {
+            (o.get("type")?.as_str()? == "git").then(|| o.get("url")?.as_str()?.strip_prefix("file://").map(PathBuf::from))?
+        });
+        match local {
+            Some(path) if !path.exists() => missing = true,
+            _ => names.push(name.clone()),
+        }
+    }
+    missing.then_some(names)
+}
+
 pub fn has_nh() -> bool {
     which("nh").is_some()
 }

@@ -1221,10 +1221,21 @@ impl App {
     fn ask_update(&mut self) {
         // With nh, updating this machine also switches to the updated config.
         let switch = cfg::has_nh() && self.host == self.hostname;
+        // Inputs on this disk that aren't here (my private repo on someone else's machine)
+        // can't be fetched, so update the others by name.
+        let only = cfg::reachable_inputs();
         let update: Vec<String> = if switch {
-            ["nh", "os", "switch", "--update"].map(String::from).into_iter().chain(cfg::nh_args(&self.host)).collect()
+            let mut cmd: Vec<String> = ["nh", "os", "switch"].map(String::from).into();
+            match &only {
+                None => cmd.push("--update".into()),
+                Some(names) => cmd.extend(names.iter().flat_map(|n| ["--update-input".to_string(), n.clone()])),
+            }
+            cmd.into_iter().chain(cfg::nh_args(&self.host)).collect()
         } else {
-            vec!["nix".into(), "flake".into(), "update".into(), "--flake".into(), posix(&DOTFILES)]
+            let mut cmd: Vec<String> = vec!["nix".into(), "flake".into(), "update".into()];
+            cmd.extend(only.unwrap_or_default());
+            cmd.extend(["--flake".into(), posix(&DOTFILES)]);
+            cmd
         };
         // Pinned release downloads that aren't flake inputs (the Horizon launcher) are bumped
         // first by their own script; a failed lookup (offline, rate limit) doesn't stop the update.

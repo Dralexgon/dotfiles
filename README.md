@@ -55,6 +55,8 @@ sudo nixos-rebuild switch --flake ~/dotfiles#<hostname>
 
 `./install.sh --help` lists every option.
 
+To update, use `u` in nixcfg. With plain Nix, name the inputs (`nix flake update nixpkgs caelestia-shell ...`): a bare `nix flake update` fails on `private`, my private repo, which only exists on my machines.
+
 ## Changing the config
 
 **nixcfg** is a terminal UI to turn modules and packages on and off for each host, and to see the Hyprland shortcuts:
@@ -87,7 +89,7 @@ The rest are Caelestia's defaults, with my changes in `config/caelestia/hypr-var
 | `nixos/core.nix` | Base config shared by every host |
 | `nixos/hosts/` | One folder per machine (`default` is a generic install) |
 | `nixos/modules/` | Optional modules: desktops, dev, gaming, drivers, ricing... |
-| `config/` | Dotfiles (kitty, fish, git, Caelestia, Zen, Neovim...) |
+| `config/` | Dotfiles (kitty, fish, Caelestia, Neovim...) |
 | `tools/` | My own apps and Hyprland plugins, see below |
 | `themes/`, `icons/` | GRUB, Plymouth, SDDM and GTK themes |
 | `recover.sh` | Notes to repair the boot from a live USB (`nixos-enter`, reinstall the bootloader) |

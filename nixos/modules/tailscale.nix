@@ -1,11 +1,11 @@
-{ ... }:
+{ username, ... }:
 
 # Tailscale: private network (tailnet) to share local services (e.g. the Wholmund wiki) with friends.
 # First time: `sudo tailscale up` to log in. Share the machine from https://login.tailscale.com/admin/machines
 {
   services.tailscale.enable = true; # also installs the `tailscale` CLI
-  # Lets alex run `tailscale serve` (used by life-manager's run.sh) without sudo
-  services.tailscale.extraSetFlags = [ "--operator=alex" ];
+  # Lets my user run `tailscale serve` (used by life-manager's run.sh) without sudo
+  services.tailscale.extraSetFlags = [ "--operator=${username}" ];
 
   networking.firewall = {
     # Only open what is needed, and only to tailnet devices (not the public internet)

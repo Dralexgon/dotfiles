@@ -66,6 +66,16 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # My private repo (Dralexgon/dotfiles-private, cloned by install.sh): personal modules
+    # (life-manager, my-websites) for my own hosts, see hostModules. Inputs are only
+    # fetched when used, so the other hosts build without it. Without that clone,
+    # `nix flake update` fails on this input: update the others by name instead
+    # (nixcfg does it for you).
+    private = {
+      url = "git+file:///home/alex/dotfiles-private";
+      flake = false;
+    };
+
     lanzaboote = {
       # url = "github:nix-community/lanzaboote/0403b4b7e8b2612657f0053a4c315e6c43eee9e6";
       url = "github:nix-community/lanzaboote/v1.1.0";
@@ -90,7 +100,6 @@
     # Given to every module as arguments, next to pkgs, config, lib...
     specialArgs = {
       inherit inputs;
-      username = "alex";
       # Evaluated once here, instead of once per module that imports them.
       # Use them as pkgs-stable.example
       pkgs-stable = import inputs.nixpkgs-stable { inherit system; config.allowUnfree = true; };
@@ -117,10 +126,18 @@
         # Extra modules for some hosts, next to their configuration.nix
         hostModules = {
           # "nixos-tower-RX9070XT" = [ inputs.boot-animation.nixosModules.default ];
+          "nixos-tower-RX9070XT" = [ "${inputs.private}/nixos" ];
+          "nixos-tower-RX9070XT-4Tssd" = [ "${inputs.private}/nixos" ];
         };
 
+        # The host's main user: nixos/hosts/<name>/username (one line, written by
+        # install.sh), else alex. Modules get it as the `username` argument.
+        hostUsername = name:
+          let file = hostsDir + "/${name}/username";
+          in if builtins.pathExists file then lib.fileContents file else "alex";
+
         mkHost = name: lib.nixosSystem {
-          inherit specialArgs;
+          specialArgs = specialArgs // { username = hostUsername name; };
           modules = [ (hostsDir + "/${name}/configuration.nix") ]
             ++ (hostModules.${name} or [ ]);
         };

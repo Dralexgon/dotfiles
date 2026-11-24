@@ -5,7 +5,7 @@ Who I am and how to address me: `~/AGENTS.md`.
 
 ## Layout
 
-- `flake.nix`: one `nixosConfiguration` per directory in `nixos/hosts/` (new host dirs must be git-added). Extra per-host modules go in `hostModules`. Also the `nixcfg` / `rgbfx` apps and dev shells.
+- `flake.nix`: one `nixosConfiguration` per directory in `nixos/hosts/` (new host dirs must be git-added). Extra per-host modules go in `hostModules` (the towers get `${inputs.private}/nixos` there: life-manager and my-websites live in `~/dotfiles-private/nixos/`, through the lazy `private` input, `git+file:///home/alex/dotfiles-private`; commit there, then `nix flake update private`). The host's user is `nixos/hosts/<host>/username` (written by `install.sh`), `alex` when missing, given to modules as `username`. Also the `nixcfg` / `rgbfx` apps and dev shells.
 - `nixos/core.nix`: shared base config, imported by every host.
 - `nixos/hosts/<host>/configuration.nix`: per-host config. Modules are toggled by commenting their import line out (that's also what `nixcfg` edits, so keep that format).
 - `nixos/modules/`: optional modules (`desktop/`, `dev/`, `gaming/`, `epita/` are groups).
@@ -25,7 +25,7 @@ Who I am and how to address me: `~/AGENTS.md`.
 - Hyprland plugins in `tools/hypr-*` are built against `pkgs.hyprland`: rebuild after a Hyprland update.
 - Rices are one JSON file each in `config/caelestia/rices/` (see its README): `set_rice()` in `hypr-user.lua` does the Hyprland side, `rice-picker --apply` the rest. The rices' wallpapers live in `config/caelestia/rices/wallpapers/`, referenced relative to the rices folder (`wallpapers/<rice>.png`); credit the author in the rices README.
 - Nothing personal goes in this public repo (real name, work/school email...): put it in the private `~/dotfiles-private` ([Dralexgon/dotfiles-private](https://github.com/Dralexgon/dotfiles-private)) and list it in its `links` file. `install.sh` (step 3, before the host setup so a cloned life-manager preselects its module; or `./install.sh --private` alone) clones it and runs its own `install.sh` (sourced in a subshell, so it can use `ask_yes_no` / `backup_and_link` in the current installer mode; it links the `links` files and does any other private setup): quietly when the current credentials can read it, after a yes/no + GitHub login when the machine isn't logged in, and not at all when logged in with another account. The git configs live there too. Git identity is `Dralexgon <dral3xgon@gmail.com>`, the only public email.
-- `username = "alex"` is hardcoded in `flake.nix` `specialArgs`.
+- `username` comes from `nixos/hosts/<host>/username` (default `alex`): use it instead of hardcoding `alex`.
 - Commits: conventional style, e.g. `feat(rgbfx): ...`, `docs(todo): ...`. Mark a TODO item `[x]` with a short note of what was done.
 
 ## TODO

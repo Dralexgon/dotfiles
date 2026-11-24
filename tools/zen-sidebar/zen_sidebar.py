@@ -5,7 +5,7 @@
     zen-sidebar apply  [--profile DIR] [--file FILE]   sidebar.json -> Zen profile (Zen must be closed)
     zen-sidebar show   [--file FILE]                   print sidebar.json as a tree
 
-FILE defaults to $ZEN_SIDEBAR_FILE or ~/dotfiles/config/zen/sidebar.json.
+FILE defaults to $ZEN_SIDEBAR_FILE or ~/dotfiles-private/zen/sidebar.json.
 DIR defaults to the Default=1 profile in ~/.config/zen/profiles.ini.
 
 Only the sidebar layout is stored (names, URLs, icons, order), never the browsing
@@ -19,7 +19,7 @@ import lz4.block
 
 ZEN_DIR = os.path.expanduser("~/.config/zen")
 DEFAULT_FILE = os.environ.get("ZEN_SIDEBAR_FILE") or os.path.join(
-    os.environ.get("ZEN_SIDEBAR_DOTFILES", os.path.expanduser("~/dotfiles")), "config/zen/sidebar.json")
+    os.environ.get("ZEN_SIDEBAR_PRIVATE", os.path.expanduser("~/dotfiles-private")), "zen/sidebar.json")
 # Files holding the session; zen-sessions.jsonlz4 is Zen's own store, the others
 # are Firefox's window session (both are restored on startup, so both are edited).
 SESSION_FILES = ["zen-sessions.jsonlz4", "sessionstore.jsonlz4",
