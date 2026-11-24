@@ -114,6 +114,7 @@ def run():
 
         speed = float(settings["speed"])
         game_mode = inputs.game_mode.enabled and settings["game_mode_pause"]
+        fan_zones = {}
         if game_mode:
             # Nothing renders, so the audio and screen captures stop by themselves
             frame = fan_frame = effects.fill(palette.primary)
@@ -128,13 +129,22 @@ def run():
                     fan_frame = part.apply(fan_frame, ctx)
             frame = flash.apply(frame, ctx)
             fan_frame = flash.apply(fan_frame, ctx)
+            if hasattr(current, "render_fans"):  # the effect draws the fans itself
+                fan_zones = current.render_fans(ctx, fans.zone_sizes())
+                for name, part in overlays.items():
+                    if name in FAN_OVERLAYS:
+                        fan_zones = {z: part.apply(c, ctx) for z, c in fan_zones.items()}
+                fan_zones = {z: flash.apply(c, ctx) for z, c in fan_zones.items()}
         brightness = float(settings["brightness"])
         out = np.round(np.clip(frame * brightness, 0, 1) * 255).astype(np.uint8)
         fan_out = np.round(np.clip(fan_frame * brightness, 0, 1) * 255).astype(np.uint8)
+        zones_out = {z: np.round(np.clip(c * brightness, 0, 1) * 255).astype(np.uint8)
+                     for z, c in fan_zones.items()}
+        fan_key = np.concatenate([fan_out.reshape(-1, 3), *zones_out.values()])  # for change detection
 
-        if last_fan_frame is None or not np.array_equal(fan_out, last_fan_frame):
-            fans.draw(fan_out)
-            last_fan_frame = fan_out if fans.client else None
+        if last_fan_frame is None or not np.array_equal(fan_key, last_fan_frame):
+            fans.draw(fan_out, zones_out)
+            last_fan_frame = fan_key if fans.client else None
 
         if last_frame is None or not np.array_equal(out, last_frame):
             if keyboards.draw(out):

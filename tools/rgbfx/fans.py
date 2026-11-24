@@ -58,8 +58,14 @@ class Fans:
             self.client = None
         return self.client is not None
 
-    def draw(self, frame: np.ndarray) -> None:
-        """frame: the keyboard frame, ROWS x COLS x 3 uint8."""
+    def zone_sizes(self) -> dict[str, int]:
+        """{zone name: LED count} of the connected devices (empty until connected)."""
+        return {z.name: len(z.leds) for dev, _ in self.devices for z in dev.zones}
+
+    def draw(self, frame: np.ndarray, given: dict | None = None) -> None:
+        """frame: the keyboard frame, ROWS x COLS x 3 uint8.
+        given: {zone name: LEDs x 3 uint8} drawn as is instead of from the frame
+        (for effects that know the case layout, see Effect.render_fans)."""
         if not self.ready():
             return
         from openrgb.utils import RGBColor
@@ -73,7 +79,9 @@ class Fans:
             for dev, zones in self.devices:
                 colours = []
                 for zone, pos in zip(dev.zones, zones):
-                    if pos is None:
+                    if given and zone.name in given:
+                        rgb = given[zone.name]
+                    elif pos is None:
                         rgb = average[None, :]
                     else:
                         rgb = np.stack([np.interp(pos, cols, strip[:, ch], period=1) for ch in range(3)], axis=1)

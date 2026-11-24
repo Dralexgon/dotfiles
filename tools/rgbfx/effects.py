@@ -16,6 +16,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+import case
 import keymap
 from keymap import COLS, ROWS
 from palette import NAMED, Palette, hex_rgb, hue, parse
@@ -785,6 +786,39 @@ class ColumnScan(Base):
         frame = fill(0)
         frame[:, int(ctx.t / 0.2) % COLS] = ctx.palette.primary
         return frame
+
+
+@effect
+class FanSpin(Base):
+    name, title, category = "fan-spin", "Fan spin", "Test"
+    description = ("A light goes around every fan at the same time, top fans included (each fan is "
+                   "drawn from its place in case.py), while a column sweeps the keyboard in step.")
+    PERIOD = 3.6  # seconds per turn, like the column scan (18 columns x 0.2 s)
+    TAIL = 0.2  # turns
+
+    def turn(self, ctx):
+        return (ctx.t / self.PERIOD) % 1
+
+    def render(self, ctx):
+        frame = fill(0)
+        frame[:, int(self.turn(ctx) * COLS) % COLS] = ctx.palette.primary
+        return frame
+
+    def render_fans(self, ctx, sizes):
+        head = self.turn(ctx)
+        zones = {z: np.zeros((n, 3)) for z, n in sizes.items()}
+        # The pump (LEDs 0-11) and the start of the top fans' chain (12-19) sit on the same
+        # LEDs as the ring fans (0-19): the pump is skipped (it just follows the ring fans) and
+        # the ring fans go last, so top fan 1's first 8 LEDs follow them too
+        for ring in sorted(case.RINGS, key=lambda r: r.name.startswith("Top"), reverse=True):
+            if ring.zone not in zones or ring.kind == "pump":
+                continue
+            angle = ring.start / 360 + np.arange(ring.count) / ring.count
+            behind = (head - angle) % 1  # how far the head has gone past each LED
+            k = np.clip(1 - behind / self.TAIL, 0, 1) ** 2
+            leds = zones[ring.zone][ring.first:ring.first + ring.count]
+            leds[:] = ctx.palette.primary * k[: len(leds), None]
+        return zones
 
 
 # ---------------------------------------------------------------------------
