@@ -48,12 +48,6 @@
       };
     };
 
-    # Horizon (Minecraft Java rewritten in Rust): its launcher, built from source by its flake
-    horizon = {
-      url = "github:horizon-rust/horizon";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # Liquid Glass / Acrylic / Mica window effects, a Hyprland plugin built by tools/hypr-liquid
     # against pkgs.hyprland (its own flake pins another Hyprland), so only its source is used.
     hyprliquid = {
