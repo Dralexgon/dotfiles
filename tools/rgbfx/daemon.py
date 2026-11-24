@@ -9,6 +9,7 @@ per-key overlays: only the notification pulses and flashes reach them.
 
 While Caelestia's game mode is on, effects and overlays pause: the keyboard
 and fans stay in the static primary colour and the loop only wakes twice a second.
+Turn `game_mode_pause` off (`rgbfx gamemode run`) to keep them running.
 """
 
 import logging
@@ -112,7 +113,7 @@ def run():
             last_frame = last_fan_frame = None
 
         speed = float(settings["speed"])
-        game_mode = inputs.game_mode.enabled
+        game_mode = inputs.game_mode.enabled and settings["game_mode_pause"]
         if game_mode:
             # Nothing renders, so the audio and screen captures stop by themselves
             frame = fan_frame = effects.fill(palette.primary)

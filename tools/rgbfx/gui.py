@@ -280,6 +280,11 @@ class Window(Adw.ApplicationWindow):
         self.speed.connect("notify::value", self.on_speed)
         settings.add(self.speed)
 
+        self.game_mode = Adw.SwitchRow(title="Run in game mode",
+                                       subtitle="Keep effects and overlays going while Caelestia's game mode is on")
+        self.game_mode.connect("notify::active", self.on_game_mode)
+        settings.add(self.game_mode)
+
         self.pomo = Adw.SpinRow(title="Pomodoro", subtitle="Minutes, shown on the F-row", digits=0,
                                 adjustment=Gtk.Adjustment(lower=1, upper=180, step_increment=5,
                                                           page_increment=15, value=25))
@@ -359,6 +364,7 @@ class Window(Adw.ApplicationWindow):
             self.brightness.set_value(s["brightness"] * 100)
         if abs(self.speed.get_value() - s["speed"]) > 0.005:
             self.speed.set_value(s["speed"])
+        self.game_mode.set_active(not s["game_mode_pause"])
         self.syncing = False
         self.show_pomodoro()
 
@@ -396,6 +402,10 @@ class Window(Adw.ApplicationWindow):
     def on_speed(self, *_):
         if not self.syncing:
             state.update(speed=round(self.speed.get_value(), 2))
+
+    def on_game_mode(self, *_):
+        if not self.syncing:
+            state.update(game_mode_pause=not self.game_mode.get_active())
 
     def on_pomodoro(self, *_):
         left = self.pomodoro_left()

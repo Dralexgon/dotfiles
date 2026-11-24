@@ -25,6 +25,7 @@ DEFAULTS = {
     "overlays": ["super-hints", "caps-lock"],
     "brightness": 1.0,  # 0..1, applied on top of every effect
     "speed": 1.0,  # animation speed multiplier
+    "game_mode_pause": True,  # pause effects while Caelestia's game mode is on
     "pomodoro": None,  # {"start": unix time, "minutes": 25}
     "flash": None,  # {"at": unix time, "colour": "#5865f2" or a name}
 }

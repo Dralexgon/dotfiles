@@ -8,6 +8,7 @@
     rgbfx overlay <name> [on|off|toggle]
     rgbfx brightness <0-100>
     rgbfx speed <multiplier>  e.g. 0.5, 1, 2
+    rgbfx gamemode [pause|run|toggle]  pause effects in Caelestia's game mode, or keep them running
     rgbfx pomodoro [minutes|stop]
     rgbfx flash [colour]      pulse the keyboard and fans (primary, discord, red, #ff00aa...)
 """
@@ -39,6 +40,7 @@ def cmd_status():
     print(f"overlays:   {', '.join(s['overlays']) or '-'}")
     print(f"brightness: {round(s['brightness'] * 100)}%")
     print(f"speed:      {s['speed']}x")
+    print(f"game mode:  {'pause' if s['game_mode_pause'] else 'run'}")
     if pomo := s["pomodoro"]:
         left = pomo["start"] + pomo["minutes"] * 60 - time.time()
         print(f"pomodoro:   {max(0, left) / 60:.1f} min left")
@@ -76,6 +78,12 @@ def main(argv):
         state.update(brightness=max(0, min(100, float(args[0]))) / 100)
     elif cmd == "speed" and len(args) == 1:
         state.update(speed=max(0.1, min(5.0, float(args[0]))))
+    elif cmd == "gamemode" and len(args) <= 1:
+        mode = args[0] if args else "toggle"
+        if mode not in ("pause", "run", "toggle"):
+            usage()
+        pause = (not state.load()["game_mode_pause"]) if mode == "toggle" else mode == "pause"
+        state.update(game_mode_pause=pause)
     elif cmd == "pomodoro" and len(args) <= 1:
         if args and args[0] == "stop":
             state.update(pomodoro=None)

@@ -126,6 +126,9 @@ game mode only lives in the shell's memory. The mouse pointer trail
 (`tools/hypr-cursortrail`) disappears too: it hides while Hyprland animations
 are off, which is what game mode turns off.
 
+To keep the lights going in game mode, turn on **Run in game mode** in the
+window (or `rgbfx gamemode run`; `rgbfx gamemode pause` brings the pause back).
+
 ## Window
 
 A GTK4 + libadwaita window, coloured by Caelestia's GTK theme
