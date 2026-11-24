@@ -47,6 +47,9 @@ in
   ];
 
   # Puts the hub on the internet (and the tailnet) at the machine's plain URL.
+  # Re-applied every minute by the timer: the serve config is shared, so another script's
+  # `tailscale serve --https=443 off` (or a re-login) would otherwise take the hub down for good.
+  # Turn it off for real with: systemctl stop my-websites-funnel.timer && tailscale funnel --https=443 off
   systemd.services.my-websites-funnel = lib.mkIf config.services.tailscale.enable {
     description = "Tailscale Funnel for the websites hub";
     wantedBy = [ "multi-user.target" ];
@@ -54,12 +57,21 @@ in
     wants = [ "network-online.target" ];
     serviceConfig = {
       Type = "oneshot";
-      RemainAfterExit = true;
-      # tailscaled may not be logged in yet right after boot: retry
-      Restart = "on-failure";
-      RestartSec = 15;
+      # Already there: nothing to do (no needless rewrite of tailscaled's config every minute)
+      ExecCondition = pkgs.writeShellScript "my-websites-funnel-missing" ''
+        ! ${tailscale}/bin/tailscale serve status --json 2>/dev/null \
+          | ${pkgs.jq}/bin/jq -e --arg proxy "http://127.0.0.1:${toString hubPort}" --arg port ":${toString funnelPort}" \
+              '([.Web // {} | to_entries[] | select(.key | endswith($port)) | .value.Handlers["/"].Proxy == $proxy] | any)
+               and ([.AllowFunnel // {} | to_entries[] | select(.key | endswith($port)) | .value] | any)' >/dev/null
+      '';
       ExecStart = "${tailscale}/bin/tailscale funnel --bg --yes --https=${toString funnelPort} http://127.0.0.1:${toString hubPort}";
-      ExecStop = "${tailscale}/bin/tailscale funnel --https=${toString funnelPort} off";
+    };
+  };
+  systemd.timers.my-websites-funnel = lib.mkIf config.services.tailscale.enable {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnBootSec = "30s";
+      OnUnitActiveSec = "1min";
     };
   };
 
