@@ -46,7 +46,13 @@ let
       gcc glibc.dev pkg-config clang mold openssl openssl.dev
     ];
     runScript = "${horizon-launcher-unwrapped}/bin/horizon-launcher";
+    # Horizon binds the game's "holder" control socket in $XDG_RUNTIME_DIR (else /tmp) and refuses
+    # any ancestor not owned by the user or root. In bwrap's user namespace, root-owned /run/user,
+    # /run and /tmp show up as nobody (65534), so Play failed with "bind holder control socket:
+    # permission denied". The same runtime dir bound at the sandbox root (owned by the user) passes.
+    extraBwrapArgs = [ ''--bind-try "''${XDG_RUNTIME_DIR:-/nonexistent}" /xdg-runtime'' ];
     profile = ''
+      if [ -d /xdg-runtime ]; then export XDG_RUNTIME_DIR=/xdg-runtime; fi
       export HORIZON_LAUNCHER_NO_SELF_UPDATE=1
       export HORIZON_LAUNCHER_DESKTOP_EXEC="''${HORIZON_LAUNCHER_DESKTOP_EXEC:-horizon-launcher}"
       export PKG_CONFIG_PATH="/usr/lib/pkgconfig:/usr/share/pkgconfig:''${PKG_CONFIG_PATH:-}"
