@@ -124,6 +124,56 @@ through the OpenRGB SDK server (`services.hardware.openrgb`, in
 - If the OpenRGB server isn't up, the keyboard still runs and the daemon
   tries again every 10 s.
 
+### ⚠️ To fix: the fans share LEDs (wiring)
+
+Everything is plugged into the **same header, D_LED2**: the ring fans' splitter
+(LEDs 0–19) and the pump + top fans daisy chain (pump 0–11, then the top fans
+12–47). So the same LED number lights several fans at once:
+
+| LEDs | Lights |
+|---|---|
+| 0–11 | the 4 ring fans (LEDs 0–11) **and** the pump |
+| 12–19 | the 4 ring fans (LEDs 12–19) **and** top fan 1 (its LEDs 0–7) |
+| 20–47 | the top fans only |
+
+That's why the top fans are out of step with the others, and why even
+**Fan spin** can't fully sync top fan 1 (the front one, top right through the
+glass): its first 8 LEDs follow the ring fans.
+
+**Fix:** move the **ring fans' splitter** (or the cable that goes to the pump,
+the top fans follow it) to the empty **D_LED1** header. The two groups then
+each have their own LEDs, and `case.py` needs to be measured again.
+
+Until then, the window shows a **warning banner** at the top, and its
+**How to fix** button opens this schema. It goes away by itself once `case.py`
+no longer has fans that share only part of their LEDs (`case.shared()`).
+
+Where the headers are on the **Gigabyte B550M GAMING X WIFI6** (board with
+the D_LED1/D_LED2 names, manual Rev. 1001: layout on page 4, the headers on
+page 17), seen as in the manual, rear I/O on the left:
+
+```
+ ┌─────────────────────────────────────────────┐
+ │ I/O            CPU            RAM  LED_C2 ◄─┼── D_LED2 (top right edge)
+ │                                             │
+ │      PCIe x16 (GPU)                         │
+ │      PCIe x4                                │
+ │ F_AUDIO  LED_C1  D_LED1  TPM  COM ...       │
+ └──────────────────▲──────────────────────────┘
+                    └── D_LED1 (bottom edge)
+```
+
+- **D_LED2** (everything now): top right corner, at the edge to the right of
+  the RAM slots, next to LED_C2 (near the 24-pin power connector).
+- **D_LED1** (empty): bottom edge, below the PCIe slots, between LED_C1 and
+  TPM, near F_AUDIO. Probably under the graphics card.
+- Both are 3-pin 5 V: pin 1 = 5V, 2 = data, 3 = no pin, 4 = ground. The arrow
+  (▼) on the plug is 5V and goes to pin 1: plugging it the wrong way can damage
+  the LEDs. Turn the PC off and unplug it first.
+- Manuals: [support page](https://www.gigabyte.com/Motherboard/B550M-GAMING-X-WIFI6/support),
+  [Rev. 1001 (D_LED names)](https://www.regard.ru/api/site/files/goodspdf/download/12832).
+  Rev. 1.2 boards name these headers ARGB_V2_1/2/3 instead.
+
 ## Game mode
 
 While Caelestia's **game mode** is on (Utilities panel, or

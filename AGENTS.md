@@ -73,6 +73,7 @@ nixosConfigurations."nixos-tower-RX9070XT" = nixpkgs.lib.nixosSystem {
 - [ ] Try `FPS = 60` in `tools/rgbfx/daemon.py` (smoother wave, plasma, audio visualiser) and measure the CPU cost of rgbfx + openrazer-daemon
 - [ ] Draw frames straight through the kernel driver (`/sys/.../matrix_custom_frame` then `matrix_effect_custom`) instead of D-Bus through openrazer-daemon : less CPU, a few ms less latency, makes 60 fps cheap (the USB link caps it around ~100 fps anyway). Write a whole row at once instead of the per-key Python loop. Watch out for openrazer-daemon / Polychromatic overriding it
 - [ ] Rust rewrite : only if the above isn't enough (would save ~2% CPU and ~45 MB RAM, but loses the run-from-checkout setup, and the GTK window would need gtk4-rs)
+- [ ] Move the ring fans' splitter (or the pump + top fans chain) from D_LED2 to the empty D_LED1 header, so the fans stop sharing LEDs 0–19 (top fans out of sync, top fan 1 tied to the ring fans). Where the headers are: "To fix: the fans share LEDs" in `tools/rgbfx/README.md`. Then measure the fans again and update `tools/rgbfx/case.py`
 
 ### Cursor trail
 

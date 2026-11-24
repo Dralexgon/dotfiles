@@ -314,6 +314,12 @@ class Window(Adw.ApplicationWindow):
         self.toasts = Adw.ToastOverlay(child=body)
         view = Adw.ToolbarView(content=self.toasts)
         view.add_top_bar(header)
+        if case.shared():  # the fans' wiring needs fixing (see case.py)
+            banner = Adw.Banner(title="⚠ The case fans share LEDs: the top fans can't be in sync. "
+                                      "Move a cable to the D_LED1 header.",
+                                button_label="How to fix", revealed=True)
+            banner.connect("button-clicked", self.on_wiring_help)
+            view.add_top_bar(banner)
         self.set_content(view)
 
         self.reload()
@@ -323,6 +329,13 @@ class Window(Adw.ApplicationWindow):
         GLib.timeout_add(500, self.tick_state)
         GLib.timeout_add_seconds(1, self.want_preview)
         GLib.timeout_add_seconds(3, self.check_daemon)
+
+    def on_wiring_help(self, _banner):
+        text = Gtk.Label(label=case.WIRING_HELP, selectable=True, xalign=0)
+        text.add_css_class("monospace")
+        dialog = Adw.AlertDialog(heading="Fix the fans' wiring", extra_child=text)
+        dialog.add_response("ok", "OK")
+        dialog.present(self)
 
     # Timers
 
