@@ -85,6 +85,7 @@ They play themselves.
 |---|---|---|
 | Row scan | `row-scan` | One **row** lit in primary, sweeping **top to bottom** (one row every 0.5 s). To check the LED grid row by row. |
 | Column scan | `column-scan` | One **column** lit in primary, sweeping **left to right** (one column every 0.2 s). Also shows the fans' column mapping. |
+| Rainbow columns | `rainbow-columns` | The rainbow **column by column**: each key column is one solid colour (no slant, unlike Rainbow), and the whole rainbow steps one column to the right every 0.2 s. The fans get it the usual way. |
 | Fan spin | `fan-spin` | A light with a short tail goes **around every fan at the same time** (one turn every 3.6 s), the top fans included, while a column sweeps the keyboard in step. Unlike the other effects it draws each fan from its place in `case.py` instead of spreading the keyboard columns over the LED strip. The pump (LEDs 0–11) isn't drawn: it's wired to the same LEDs as the ring fans (0–19), so it follows them by itself. The first 8 LEDs of top fan 1 (12–19) are those same LEDs too, so they follow the ring fans and only its last 4 follow its own turn. |
 
 ## Overlays

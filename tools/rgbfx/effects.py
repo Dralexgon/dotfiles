@@ -789,6 +789,17 @@ class ColumnScan(Base):
 
 
 @effect
+class RainbowColumns(Base):
+    name, title, category = "rainbow-columns", "Rainbow columns", "Test"
+    description = ("The rainbow column by column: each key column is one solid colour, and the "
+                   "whole rainbow moves one column to the right every 0.2 s.")
+
+    def render(self, ctx):
+        step = int(ctx.t / 0.2)
+        return hue((np.arange(COLS) - step) / COLS)[None, :, :].repeat(ROWS, axis=0)
+
+
+@effect
 class FanSpin(Base):
     name, title, category = "fan-spin", "Fan spin", "Test"
     description = ("A light goes around every fan at the same time, top fans included (each fan is "
