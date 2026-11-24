@@ -200,6 +200,8 @@ in
 
   # Bluetooth
   hardware.bluetooth.enable = true;
+  # Without an agent that turns it on, the adapter stays "Pairable: no" and new devices can't pair
+  hardware.bluetooth.settings.General.AlwaysPairable = true;
   # services.blueman.enable = true; # Gui if you Desktop Environment doesn't have it
 
   # Set your time zone.
