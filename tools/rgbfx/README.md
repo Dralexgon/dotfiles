@@ -79,6 +79,13 @@ They play themselves.
 |---|---|---|
 | Snake | `snake` | A **snake that plays by itself**: it finds the shortest path to the pulsing **tertiary** food (only over keys that have an LED) and grows each time it eats. Its head is near-white and its body fades along the scheme gradient. **Press a key to drop the food there.** When it traps itself it turns red, fades and starts over. |
 
+### Test
+
+| Effect | Name | What it does |
+|---|---|---|
+| Row scan | `row-scan` | One **row** lit in primary, sweeping **top to bottom** (one row every 0.5 s). To check the LED grid row by row. |
+| Column scan | `column-scan` | One **column** lit in primary, sweeping **left to right** (one column every 0.2 s). Also shows the fans' column mapping. |
+
 ## Overlays
 
 Drawn on top of the effect, always in this order (so the Super hints win):

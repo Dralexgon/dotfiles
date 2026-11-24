@@ -762,6 +762,31 @@ class Snake(Base):
         return frame
 
 
+# Test patterns
+
+
+@effect
+class RowScan(Base):
+    name, title, category = "row-scan", "Row scan", "Test"
+    description = "One row lit in the primary colour, sweeping top to bottom (one row every 0.5 s)."
+
+    def render(self, ctx):
+        frame = fill(0)
+        frame[int(ctx.t / 0.5) % ROWS, :] = ctx.palette.primary
+        return frame
+
+
+@effect
+class ColumnScan(Base):
+    name, title, category = "column-scan", "Column scan", "Test"
+    description = "One column lit in the primary colour, sweeping left to right (one column every 0.2 s)."
+
+    def render(self, ctx):
+        frame = fill(0)
+        frame[:, int(ctx.t / 0.2) % COLS] = ctx.palette.primary
+        return frame
+
+
 # ---------------------------------------------------------------------------
 # Overlays: any number, drawn on top of the effect (in this order)
 # ---------------------------------------------------------------------------
