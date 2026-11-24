@@ -75,6 +75,16 @@ in
     };
   };
 
+  # Lets me (and coding agents) restart the hub's services without a password, e.g. after
+  # editing server/ports.py: `sudo systemctl restart my-websites-ports`. Only these units.
+  security.sudo.extraRules = [{
+    users = [ username ];
+    commands = [{
+      command = "/run/current-system/sw/bin/systemctl ^(start|stop|restart) (my-websites-ports|my-websites-funnel|nginx)(\\.service)?$";
+      options = [ "NOPASSWD" ];
+    }];
+  }];
+
   systemd.services.my-websites-ports = {
     description = "API for the websites hub";
     wantedBy = [ "multi-user.target" ];
