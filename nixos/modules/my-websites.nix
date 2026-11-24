@@ -4,12 +4,12 @@
 #   https://<machine>.<tailnet>.ts.net (`tailscale funnel status` shows it).
 # Edits to the folder show up on refresh, no rebuild needed.
 #
-# Who can do what is decided by the hub API (server/ports.py, runs as me on 127.0.0.1:7420)
-# from the identity tailscaled adds to each request:
-#   - tailnet visitors whose login is in ~/.config/my-websites/allowed-users (from
-#     ~/dotfiles-private) see everything and can add / remove / start / stop sites;
-#   - everyone else (the internet through Funnel, other tailnet users) gets a read-only hub
-#     without the "private" sites, the run / stop / path fields and the unshared local ports.
+# Who can do what is decided by the hub API (server/ports.py, runs as me on 127.0.0.1:7420):
+#   - "Sign in with Google" (Life Manager's Google client, ~/dev/apps/life-manager/google-client.json):
+#     only the accounts in ~/.config/my-websites/allowed-users (from ~/dotfiles-private) get a
+#     session, and can add / remove / start / stop sites;
+#   - everyone else gets a read-only hub without the "private" sites, the run / stop / path
+#     fields and the unshared local ports.
 # Logs: journalctl -u nginx -f / journalctl -u my-websites-ports -f
 let
   hubPort = 8090; # local nginx port behind the Funnel (loopback only)
@@ -17,8 +17,8 @@ let
   # Life Manager stays tailnet-only on 8447 (its run.sh).
   tailscale = config.services.tailscale.package;
 
-  # To the API. nginx passes tailscaled's headers as-is: Tailscale-User-* / Tailscale-Funnel-Request
-  # (who is looking) and X-Forwarded-Host (the public host:port, for the API's Origin check).
+  # To the API. nginx passes tailscaled's X-Forwarded-Host as-is: the public host:port, for the
+  # API's Origin check and Google's redirect URI.
   toApi = path: { proxyPass = "http://127.0.0.1:7420${path}"; };
 in
 {
